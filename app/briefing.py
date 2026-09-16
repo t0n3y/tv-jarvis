@@ -147,6 +147,7 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
                 _speech_for_events(events_list),
                 _speech_for_plan(plan_list, is_school_day),
                 _speech_for_todos(todo_items),
+                "Ich wünsche dir einen schönen Tag!",
             ],
         )
     )
