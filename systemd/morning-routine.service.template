@@ -1,0 +1,13 @@
+[Unit]
+Description=TV-Jarvis Morgen-Routine (TV an, Briefing vorlesen, Radio starten)
+After=network-online.target dashboard.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__INSTALL_DIR__
+EnvironmentFile=__INSTALL_DIR__/.env
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/__RUN_USER__/.Xauthority
+ExecStart=__INSTALL_DIR__/.venv/bin/python -m app.routines.morning_routine
+User=__RUN_USER__

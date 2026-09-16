@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JARVIS</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div id="boot-screen">
+    <div class="boot-rings">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+      <div class="ring-core"></div>
+    </div>
+    <div class="boot-text" id="boot-text">SYSTEM STARTET&hellip;</div>
+  </div>
+
+  <div id="shutdown-bar-top" class="shutdown-bar"></div>
+  <div id="shutdown-bar-bottom" class="shutdown-bar"></div>
+  <div id="shutdown-flash"></div>
+
+  <div id="dashboard" class="hidden">
+    <header>
+      <div class="header-left">
+        <div class="clock" id="clock">00:00</div>
+        <div class="date" id="date-label">&nbsp;</div>
+      </div>
+      <div class="header-right">
+        <div class="brand">JARVIS</div>
+        <div id="onair" class="onair hidden">&#9679; ON AIR &mdash; SUNSHINE LIVE</div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel weather-panel">
+        <h2>Wetter</h2>
+        <div id="weather-content" class="panel-body">&ndash;</div>
+      </section>
+
+      <section class="panel calendar-panel">
+        <h2>Kalender</h2>
+        <ul id="calendar-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
+      </section>
+
+      <section class="panel plan-panel" id="plan-panel">
+        <h2 id="plan-title">Stundenplan / Vertretung</h2>
+        <ul id="plan-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
+      </section>
+
+      <section class="panel todos-panel">
+        <h2>ToDos</h2>
+        <ul id="todos-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
+      </section>
+    </main>
+
+    <footer id="errors" class="hidden"></footer>
+  </div>
+
+<script src="app.js"></script>
+</body>
+</html>

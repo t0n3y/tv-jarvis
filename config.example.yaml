@@ -1,0 +1,72 @@
+# Kopieren nach config.yaml und anpassen. Keine Geheimnisse hier rein (siehe .env.example).
+
+location:
+  # Ort für die Wetter-Abfrage (Open-Meteo Geocoding). Alternativ lat/lon direkt setzen
+  # und city leer lassen, dann wird nicht geocodet.
+  city: "Berlin"
+  lat: null
+  lon: null
+
+schedule:
+  # Zeiten im Format HH:MM, jeweils lokale Zeit des Pi.
+  weekday:
+    wake_time: "06:30"
+    leave_time: "07:15"
+  weekend:
+    wake_time: "08:30"
+    leave_time: "10:30"
+
+tv_control:
+  backend: "cec"          # "cec" oder "smart_plug"
+  cec_device: "0"          # TV-Geräteadresse für cec-client (per `cec-client -l` prüfen)
+  boot_wait_seconds: 3     # Wartezeit nach dem Einschalten, bevor Kiosk/TTS starten
+
+calendars:
+  google:
+    enabled: true
+    # "Geheime Adresse im iCal-Format" aus den Google-Kalender-Einstellungen
+    ics_urls:
+      - "https://calendar.google.com/calendar/ical/DEINE_ADRESSE/basic.ics"
+  icloud:
+    enabled: true
+    # leer = alle Kalender, sonst Liste von Kalendernamen wie in der iCloud-Kalender-App
+    calendar_names: []
+
+iserv:
+  enabled: true
+  base_url: "https://DEINE-SCHULE.iserv.de"
+  # Pfad zur Vertretungsplan-Ansicht - je nach Schule unterschiedlich, wird beim
+  # Feinschliff (siehe README) an eure IServ-Instanz angepasst.
+  vertretungsplan_path: "/iserv/plan/show"
+  login_path: "/iserv/app/login"
+  selectors:
+    row: "table.plan tbody tr"
+    lesson: "td.lesson"
+    subject: "td.subject"
+    room: "td.room"
+    note: "td.note"
+
+todos:
+  provider: "icloud_shortcut"   # "icloud_shortcut" oder "notion"
+  icloud_shortcut:
+    cache_file: "data/todos_cache.json"
+  notion:
+    database_id: ""
+
+radio:
+  enabled: true
+  # Sunshine-Live-Stream, beim Setup einmal verifizieren (siehe README)
+  stream_url: "https://stream.sunshine-live.de/live/mp3-192/stream.sunshine-live.de"
+  volume: 25
+
+tts:
+  voice: "de_DE-thorsten-medium"
+  model_dir: "data/piper-voices"
+  speed: 1.0
+
+dashboard:
+  host: "127.0.0.1"
+  port: 8080
+  title: "JARVIS"
+  boot_animation_seconds: 4
+  shutdown_animation_seconds: 1.5

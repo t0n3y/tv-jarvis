@@ -1,0 +1,16 @@
+[Unit]
+Description=TV-Jarvis Dashboard-Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=__INSTALL_DIR__
+EnvironmentFile=__INSTALL_DIR__/.env
+ExecStart=__INSTALL_DIR__/.venv/bin/python -m app.dashboard.run
+Restart=on-failure
+RestartSec=5
+User=__RUN_USER__
+
+[Install]
+WantedBy=multi-user.target

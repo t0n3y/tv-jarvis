@@ -1,0 +1,11 @@
+[Unit]
+Description=Startet die TV-Jarvis Morgen-Routine
+
+[Timer]
+OnCalendar=Mon..Fri __WAKE_WEEKDAY__
+OnCalendar=Sat,Sun __WAKE_WEEKEND__
+Persistent=false
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

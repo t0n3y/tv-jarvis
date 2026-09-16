@@ -1,0 +1,312 @@
+:root {
+  --bg: #030810;
+  --bg-panel: rgba(11, 23, 38, 0.65);
+  --border: rgba(79, 216, 255, 0.25);
+  --accent: #4fd8ff;
+  --accent-glow: rgba(79, 216, 255, 0.55);
+  --accent-warn: #ff8c42;
+  --text: #d9f2ff;
+  --text-dim: #6f8ba3;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Rajdhani", sans-serif;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- Boot-Screen ---------- */
+
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  background: radial-gradient(circle at center, #081722 0%, #030810 70%);
+  z-index: 50;
+}
+
+.boot-rings {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  box-shadow: 0 0 24px var(--accent-glow);
+  animation: ring-appear 1.8s ease-out infinite;
+}
+
+.ring-1 { animation-delay: 0s; }
+.ring-2 { inset: 30px; animation-delay: 0.3s; border-color: rgba(79, 216, 255, 0.7); }
+.ring-3 { inset: 60px; animation-delay: 0.6s; border-style: dashed; }
+
+.ring-core {
+  position: absolute;
+  inset: 110px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 40px 10px var(--accent-glow);
+  animation: core-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ring-appear {
+  0%   { transform: scale(0.6) rotate(0deg); opacity: 0; }
+  40%  { opacity: 1; }
+  100% { transform: scale(1) rotate(180deg); opacity: 0.15; }
+}
+
+@keyframes core-pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.8; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+.boot-text {
+  font-family: "Orbitron", sans-serif;
+  letter-spacing: 6px;
+  font-size: 20px;
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow);
+  animation: text-flicker 2s ease-in-out infinite;
+}
+
+@keyframes text-flicker {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* ---------- Shutdown-Animation ---------- */
+
+.shutdown-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  z-index: 100;
+  transition: height 1.3s cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+#shutdown-bar-top { top: 0; }
+#shutdown-bar-bottom { bottom: 0; }
+
+#shutdown-bar-top.active,
+#shutdown-bar-bottom.active {
+  height: 50vh;
+}
+
+#shutdown-flash {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  transform: translateY(-50%);
+  background: var(--accent);
+  box-shadow: 0 0 30px 6px var(--accent-glow);
+  opacity: 0;
+  z-index: 101;
+  pointer-events: none;
+}
+
+#shutdown-flash.flash {
+  animation: flash-line 0.5s ease-out forwards;
+}
+
+@keyframes flash-line {
+  0%   { height: 3px; opacity: 1; }
+  100% { height: 0; opacity: 0; }
+}
+
+/* ---------- Dashboard ---------- */
+
+#dashboard {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 36px 48px;
+  background:
+    linear-gradient(rgba(3, 8, 16, 0.9), rgba(3, 8, 16, 0.9)),
+    repeating-linear-gradient(0deg, rgba(79, 216, 255, 0.03) 0px, rgba(79, 216, 255, 0.03) 1px, transparent 1px, transparent 3px);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+
+.clock {
+  font-family: "Orbitron", sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 18px var(--accent-glow);
+  line-height: 1;
+}
+
+.date {
+  margin-top: 6px;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.header-right {
+  text-align: right;
+}
+
+.brand {
+  font-family: "Orbitron", sans-serif;
+  font-size: 26px;
+  letter-spacing: 10px;
+  color: var(--accent);
+  text-shadow: 0 0 14px var(--accent-glow);
+}
+
+.onair {
+  margin-top: 10px;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--accent-warn);
+  text-shadow: 0 0 10px rgba(255, 140, 66, 0.6);
+  animation: onair-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes onair-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 24px;
+  min-height: 0;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 22px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent 70%);
+  opacity: 0.7;
+}
+
+.panel h2 {
+  margin: 0 0 12px 0;
+  font-family: "Orbitron", sans-serif;
+  font-size: 15px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.panel-body {
+  font-size: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list li {
+  display: flex;
+  gap: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(79, 216, 255, 0.1);
+}
+
+.list li .time {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+}
+
+.list li.empty {
+  color: var(--text-dim);
+  border-bottom: none;
+}
+
+.list .note {
+  color: var(--accent-warn);
+}
+
+.weather-current {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.weather-icon {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.weather-temp {
+  font-family: "Orbitron", sans-serif;
+  font-size: 44px;
+  color: var(--accent);
+}
+
+.weather-desc {
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.weather-range {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 17px;
+}
+
+footer#errors {
+  margin-top: 16px;
+  font-size: 13px;
+  color: rgba(255, 140, 66, 0.7);
+}
