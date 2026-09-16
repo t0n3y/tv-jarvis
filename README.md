@@ -145,6 +145,11 @@ journalctl -u leave-routine.service -e
 Zeiten geändert? `config.yaml` anpassen und `sudo ./scripts/install.sh`
 erneut ausführen (regeneriert die Timer-Units mit den neuen Zeiten).
 
+**Schnelltest ohne den Zeitplan anzufassen:** `./scripts/quick_test.sh [Sekunden]`
+löst die komplette Routine sofort aus (TV an, Briefing, Radio), wartet die
+angegebene Zeit (Standard 120s) und fährt dann wieder runter (Radio aus, TV
+aus) - ohne `config.yaml` oder die systemd-Timer zu verändern.
+
 ## Architektur (Kurzüberblick)
 
 ```
