@@ -41,14 +41,13 @@ def start(cfg: Config) -> None:
         return
 
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    args = ["mpv", "--no-video", f"--volume={cfg.radio.volume}", "--really-quiet"]
+    if cfg.audio.alsa_device:
+        args.append(f"--audio-device=alsa/{cfg.audio.alsa_device}")
+    args.append(cfg.radio.stream_url)
+
     proc = subprocess.Popen(
-        [
-            "mpv",
-            "--no-video",
-            f"--volume={cfg.radio.volume}",
-            "--really-quiet",
-            cfg.radio.stream_url,
-        ],
+        args,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

@@ -5,6 +5,11 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+# Ohne dies killt systemd beim Beenden des oneshot-Hauptprozesses (python)
+# standardmaessig ALLE Kindprozesse in der selben Cgroup - also auch den
+# absichtlich im Hintergrund weiterlaufenden Chromium-Kiosk und mpv/Radio.
+# "process" toetet nur den Hauptprozess selbst, Kindprozesse bleiben am Leben.
+KillMode=process
 WorkingDirectory=__INSTALL_DIR__
 EnvironmentFile=__INSTALL_DIR__/.env
 Environment=DISPLAY=:0

@@ -7,10 +7,12 @@ eigenen Zeiten und ohne Stundenplan. Läuft auf einem Raspberry Pi 4B.
 
 ## Voraussetzungen
 
-- Raspberry Pi 4B mit Raspberry Pi OS **Desktop** (Bookworm oder neuer, mit
-  Autologin auf den Desktop – siehe unten), per HDMI an den Fernseher
-  angeschlossen. **Wichtig:** Nur der HDMI-Port direkt neben dem USB-C-Port
-  des Pi 4 unterstützt HDMI-CEC.
+- Raspberry Pi 4B mit Raspberry Pi OS **Desktop** (Bookworm/Trixie oder neuer,
+  mit Autologin auf den Desktop – siehe unten), per HDMI an den Fernseher
+  angeschlossen. Der Pi 4 hat zwei micro-HDMI-Ports mit je einem eigenen
+  CEC-Adapter (`/dev/cec0`, `/dev/cec1`) – **egal an welchem der Fernseher
+  hängt**, es muss nur der passende Adapter in `config.yaml`
+  (`tv_control.cec_adapter`) eingetragen werden (siehe Schritt 3).
 - Am Samsung-Fernseher: Einstellungen → Allgemein → Externe Geräteverwaltung
   → **Anynet+ (HDMI-CEC)** aktivieren, dort zusätzlich **Automatisches
   Ausschalten** aktivieren (ohne das ignoriert Samsung oft den
@@ -55,7 +57,16 @@ den [Piper-Releases](https://github.com/rhasspy/piper/releases) die
 
 - **location**: Stadt für die Wetterabfrage (oder direkt `lat`/`lon`).
 - **schedule**: Weck-/Verlasszeiten für Wochentage und Wochenende.
-- **tv_control**: `cec_device` per `cec-client -l` ermitteln (meist `0`).
+- **tv_control**: `cec_device` bleibt meist `0`. `cec_adapter` ermitteln mit
+  `for f in /sys/class/drm/*/status; do echo "$f: $(cat $f)"; done` (welcher
+  HDMI-Port zeigt `connected`?) und `cec-client -l` (welcher `/dev/cecX`
+  gehört dazu) - ohne diese Angabe kann `cec-client` den falschen der beiden
+  Adapter wählen und jeder Befehl schlägt mit `power status: unknown` fehl.
+- **audio.alsa_device**: Gleiches Thema wie beim CEC-Adapter - der Pi 4 hat
+  zwei HDMI-Audio-Karten. Mit `aplay -l` den Kartennamen (z. B. `vc4hdmi1`)
+  ermitteln, der zum verbundenen Port passt, und als
+  `"plughw:CARD=vc4hdmi1,DEV=0"` eintragen (reines `hw:` ohne `plug`
+  funktioniert oft nicht, da das Format sonst nicht passt).
 - **calendars.google.ics_urls**: In Google Kalender → Einstellungen des
   jeweiligen Kalenders → "Kalender integrieren" → **"Geheime Adresse im
   iCal-Format"** kopieren.

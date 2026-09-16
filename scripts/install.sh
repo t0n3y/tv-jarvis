@@ -46,12 +46,13 @@ VOICE_DIR="$INSTALL_DIR/data/piper-voices"
 mkdir -p "$VOICE_DIR"
 chown -R "$RUN_USER" "$INSTALL_DIR/data"
 
-if ! command -v piper >/dev/null 2>&1; then
-  echo "piper-Binary nicht gefunden - bitte manuell installieren:"
-  echo "  https://github.com/rhasspy/piper (Release fuer aarch64 herunterladen, nach /usr/local/bin entpacken)"
-  echo "Installation wird trotzdem fortgesetzt, TTS funktioniert erst danach."
+# Das piper-Binary kommt ueber requirements.txt (Paket "piper-tts") mit ins
+# venv (.venv/bin/piper) - app/tts.py findet es relativ zum venv-Python,
+# unabhaengig vom PATH des systemd-Diensts.
+if [[ -x "$INSTALL_DIR/.venv/bin/piper" ]]; then
+  echo "piper-Binary im venv gefunden: $INSTALL_DIR/.venv/bin/piper"
 else
-  echo "piper-Binary gefunden: $(command -v piper)"
+  echo "WARNUNG: piper-Binary fehlt im venv - 'pip install -r requirements.txt' pruefen."
 fi
 
 VOICE_BASENAME="de_DE-thorsten-medium"

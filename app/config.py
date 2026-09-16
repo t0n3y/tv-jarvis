@@ -52,6 +52,7 @@ class ScheduleConfig:
 class TVControlConfig:
     backend: str
     cec_device: str
+    cec_adapter: str
     boot_wait_seconds: float
 
 
@@ -87,6 +88,15 @@ class TodosConfig:
     provider: str
     cache_file: Path
     notion_database_id: str
+
+
+@dataclass
+class AudioConfig:
+    # ALSA-Geraetename fuer den HDMI-Port, an dem der Fernseher haengt, z.B.
+    # "plughw:CARD=vc4hdmi1,DEV=0" (siehe README, Abschnitt CEC/Audio-Port
+    # ermitteln - der Pi 4 hat zwei HDMI-Audio-Karten, "default" trifft nicht
+    # zuverlaessig den richtigen Port). Leer = ALSA-Standardgeraet.
+    alsa_device: str
 
 
 @dataclass
@@ -130,6 +140,7 @@ class Config:
     calendars: CalendarsConfig
     iserv: IServConfig
     todos: TodosConfig
+    audio: AudioConfig
     radio: RadioConfig
     tts: TTSConfig
     dashboard: DashboardConfig
@@ -156,6 +167,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
     cals = raw.get("calendars", {})
     isv = raw.get("iserv", {})
     todos = raw.get("todos", {})
+    audio = raw.get("audio", {})
     radio = raw.get("radio", {})
     tts = raw.get("tts", {})
     dash = raw.get("dashboard", {})
@@ -173,6 +185,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
         tv_control=TVControlConfig(
             backend=tvc.get("backend", "cec"),
             cec_device=str(tvc.get("cec_device", "0")),
+            cec_adapter=tvc.get("cec_adapter", ""),
             boot_wait_seconds=float(tvc.get("boot_wait_seconds", 3)),
         ),
         calendars=CalendarsConfig(
@@ -192,6 +205,9 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
                 todos.get("icloud_shortcut", {}).get("cache_file", "data/todos_cache.json")
             ),
             notion_database_id=todos.get("notion", {}).get("database_id", ""),
+        ),
+        audio=AudioConfig(
+            alsa_device=audio.get("alsa_device", ""),
         ),
         radio=RadioConfig(
             enabled=radio.get("enabled", True),

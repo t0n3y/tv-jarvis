@@ -1,8 +1,13 @@
 """Wrapper um Piper (offline TTS, laeuft performant auf dem Pi 4).
 
-Erwartet, dass das Binary `piper` im PATH liegt und das Sprachmodell unter
-`cfg.tts.model_dir/<voice>.onnx` (+ `.onnx.json`) abgelegt ist - siehe
-scripts/install.sh, das die deutsche Stimme automatisch herunterlaedt.
+`pip install piper-tts` legt das `piper`-CLI-Binary im selben bin/-Verzeichnis
+wie den Python-Interpreter ab (also im venv). Systemd-Services rufen die venv-
+Python ueber ihren vollen Pfad auf, OHNE das venv zu aktivieren - das venv-
+bin/-Verzeichnis steht dann NICHT im PATH. Deshalb wird piper hier relativ zu
+`sys.executable` aufgeloest statt sich auf PATH zu verlassen.
+
+Das Sprachmodell liegt unter `cfg.tts.model_dir/<voice>.onnx` (+ `.onnx.json`)
+- siehe scripts/install.sh, das die deutsche Stimme automatisch herunterlaedt.
 
 Ausgabe geht direkt (raw PCM, ohne Zwischendatei) an `aplay`, das auf dem Pi
 per Default ueber HDMI an die TV-Lautsprecher ausgibt.
@@ -13,6 +18,7 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
+import sys
 from pathlib import Path
 
 from app.config import Config
@@ -20,6 +26,17 @@ from app.config import Config
 logger = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_RATE = 22050
+
+
+def _piper_binary() -> str:
+    # sys.prefix zeigt zuverlaessig auf das venv-Verzeichnis, selbst wenn
+    # .venv/bin/python ein Symlink auf den System-Python ist (sys.executable
+    # per .resolve() wuerde dann faelschlich zum System-bin/ fuehren, wo kein
+    # piper liegt).
+    venv_piper = Path(sys.prefix) / "bin" / "piper"
+    if venv_piper.exists():
+        return str(venv_piper)
+    return "piper"  # Fallback: system-weite Installation im PATH
 
 
 def _sample_rate(config_path: Path) -> int:
@@ -49,7 +66,7 @@ def speak(cfg: Config, text: str) -> None:
 
     piper = subprocess.Popen(
         [
-            "piper",
+            _piper_binary(),
             "--model", str(model_path),
             "--output-raw",
             "--length_scale", str(length_scale),
@@ -57,10 +74,12 @@ def speak(cfg: Config, text: str) -> None:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
-    aplay = subprocess.Popen(
-        ["aplay", "-q", "-r", str(sample_rate), "-f", "S16_LE", "-t", "raw", "-"],
-        stdin=piper.stdout,
-    )
+    aplay_args = ["aplay", "-q", "-r", str(sample_rate), "-f", "S16_LE", "-t", "raw"]
+    if cfg.audio.alsa_device:
+        aplay_args += ["-D", cfg.audio.alsa_device]
+    aplay_args.append("-")
+
+    aplay = subprocess.Popen(aplay_args, stdin=piper.stdout)
 
     assert piper.stdin is not None
     piper.stdin.write(text.encode("utf-8"))

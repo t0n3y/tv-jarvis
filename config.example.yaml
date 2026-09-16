@@ -18,7 +18,14 @@ schedule:
 
 tv_control:
   backend: "cec"          # "cec" oder "smart_plug"
-  cec_device: "0"          # TV-Geräteadresse für cec-client (per `cec-client -l` prüfen)
+  cec_device: "0"          # TV-Geräteadresse für cec-client (meist 0)
+  # Welcher der beiden Pi-4-HDMI-CEC-Adapter mit dem Fernseher verbunden ist
+  # (leer = cec-client waehlt automatisch, das kann aber den falschen Port
+  # treffen). Ermitteln mit:
+  #   for f in /sys/class/drm/*/status; do echo "$f: $(cat $f)"; done
+  # und dann per `cec-client -l` den passenden com-port (/dev/cec0 oder
+  # /dev/cec1) eintragen.
+  cec_adapter: ""
   boot_wait_seconds: 3     # Wartezeit nach dem Einschalten, bevor Kiosk/TTS starten
 
 calendars:
@@ -52,6 +59,14 @@ todos:
     cache_file: "data/todos_cache.json"
   notion:
     database_id: ""
+
+audio:
+  # ALSA-Geraet fuer den HDMI-Port, an dem der Fernseher haengt. Der Pi 4 hat
+  # ZWEI HDMI-Audio-Karten (vc4hdmi0/vc4hdmi1) - "default" trifft nicht
+  # zuverlaessig die richtige. Ermitteln mit `aplay -l` (Kartenname) und dazu
+  # passend beim gleichen Port wie cec_adapter oben bleiben. Format:
+  # "plughw:CARD=vc4hdmi1,DEV=0". Leer = ALSA-Standardgeraet versuchen.
+  alsa_device: ""
 
 radio:
   enabled: true
