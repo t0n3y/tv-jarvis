@@ -1,28 +1,30 @@
-"""FastAPI-Backend fuers Dashboard.
+"""FastAPI-Backend fuers Dashboard und die Fernbedienung.
 
-Laeuft dauerhaft (systemd/dashboard.service) und macht drei Dinge:
+Laeuft dauerhaft (systemd/dashboard.service). Aufgaben:
 1. Liefert den zuletzt von morning_routine.py geschriebenen Briefing-Stand
    (data/state.json) als JSON unter GET /api/state.
 2. Nimmt ToDo-Updates von der iCloud-Shortcuts-Automation entgegen
    (POST /api/todos/webhook).
-3. Broadcastet per WebSocket ein "shutdown"-Event, damit die im
-   Chromium-Kiosk offene Seite die Ausschalt-Animation abspielen kann, bevor
-   leave_routine.py den Fernseher wirklich per CEC ausschaltet.
+3. Broadcastet per WebSocket Events (Ausschalt-Animation, YouTube-Steuerung)
+   an die im Chromium-Kiosk offene Seite.
+4. Stellt die Fernbedienungs-API bereit (POST /api/remote/*), gedacht fuer
+   die mobile Seite unter /remote.html (vom iPhone/iPad im selben WLAN).
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from app import audio_control, kiosk_media, radio, tv_power
 from app.config import ROOT_DIR, get_config
 from app.sources import todos_icloud_shortcut
-from app import radio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,6 +60,20 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+def require_remote_secret(
+    x_remote_secret: str | None = Header(default=None),
+    secret: str | None = Query(default=None),
+) -> None:
+    """Schuetzt die Fernbedienungs-Routen, FALLS REMOTE_CONTROL_SECRET in .env
+    gesetzt ist. Ohne konfiguriertes Secret bleibt die Fernbedienung offen
+    fuers eigene WLAN (siehe README - Empfehlung: Secret setzen)."""
+    expected = get_config().secrets.remote_control_secret
+    if not expected:
+        return
+    if (x_remote_secret or secret) != expected:
+        raise HTTPException(status_code=401, detail="ungueltiges oder fehlendes Secret")
+
+
 @app.get("/api/state")
 def get_state() -> JSONResponse:
     if not STATE_FILE.exists():
@@ -86,9 +102,65 @@ async def todos_webhook(
     return {"ok": True, "count": len(items)}
 
 
-@app.post("/api/shutdown-animation")
+@app.post("/api/shutdown-animation", dependencies=[Depends(require_remote_secret)])
 async def trigger_shutdown_animation() -> dict:
     await manager.broadcast({"type": "shutdown"})
+    return {"ok": True}
+
+
+@app.post("/api/youtube-command", dependencies=[Depends(require_remote_secret)])
+async def youtube_command(request: Request) -> dict:
+    body = await request.json()
+    await manager.broadcast(body)
+    return {"ok": True}
+
+
+@app.post("/api/remote/power", dependencies=[Depends(require_remote_secret)])
+async def remote_power(request: Request) -> dict:
+    body = await request.json()
+    state = body.get("state")
+    cfg = get_config()
+    if state == "on":
+        await asyncio.to_thread(tv_power.power_on, cfg)
+    elif state == "off":
+        await asyncio.to_thread(tv_power.power_off, cfg, False)
+    else:
+        raise HTTPException(status_code=400, detail="state muss 'on' oder 'off' sein")
+    return {"ok": True}
+
+
+@app.post("/api/remote/volume", dependencies=[Depends(require_remote_secret)])
+async def remote_volume(request: Request) -> dict:
+    body = await request.json()
+    delta = body.get("delta", 0)
+    if delta > 0:
+        await asyncio.to_thread(audio_control.volume_up)
+    elif delta < 0:
+        await asyncio.to_thread(audio_control.volume_down)
+    else:
+        await asyncio.to_thread(audio_control.mute_toggle)
+    return {"ok": True}
+
+
+@app.post("/api/remote/youtube", dependencies=[Depends(require_remote_secret)])
+async def remote_youtube(request: Request) -> dict:
+    body = await request.json()
+    action = body.get("action")
+    cfg = get_config()
+
+    if action == "play":
+        video_id = await asyncio.to_thread(kiosk_media.play_youtube, cfg, body.get("url", ""))
+        if not video_id:
+            raise HTTPException(status_code=400, detail="Konnte keine YouTube-Video-ID aus der URL lesen")
+        return {"ok": True, "video_id": video_id}
+    if action == "pause":
+        await asyncio.to_thread(kiosk_media.pause_youtube, cfg)
+    elif action == "resume":
+        await asyncio.to_thread(kiosk_media.resume_youtube, cfg)
+    elif action == "stop":
+        await asyncio.to_thread(kiosk_media.stop_youtube, cfg)
+    else:
+        raise HTTPException(status_code=400, detail="unbekannte action")
     return {"ok": True}
 
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>JARVIS Fernbedienung</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="remote.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body class="remote-body">
+
+  <header class="remote-header">
+    <div class="brand">JARVIS</div>
+    <div class="remote-sub">FERNBEDIENUNG</div>
+  </header>
+
+  <main class="remote-main">
+    <section class="remote-card">
+      <h2>Fernseher</h2>
+      <div class="button-row">
+        <button id="btn-power-on" class="btn btn-accent">Ein</button>
+        <button id="btn-power-off" class="btn">Aus</button>
+      </div>
+    </section>
+
+    <section class="remote-card">
+      <h2>Lautstärke</h2>
+      <div class="button-row">
+        <button id="btn-vol-down" class="btn btn-round">&minus;</button>
+        <button id="btn-mute" class="btn">Stumm</button>
+        <button id="btn-vol-up" class="btn btn-round">&plus;</button>
+      </div>
+    </section>
+
+    <section class="remote-card">
+      <h2>YouTube</h2>
+      <input id="yt-url" class="text-input" type="text" placeholder="YouTube-Link einfügen…" />
+      <div class="button-row">
+        <button id="btn-yt-play" class="btn btn-accent">Abspielen</button>
+      </div>
+      <div class="button-row">
+        <button id="btn-yt-pause" class="btn">Pause</button>
+        <button id="btn-yt-resume" class="btn">Weiter</button>
+        <button id="btn-yt-stop" class="btn">Stopp</button>
+      </div>
+    </section>
+
+    <div id="status-line" class="status-line"></div>
+  </main>
+
+<script src="remote.js"></script>
+</body>
+</html>

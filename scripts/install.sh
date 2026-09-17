@@ -66,6 +66,19 @@ if [[ ! -f "$VOICE_DIR/$VOICE_BASENAME.onnx" ]]; then
   chown -R "$RUN_USER" "$VOICE_DIR"
 fi
 
+echo "\n-- Audio-Sink-Fix im Desktop-Autostart --"
+# PipeWire waehlt sonst oft den Kopfhoereranschluss statt HDMI als Standard.
+AUTOSTART_DIR="/home/$RUN_USER/.config/labwc"
+AUTOSTART_FILE="$AUTOSTART_DIR/autostart"
+AUTOSTART_LINE="$INSTALL_DIR/scripts/fix_audio_sink.sh >> $INSTALL_DIR/data/autostart.log 2>&1 &"
+sudo -u "$RUN_USER" mkdir -p "$AUTOSTART_DIR"
+if ! grep -qF "fix_audio_sink.sh" "$AUTOSTART_FILE" 2>/dev/null; then
+  sudo -u "$RUN_USER" bash -c "echo '$AUTOSTART_LINE' >> '$AUTOSTART_FILE'"
+  echo "Autostart-Eintrag hinzugefuegt: $AUTOSTART_FILE"
+else
+  echo "Autostart-Eintrag bereits vorhanden."
+fi
+
 echo "\n-- systemd-Units generieren --"
 read -r WAKE_WEEKDAY WAKE_WEEKEND LEAVE_WEEKDAY LEAVE_WEEKEND < <(
   "$INSTALL_DIR/.venv/bin/python" - "$INSTALL_DIR/config.yaml" <<'PYEOF'

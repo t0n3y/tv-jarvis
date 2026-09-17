@@ -17,6 +17,8 @@ import logging
 import os
 import signal
 import subprocess
+import time
+from pathlib import Path
 
 from app.config import Config, ROOT_DIR
 
@@ -26,6 +28,22 @@ PID_FILE = ROOT_DIR / "data" / "kiosk.pid"
 PROFILE_DIR = ROOT_DIR / "data" / "chromium-profile"
 
 CHROMIUM_CANDIDATES = ["chromium-browser", "chromium"]
+
+# Direkt nach einem Reboot ist der Wayland-Compositor (labwc) manchmal noch
+# nicht bereit, wenn morning-routine.service schon anlaufen will. Ohne
+# Wartezeit scheitert Chromium dann mit "Missing X server or $DISPLAY" bzw.
+# findet den Wayland-Socket nicht. Deshalb kurz pollen statt sofort starten.
+WAYLAND_WAIT_TIMEOUT_SECONDS = 45
+
+
+def _wait_for_wayland_socket(display: str = "wayland-0") -> bool:
+    socket_path = Path(f"/run/user/{os.getuid()}") / display
+    deadline = time.monotonic() + WAYLAND_WAIT_TIMEOUT_SECONDS
+    while time.monotonic() < deadline:
+        if socket_path.exists():
+            return True
+        time.sleep(1)
+    return False
 
 
 def _chromium_binary() -> str:
@@ -64,6 +82,11 @@ def _clear_stale_profile_lock() -> None:
 def start(cfg: Config) -> None:
     if is_running():
         return
+    if not _wait_for_wayland_socket():
+        logger.warning(
+            "Wayland-Socket nach %ss nicht gefunden - versuche trotzdem zu starten.",
+            WAYLAND_WAIT_TIMEOUT_SECONDS,
+        )
     _clear_stale_profile_lock()
 
     url = f"http://{cfg.dashboard.host}:{cfg.dashboard.port}/"
@@ -95,6 +118,10 @@ def start(cfg: Config) -> None:
             "--disable-infobars",
             "--disable-session-crashed-bubble",
             "--no-first-run",
+            # Ohne dies blockiert Chromiums Autoplay-Schutz das automatische
+            # Abspielen des YouTube-Players, weil der Start per WebSocket
+            # (Fernbedienung) kommt statt per echtem Klick im Browser.
+            "--autoplay-policy=no-user-gesture-required",
             "--check-for-update-interval=31536000",
             f"--app={url}",
         ],

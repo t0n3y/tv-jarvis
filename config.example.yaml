@@ -80,7 +80,10 @@ tts:
   speed: 1.0
 
 dashboard:
-  host: "127.0.0.1"
+  # 0.0.0.0 = im ganzen WLAN erreichbar (fuer die Fernbedienung vom
+  # iPhone/iPad unter http://<pi-ip>:8080/remote.html). Auf "127.0.0.1"
+  # setzen, um den Zugriff auf den Pi selbst zu beschraenken.
+  host: "0.0.0.0"
   port: 8080
   title: "JARVIS"
   boot_animation_seconds: 4

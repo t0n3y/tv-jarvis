@@ -10,14 +10,11 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from dataclasses import asdict
 
-from app import radio, tts
+from app import radio, tts, tv_power
 from app.briefing import build_briefing
 from app.config import ROOT_DIR, get_config
-from app.dashboard import kiosk
-from app.tv_control import get_controller
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,12 +25,7 @@ STATE_FILE = ROOT_DIR / "data" / "state.json"
 def main() -> None:
     cfg = get_config()
 
-    tv = get_controller(cfg)
-    logger.info("Schalte Fernseher ein ...")
-    tv.turn_on()
-    time.sleep(cfg.tv_control.boot_wait_seconds)
-
-    kiosk.start(cfg)
+    tv_power.power_on(cfg)
 
     logger.info("Sammle Briefing-Daten ...")
     briefing = build_briefing(cfg)

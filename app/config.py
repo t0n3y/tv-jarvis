@@ -130,6 +130,7 @@ class Secrets:
     icloud_app_specific_password: str | None
     notion_token: str | None
     todos_webhook_secret: str | None
+    remote_control_secret: str | None
 
 
 @dataclass
@@ -233,6 +234,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
             icloud_app_specific_password=os.environ.get("ICLOUD_APP_SPECIFIC_PASSWORD") or None,
             notion_token=os.environ.get("NOTION_TOKEN") or None,
             todos_webhook_secret=os.environ.get("TODOS_WEBHOOK_SECRET") or None,
+            remote_control_secret=os.environ.get("REMOTE_CONTROL_SECRET") or None,
         ),
     )
 

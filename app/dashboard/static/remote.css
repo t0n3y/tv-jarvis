@@ -1,0 +1,116 @@
+.remote-body {
+  overflow-y: auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px 48px;
+}
+
+.remote-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.remote-header .brand {
+  font-size: 32px;
+  letter-spacing: 8px;
+}
+
+.remote-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+}
+
+.remote-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.remote-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.remote-card h2 {
+  margin: 0 0 14px 0;
+  font-family: "Orbitron", sans-serif;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.button-row:first-of-type {
+  margin-top: 0;
+}
+
+.btn {
+  flex: 1;
+  padding: 16px 10px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text);
+  background: rgba(79, 216, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.btn:active {
+  background: rgba(79, 216, 255, 0.25);
+}
+
+.btn-accent {
+  background: rgba(79, 216, 255, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-round {
+  flex: 0 0 64px;
+  font-size: 28px;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  padding: 0;
+}
+
+.text-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.text-input::placeholder {
+  color: var(--text-dim);
+}
+
+.status-line {
+  text-align: center;
+  min-height: 20px;
+  font-size: 14px;
+  color: var(--text-dim);
+}

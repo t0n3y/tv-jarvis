@@ -99,6 +99,58 @@ async function refreshState() {
   }
 }
 
+// ---------- YouTube-Player (gesteuert per WebSocket von /remote.html) ----------
+
+let ytPlayer = null;
+let ytReady = false;
+const ytPendingQueue = [];
+
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player("youtube-player", {
+    height: "100%",
+    width: "100%",
+    playerVars: { autoplay: 1, controls: 0, rel: 0 },
+    events: {
+      onReady: () => {
+        ytReady = true;
+        ytPendingQueue.splice(0).forEach((fn) => fn());
+      },
+    },
+  });
+}
+
+function withYtPlayer(fn) {
+  if (ytReady) {
+    fn();
+  } else {
+    ytPendingQueue.push(fn);
+  }
+}
+
+function showPlayerScreen() {
+  $("player-screen").classList.remove("hidden");
+  $("dashboard").classList.add("hidden");
+}
+
+function hidePlayerScreen() {
+  $("player-screen").classList.add("hidden");
+  $("dashboard").classList.remove("hidden");
+}
+
+function handleYoutubeMessage(msg) {
+  if (msg.type === "youtube_play") {
+    showPlayerScreen();
+    withYtPlayer(() => ytPlayer.loadVideoById(msg.video_id));
+  } else if (msg.type === "youtube_pause") {
+    withYtPlayer(() => ytPlayer.pauseVideo());
+  } else if (msg.type === "youtube_resume") {
+    withYtPlayer(() => ytPlayer.playVideo());
+  } else if (msg.type === "youtube_stop") {
+    withYtPlayer(() => ytPlayer.stopVideo());
+    hidePlayerScreen();
+  }
+}
+
 function connectWebSocket() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/ws`);
@@ -107,6 +159,8 @@ function connectWebSocket() {
       const msg = JSON.parse(event.data);
       if (msg.type === "shutdown") {
         playShutdownAnimation();
+      } else if (msg.type && msg.type.startsWith("youtube_")) {
+        handleYoutubeMessage(msg);
       }
     } catch (err) {
       console.error("WS-Nachricht ungueltig", err);

@@ -150,6 +150,25 @@ löst die komplette Routine sofort aus (TV an, Briefing, Radio), wartet die
 angegebene Zeit (Standard 120s) und fährt dann wieder runter (Radio aus, TV
 aus) - ohne `config.yaml` oder die systemd-Timer zu verändern.
 
+## Fernbedienung (iPhone/iPad) + YouTube
+
+Der Dashboard-Server hostet unter `/remote.html` eine mobile Fernbedienung,
+solange `dashboard.host: "0.0.0.0"` in `config.yaml` gesetzt ist (Standard).
+Im selben WLAN wie der Pi im Browser öffnen:
+
+```
+http://<pi-ip>:8080/remote.html
+```
+
+Damit steuerbar: Fernseher an/aus, Lautstärke +/-/stumm, YouTube-Link einfügen
+und abspielen, Pause/Weiter/Stopp. Das Video läuft direkt im Kiosk-Fenster
+(YouTube IFrame API) - beim Abspielen wird das Radio automatisch gestoppt.
+
+**Absicherung:** Ohne `REMOTE_CONTROL_SECRET` in `.env` ist die Fernbedienung
+ohne Passwort nutzbar (ok fürs eigene, vertrauenswürdige WLAN). Zum Absichern
+in `.env` einen Wert eintragen - die Seite fragt dann beim ersten Tastendruck
+einmalig danach und merkt sich das Passwort im Browser.
+
 ## Architektur (Kurzüberblick)
 
 ```
@@ -158,12 +177,18 @@ app/
   briefing.py           Sammelt alle Quellen parallel, baut Text + JSON
   tts.py                 Piper-Wrapper
   radio.py                mpv-Steuerung (Sunshine Live)
-  sources/                Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
-  tv_control/              CEC- und Steckdosen-Backend (austauschbar)
-  dashboard/                FastAPI-Server + Jarvis-Frontend (static/)
-  routines/                 morning_routine.py / leave_routine.py
-systemd/                    Service-/Timer-Vorlagen (von install.sh gerendert)
-scripts/install.sh           Komplette Einrichtung auf dem Pi
+  tv_power.py              Gemeinsames An/Aus (Routinen + Fernbedienung)
+  kiosk_media.py            YouTube-Steuerung (WebSocket-Broadcast)
+  audio_control.py          Lautstaerke ueber PipeWire/wpctl
+  sources/                   Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
+  tv_control/                 CEC- und Steckdosen-Backend (austauschbar)
+  dashboard/                   FastAPI-Server + Jarvis-Frontend (static/,
+                                inkl. remote.html fuers Handy)
+  routines/                     morning_routine.py / leave_routine.py
+systemd/                        Service-/Timer-Vorlagen (von install.sh gerendert)
+scripts/install.sh               Komplette Einrichtung auf dem Pi
+scripts/fix_audio_sink.sh         Setzt HDMI als PipeWire-Standardausgabe
+                                   (per labwc-Autostart bei jedem Login)
 ```
 
 Mehr Details/Hintergrund zu den Design-Entscheidungen: siehe Plan-Historie in
