@@ -56,7 +56,11 @@ den [Piper-Releases](https://github.com/rhasspy/piper/releases) die
 ## 3. config.yaml anpassen
 
 - **location**: Stadt für die Wetterabfrage (oder direkt `lat`/`lon`).
-- **schedule**: Weck-/Verlasszeiten für Wochentage und Wochenende.
+- **schedule**: Weck-/Verlasszeiten für Wochentage und Wochenende - dient nur
+  als **Startwert** beim allerersten Lauf. Danach lebt der Zeitplan in
+  `data/schedule.json` und lässt sich jederzeit live über die
+  **Einstellungen-App** auf der Fernbedienung ändern (inkl. Wecker an/aus),
+  ohne `config.yaml` anzufassen oder den Dienst neu zu starten.
 - **tv_control**: `cec_device` bleibt meist `0`. `cec_adapter` ermitteln mit
   `for f in /sys/class/drm/*/status; do echo "$f: $(cat $f)"; done` (welcher
   HDMI-Port zeigt `connected`?) und `cec-client -l` (welcher `/dev/cecX`
@@ -75,8 +79,11 @@ den [Piper-Releases](https://github.com/rhasspy/piper/releases) die
 - **iserv**: `base_url` eurer Schule eintragen. Die Selektoren (`selectors`)
   müssen an die echte Seite angepasst werden, siehe Abschnitt "IServ-
   Feinschliff" unten.
-- **radio.stream_url**: Stream-URL vorher im Browser/VLC testen (Sender
-  ändern ihre Stream-Infrastruktur gelegentlich).
+- **radio.stream_url**: nur noch der Fallback, falls `data/radio_stations.json`
+  fehlt - die eigentliche Senderliste (Standard: Sunshine Live + 1LIVE) lässt
+  sich über die Radio- bzw. Einstellungen-App auf der Fernbedienung verwalten.
+  Stream-URLs vorher im Browser/VLC testen (Sender ändern ihre
+  Streaming-Infrastruktur gelegentlich).
 
 ## 4. .env ausfüllen
 
@@ -137,36 +144,55 @@ Nützliche Befehle:
 
 ```bash
 sudo systemctl restart dashboard.service
-sudo systemctl list-timers | grep routine
-journalctl -u morning-routine.service -e
-journalctl -u leave-routine.service -e
+journalctl -u dashboard.service -e
 ```
 
-Zeiten geändert? `config.yaml` anpassen und `sudo ./scripts/install.sh`
-erneut ausführen (regeneriert die Timer-Units mit den neuen Zeiten).
+Der Zeitplan (Weckzeiten, Wecker an/aus) wird von `dashboard.service` selbst
+im Hintergrund überwacht (kein separater Timer mehr, siehe
+[Architektur](#architektur-kurzüberblick)) und lässt sich jederzeit über die
+Einstellungen-App auf `/remote.html` ändern - Änderungen wirken sofort, ganz
+ohne Neustart.
 
 **Schnelltest ohne den Zeitplan anzufassen:** `./scripts/quick_test.sh [Sekunden]`
 löst die komplette Routine sofort aus (TV an, Briefing, Radio), wartet die
 angegebene Zeit (Standard 120s) und fährt dann wieder runter (Radio aus, TV
 aus) - ohne `config.yaml` oder die systemd-Timer zu verändern.
 
-## Fernbedienung (iPhone/iPad) + YouTube
+## Fernbedienung (iPhone/iPad)
 
-Der Dashboard-Server hostet unter `/remote.html` eine mobile Fernbedienung,
-solange `dashboard.host: "0.0.0.0"` in `config.yaml` gesetzt ist (Standard).
-Im selben WLAN wie der Pi im Browser öffnen:
+Der Dashboard-Server hostet unter `/remote.html` eine mobile Fernbedienung im
+Tablet-Look, solange `dashboard.host: "0.0.0.0"` in `config.yaml` gesetzt ist
+(Standard). Im selben WLAN wie der Pi im Browser öffnen (am besten "Zum
+Home-Bildschirm" hinzufügen für App-artigen Vollbild-Zugriff):
 
 ```
 http://<pi-ip>:8080/remote.html
 ```
 
-Damit steuerbar: Fernseher an/aus, Lautstärke +/-/stumm, YouTube-Link einfügen
-und abspielen, Pause/Weiter/Stopp. Das Video läuft direkt im Kiosk-Fenster
-(YouTube IFrame API) - beim Abspielen wird das Radio automatisch gestoppt.
+Aufbau wie ein Tablet-Homescreen:
+
+- **Homescreen**: Fernseher an/aus, darunter App-Icons für YouTube, Radio und
+  Einstellungen.
+- **YouTube-App**: Link einfügen und abspielen (Stopp-Knopf als "×" im
+  Eingabefeld), Now-Playing-Karte mit Thumbnail, Titel und scrubbarem
+  Fortschrittsbalken (an eine beliebige Stelle springen durch Ziehen), 10s
+  zurück/vor sowie ein Pause/Weiter-Knopf, der seine Beschriftung automatisch
+  umschaltet.
+- **Radio-App**: zwischen den konfigurierten Sendern wechseln (Standard:
+  Sunshine Live, 1LIVE) sowie Stopp.
+- **Einstellungen-App**: Wecker an/aus + Weck-/Verlasszeiten für Wochentag und
+  Wochenende (wirkt sofort, siehe oben), Radiosender hinzufügen/entfernen.
+- **Control-Dock**: am unteren Rand fest sichtbar, egal welche App gerade
+  offen ist - Home, Lautstärke -/+, Stumm und ein Pause/Weiter-Knopf, der
+  automatisch YouTube oder Radio steuert (je nachdem, was gerade läuft).
+
+YouTube läuft direkt im Kiosk-Fenster (YouTube IFrame API, Untertitel und das
+eigene Pause-Overlay von YouTube sind unterdrückt); beim Abspielen wird das
+Radio automatisch gestoppt und umgekehrt.
 
 **Absicherung:** Ohne `REMOTE_CONTROL_SECRET` in `.env` ist die Fernbedienung
 ohne Passwort nutzbar (ok fürs eigene, vertrauenswürdige WLAN). Zum Absichern
-in `.env` einen Wert eintragen - die Seite fragt dann beim ersten Tastendruck
+in `.env` einen Wert eintragen - die Seite fragt dann beim ersten Laden
 einmalig danach und merkt sich das Passwort im Browser.
 
 ## Architektur (Kurzüberblick)
@@ -176,19 +202,28 @@ app/
   config.py            Config-/Secrets-Loader
   briefing.py           Sammelt alle Quellen parallel, baut Text + JSON
   tts.py                 Piper-Wrapper
-  radio.py                mpv-Steuerung (Sunshine Live)
-  tv_power.py              Gemeinsames An/Aus (Routinen + Fernbedienung)
-  kiosk_media.py            YouTube-Steuerung (WebSocket-Broadcast)
-  audio_control.py          Lautstaerke ueber PipeWire/wpctl
-  sources/                   Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
-  tv_control/                 CEC- und Steckdosen-Backend (austauschbar)
-  dashboard/                   FastAPI-Server + Jarvis-Frontend (static/,
-                                inkl. remote.html fuers Handy)
-  routines/                     morning_routine.py / leave_routine.py
-systemd/                        Service-/Timer-Vorlagen (von install.sh gerendert)
-scripts/install.sh               Komplette Einrichtung auf dem Pi
-scripts/fix_audio_sink.sh         Setzt HDMI als PipeWire-Standardausgabe
-                                   (per labwc-Autostart bei jedem Login)
+  radio.py                mpv-Steuerung, spielt den aktuell gewaehlten Sender
+  radio_stations.py        Sender-Liste + aktueller Sender (data/radio_stations.json)
+  schedule_store.py         Laufzeit-Zeitplan, per Einstellungen-App editierbar
+                             (data/schedule.json)
+  scheduler.py               In-Prozess-Scheduler in dashboard.service - loest
+                              morning_routine/leave_routine zur konfigurierten
+                              Zeit aus (ersetzt die frueheren systemd-Timer)
+  tv_power.py                 Gemeinsames An/Aus (Routinen + Fernbedienung)
+  kiosk_media.py                YouTube-Steuerung (WebSocket-Broadcast)
+  audio_control.py               Lautstaerke ueber PipeWire/wpctl
+  sources/                        Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
+  tv_control/                      CEC- und Steckdosen-Backend (austauschbar)
+  dashboard/                        FastAPI-Server + Jarvis-Frontend (static/:
+                                     index.html/app.js fuers Kiosk-Fenster,
+                                     remote.html/css/js fuers Handy)
+  routines/                          morning_routine.py / leave_routine.py
+systemd/                              dashboard.service-Vorlage (von install.sh
+                                       gerendert - der einzige systemd-Dienst,
+                                       der Zeitplan laeuft in-Prozess mit)
+scripts/install.sh                     Komplette Einrichtung auf dem Pi
+scripts/fix_audio_sink.sh               Setzt HDMI als PipeWire-Standardausgabe
+                                         (per labwc-Autostart bei jedem Login)
 ```
 
 Mehr Details/Hintergrund zu den Design-Entscheidungen: siehe Plan-Historie in

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Loest die komplette Routine sofort aus, unabhaengig vom Zeitplan in
-# config.yaml - fuer schnelle Tests ohne die Timer anzufassen.
+# Loest die komplette Routine sofort aus, unabhaengig vom Zeitplan
+# (data/schedule.json, siehe Einstellungen-App) - fuer schnelle Tests ohne den
+# Zeitplan anzufassen.
 #
 # Ablauf: TV an + Briefing + Radio -> N Sekunden warten -> Radio aus + TV aus.
 #

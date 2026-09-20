@@ -14,6 +14,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from app import radio_stations
 from app.config import Config, ROOT_DIR
 
 logger = logging.getLogger(__name__)
@@ -42,16 +43,21 @@ def is_playing() -> bool:
 
 
 def start(cfg: Config) -> None:
-    if not cfg.radio.enabled or not cfg.radio.stream_url:
+    if not cfg.radio.enabled:
         return
     if is_playing():
+        return
+
+    station = radio_stations.current_station(cfg)
+    stream_url = station["url"] if station else cfg.radio.stream_url
+    if not stream_url:
         return
 
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     args = ["mpv", "--no-video", f"--volume={cfg.radio.volume}", "--really-quiet"]
     if cfg.audio.alsa_device:
         args.append(f"--audio-device=alsa/{cfg.audio.alsa_device}")
-    args.append(cfg.radio.stream_url)
+    args.append(stream_url)
 
     proc = subprocess.Popen(
         args,

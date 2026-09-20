@@ -17,38 +17,144 @@
   </header>
 
   <main class="remote-main">
-    <section class="remote-card">
-      <h2>Fernseher</h2>
-      <div class="button-row">
-        <button id="btn-power-on" class="btn btn-accent">Ein</button>
-        <button id="btn-power-off" class="btn">Aus</button>
+
+    <!-- ---------- Homescreen ---------- -->
+    <section id="view-home" class="app-view">
+      <div class="remote-card home-power-card">
+        <h2>Fernseher</h2>
+        <div class="button-row">
+          <button id="btn-power-on" class="btn btn-accent">Ein</button>
+          <button id="btn-power-off" class="btn">Aus</button>
+        </div>
+      </div>
+
+      <div class="app-grid">
+        <button class="app-icon" data-view="youtube">
+          <span class="app-icon-glyph">&#9654;</span>
+          <span class="app-icon-label">YouTube</span>
+        </button>
+        <button class="app-icon" data-view="radio">
+          <span class="app-icon-glyph">&#9835;</span>
+          <span class="app-icon-label">Radio</span>
+        </button>
+        <button class="app-icon" data-view="settings">
+          <span class="app-icon-glyph">&#9881;</span>
+          <span class="app-icon-label">Einstellungen</span>
+        </button>
       </div>
     </section>
 
-    <section class="remote-card">
-      <h2>Lautstärke</h2>
-      <div class="button-row">
-        <button id="btn-vol-down" class="btn btn-round">&minus;</button>
-        <button id="btn-mute" class="btn">Stumm</button>
-        <button id="btn-vol-up" class="btn btn-round">&plus;</button>
+    <!-- ---------- YouTube-App ---------- -->
+    <section id="view-youtube" class="app-view hidden">
+      <div class="app-view-header">
+        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
+        <h2>YouTube</h2>
+      </div>
+
+      <div class="remote-card now-playing-card">
+        <div class="np-thumb" id="yt-thumb"></div>
+        <div class="np-title" id="yt-title">Kein Video geladen</div>
+        <div class="np-progress-wrap">
+          <input id="yt-progress" class="np-progress" type="range" min="0" max="100" value="0" step="0.5" />
+          <div class="np-time-row">
+            <span id="yt-time-current">0:00</span>
+            <span id="yt-time-duration">0:00</span>
+          </div>
+        </div>
+        <div class="button-row">
+          <button id="btn-seek-back" class="btn">&laquo; 10s</button>
+          <button id="btn-play-pause" class="btn btn-accent">Pause</button>
+          <button id="btn-seek-fwd" class="btn">10s &raquo;</button>
+        </div>
+      </div>
+
+      <div class="remote-card">
+        <h2>Neuer Link</h2>
+        <div class="input-wrap">
+          <input id="yt-url" class="text-input" type="text" placeholder="YouTube-Link einfügen…" />
+          <button id="btn-yt-stop" class="input-clear-btn" aria-label="Stopp">&times;</button>
+        </div>
+        <div class="button-row">
+          <button id="btn-yt-play" class="btn btn-accent">Abspielen</button>
+        </div>
       </div>
     </section>
 
-    <section class="remote-card">
-      <h2>YouTube</h2>
-      <input id="yt-url" class="text-input" type="text" placeholder="YouTube-Link einfügen…" />
-      <div class="button-row">
-        <button id="btn-yt-play" class="btn btn-accent">Abspielen</button>
+    <!-- ---------- Radio-App ---------- -->
+    <section id="view-radio" class="app-view hidden">
+      <div class="app-view-header">
+        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
+        <h2>Radio</h2>
       </div>
-      <div class="button-row">
-        <button id="btn-yt-pause" class="btn">Pause</button>
-        <button id="btn-yt-resume" class="btn">Weiter</button>
-        <button id="btn-yt-stop" class="btn">Stopp</button>
+
+      <div class="remote-card">
+        <ul id="station-list" class="station-list"></ul>
+        <div class="button-row">
+          <button id="btn-radio-stop" class="btn">Stopp</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Einstellungen-App ---------- -->
+    <section id="view-settings" class="app-view hidden">
+      <div class="app-view-header">
+        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
+        <h2>Einstellungen</h2>
+      </div>
+
+      <div class="remote-card">
+        <h2>Wecker</h2>
+        <div class="settings-row settings-row-toggle">
+          <span>Aktiv</span>
+          <label class="switch">
+            <input type="checkbox" id="sched-enabled" />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        <h3>Unter der Woche</h3>
+        <div class="settings-row">
+          <label for="sched-weekday-wake">Wecken</label>
+          <input type="time" id="sched-weekday-wake" class="time-input" />
+        </div>
+        <div class="settings-row">
+          <label for="sched-weekday-leave">Verlassen</label>
+          <input type="time" id="sched-weekday-leave" class="time-input" />
+        </div>
+        <h3>Wochenende</h3>
+        <div class="settings-row">
+          <label for="sched-weekend-wake">Wecken</label>
+          <input type="time" id="sched-weekend-wake" class="time-input" />
+        </div>
+        <div class="settings-row">
+          <label for="sched-weekend-leave">Verlassen</label>
+          <input type="time" id="sched-weekend-leave" class="time-input" />
+        </div>
+        <div class="button-row">
+          <button id="btn-schedule-save" class="btn btn-accent">Speichern</button>
+        </div>
+      </div>
+
+      <div class="remote-card">
+        <h2>Radiosender</h2>
+        <ul id="settings-station-list" class="station-list"></ul>
+        <div class="add-station-row">
+          <input id="new-station-name" class="text-input" type="text" placeholder="Name" />
+          <input id="new-station-url" class="text-input" type="text" placeholder="Stream-URL" />
+          <button id="btn-add-station" class="btn btn-accent">+</button>
+        </div>
       </div>
     </section>
 
     <div id="status-line" class="status-line"></div>
   </main>
+
+  <nav id="control-dock">
+    <button id="dock-home" class="dock-btn" aria-label="Home">&#8962;</button>
+    <button id="dock-vol-down" class="dock-btn" aria-label="Leiser">&minus;</button>
+    <button id="dock-play-pause" class="dock-btn dock-btn-accent" aria-label="Pause/Weiter">&#10073;&#10073;</button>
+    <button id="dock-vol-up" class="dock-btn" aria-label="Lauter">&plus;</button>
+    <button id="dock-mute" class="dock-btn" aria-label="Stumm">&#128264;</button>
+  </nav>
 
 <script src="remote.js"></script>
 </body>

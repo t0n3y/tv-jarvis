@@ -326,3 +326,49 @@ footer#errors {
   height: 100%;
   border: none;
 }
+
+/* Deckt YouTubes eigenes Pause-/Endscreen-Overlay (Videovorschlaege, Logo)
+   vollstaendig ab - das laesst sich im eingebetteten iframe nicht per CSS
+   entfernen (anderer Origin), daher stattdessen komplett verdecken. */
+#player-pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background-size: cover;
+  background-position: center;
+}
+
+#player-pause-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 8, 16, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+#player-pause-overlay .pause-icon,
+#player-pause-overlay .pause-title {
+  position: relative;
+}
+
+#player-pause-overlay .pause-icon {
+  font-size: 64px;
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--accent-glow);
+  animation: core-pulse 1.6s ease-in-out infinite;
+}
+
+#player-pause-overlay .pause-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+  text-align: center;
+  max-width: 80%;
+  text-shadow: 0 0 12px var(--accent-glow);
+}

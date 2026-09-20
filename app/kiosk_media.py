@@ -70,3 +70,15 @@ def resume_youtube(cfg: Config) -> None:
 
 def stop_youtube(cfg: Config) -> None:
     _post_local(cfg, "/api/youtube-command", {"type": "youtube_stop"})
+
+
+def seek_youtube(cfg: Config, seconds: int) -> None:
+    _post_local(cfg, "/api/youtube-command", {"type": "youtube_seek", "seconds": seconds})
+
+
+def seek_to_youtube(cfg: Config, seconds: float) -> None:
+    _post_local(cfg, "/api/youtube-command", {"type": "youtube_seek_to", "seconds": seconds})
+
+
+def thumbnail_url(video_id: str) -> str:
+    return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"

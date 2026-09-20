@@ -22,8 +22,9 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Web
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import audio_control, kiosk_media, radio, tv_power
+from app import audio_control, kiosk_media, radio, radio_stations, schedule_store, tv_power
 from app.config import ROOT_DIR, get_config
+from app.scheduler import Scheduler
 from app.sources import todos_icloud_shortcut
 
 logging.basicConfig(level=logging.INFO)
@@ -58,6 +59,37 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+# Letzter bekannter YouTube-Stand, gemeldet vom Kiosk-Player per WebSocket
+# (siehe dashboard/static/app.js). Lebt nur im Prozessspeicher - die
+# Fernbedienung pollt ihn ueber GET /api/remote/now-playing fuer Titel/
+# Fortschrittsbalken, da die YouTube IFrame API nur im Kiosk-Browser laeuft.
+youtube_now_playing: dict = {
+    "video_id": None,
+    "title": None,
+    "thumbnail_url": None,
+    "current_time": 0,
+    "duration": 0,
+    "playing": False,
+}
+
+
+def _reset_youtube_state() -> None:
+    youtube_now_playing.update(
+        {
+            "video_id": None,
+            "title": None,
+            "thumbnail_url": None,
+            "current_time": 0,
+            "duration": 0,
+            "playing": False,
+        }
+    )
+
+
+@app.on_event("startup")
+async def _start_scheduler() -> None:
+    Scheduler(get_config()).start()
 
 
 def require_remote_secret(
@@ -108,9 +140,37 @@ async def trigger_shutdown_animation() -> dict:
     return {"ok": True}
 
 
+def _apply_youtube_command_state(body: dict) -> None:
+    # Zentraler Durchlaufpunkt fuer JEDEN YouTube-Befehl, egal ob von der
+    # Fernbedienung (/api/remote/youtube) oder direkt aus tv_power.py beim
+    # Ausschalten (kiosk_media.stop_youtube) ausgeloest - so bleibt der
+    # now-playing-Stand fuer die Fernbedienung immer aktuell, unabhaengig vom
+    # Ausloeser.
+    msg_type = body.get("type")
+    if msg_type == "youtube_play":
+        video_id = body.get("video_id")
+        youtube_now_playing.update(
+            {
+                "video_id": video_id,
+                "title": None,
+                "thumbnail_url": kiosk_media.thumbnail_url(video_id) if video_id else None,
+                "current_time": 0,
+                "duration": 0,
+                "playing": True,
+            }
+        )
+    elif msg_type == "youtube_pause":
+        youtube_now_playing["playing"] = False
+    elif msg_type == "youtube_resume":
+        youtube_now_playing["playing"] = True
+    elif msg_type == "youtube_stop":
+        _reset_youtube_state()
+
+
 @app.post("/api/youtube-command", dependencies=[Depends(require_remote_secret)])
 async def youtube_command(request: Request) -> dict:
     body = await request.json()
+    _apply_youtube_command_state(body)
     await manager.broadcast(body)
     return {"ok": True}
 
@@ -159,9 +219,83 @@ async def remote_youtube(request: Request) -> dict:
         await asyncio.to_thread(kiosk_media.resume_youtube, cfg)
     elif action == "stop":
         await asyncio.to_thread(kiosk_media.stop_youtube, cfg)
+    elif action == "seek":
+        await asyncio.to_thread(kiosk_media.seek_youtube, cfg, int(body.get("seconds", 0)))
+    elif action == "seek_to":
+        await asyncio.to_thread(kiosk_media.seek_to_youtube, cfg, float(body.get("seconds", 0)))
     else:
         raise HTTPException(status_code=400, detail="unbekannte action")
     return {"ok": True}
+
+
+@app.get("/api/remote/radio/stations", dependencies=[Depends(require_remote_secret)])
+async def get_radio_stations() -> dict:
+    return radio_stations.list_stations(get_config())
+
+
+@app.post("/api/remote/radio/stations", dependencies=[Depends(require_remote_secret)])
+async def add_radio_station(request: Request) -> dict:
+    body = await request.json()
+    name = (body.get("name") or "").strip()
+    url = (body.get("url") or "").strip()
+    if not name or not url:
+        raise HTTPException(status_code=400, detail="name und url erforderlich")
+    if not url.startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="url muss mit http:// oder https:// beginnen")
+    return await asyncio.to_thread(radio_stations.add_station, get_config(), name, url)
+
+
+@app.delete("/api/remote/radio/stations/{station_id}", dependencies=[Depends(require_remote_secret)])
+async def delete_radio_station(station_id: str) -> dict:
+    return await asyncio.to_thread(radio_stations.remove_station, get_config(), station_id)
+
+
+@app.post("/api/remote/radio", dependencies=[Depends(require_remote_secret)])
+async def remote_radio(request: Request) -> dict:
+    body = await request.json()
+    action = body.get("action")
+    cfg = get_config()
+
+    if action == "play":
+        station_id = body.get("station_id")
+        if station_id:
+            try:
+                await asyncio.to_thread(radio_stations.set_current, cfg, station_id)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # Radio und YouTube-Ton teilen sich die TV-Lautsprecher - beim
+        # (Um-)Schalten des Senders laeuft evtl. noch ein Video.
+        await asyncio.to_thread(kiosk_media.stop_youtube, cfg)
+        await asyncio.to_thread(radio.stop)
+        await asyncio.to_thread(radio.start, cfg)
+    elif action == "stop":
+        await asyncio.to_thread(radio.stop)
+    else:
+        raise HTTPException(status_code=400, detail="unbekannte action")
+    return {"ok": True, "playing": radio.is_playing()}
+
+
+@app.get("/api/remote/now-playing", dependencies=[Depends(require_remote_secret)])
+async def get_now_playing() -> dict:
+    cfg = get_config()
+    return {
+        "youtube": youtube_now_playing,
+        "radio": {"playing": radio.is_playing(), "station": radio_stations.current_station(cfg)},
+    }
+
+
+@app.get("/api/remote/schedule", dependencies=[Depends(require_remote_secret)])
+async def get_schedule() -> dict:
+    return schedule_store.load_schedule(get_config())
+
+
+@app.post("/api/remote/schedule", dependencies=[Depends(require_remote_secret)])
+async def set_schedule(request: Request) -> dict:
+    body = await request.json()
+    try:
+        return await asyncio.to_thread(schedule_store.save_schedule, body)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.websocket("/ws")
@@ -169,7 +303,18 @@ async def websocket_endpoint(ws: WebSocket) -> None:
     await manager.connect(ws)
     try:
         while True:
-            await ws.receive_text()
+            raw = await ws.receive_text()
+            try:
+                msg = json.loads(raw)
+            except (json.JSONDecodeError, TypeError):
+                continue
+            if msg.get("type") == "youtube_progress":
+                youtube_now_playing["current_time"] = msg.get("current_time", 0)
+                youtube_now_playing["duration"] = msg.get("duration", 0)
+                youtube_now_playing["playing"] = bool(msg.get("playing", False))
+                title = msg.get("title")
+                if title:
+                    youtube_now_playing["title"] = title
     except WebSocketDisconnect:
         manager.disconnect(ws)
 

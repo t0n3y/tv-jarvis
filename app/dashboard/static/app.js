@@ -104,16 +104,61 @@ async function refreshState() {
 let ytPlayer = null;
 let ytReady = false;
 const ytPendingQueue = [];
+let progressIntervalId = null;
+
+function suppressCaptions() {
+  // cc_load_policy/hl allein reichen bei manchen Videos nicht - YouTube
+  // erzwingt Untertitel trotzdem. Deshalb an mehreren Stellen im Lebenszyklus
+  // (ready, sobald die Modul-API verfuegbar ist, bei jedem Statuswechsel)
+  // zusaetzlich aktiv das Untertitel-Modul entladen/leeren.
+  if (!ytPlayer) return;
+  try { ytPlayer.unloadModule("captions"); } catch (err) {}
+  try { ytPlayer.setOption("captions", "track", {}); } catch (err) {}
+}
+
+function updatePauseOverlay(show) {
+  const overlay = $("player-pause-overlay");
+  if (!show) {
+    overlay.classList.add("hidden");
+    return;
+  }
+  const data = (ytPlayer && ytPlayer.getVideoData && ytPlayer.getVideoData()) || {};
+  $("pause-title").textContent = data.title || "";
+  overlay.style.backgroundImage = data.video_id
+    ? `url(https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg)`
+    : "none";
+  overlay.classList.remove("hidden");
+}
 
 function onYouTubeIframeAPIReady() {
   ytPlayer = new YT.Player("youtube-player", {
     height: "100%",
     width: "100%",
-    playerVars: { autoplay: 1, controls: 0, rel: 0 },
+    // cc_load_policy: 0 = Untertitel nicht automatisch einblenden. iv_load_policy/
+    // disablekb/fs/modestbranding reduzieren zusaetzliche YouTube-eigene UI.
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      rel: 0,
+      cc_load_policy: 0,
+      iv_load_policy: 3,
+      disablekb: 1,
+      fs: 0,
+      modestbranding: 1,
+    },
     events: {
       onReady: () => {
         ytReady = true;
+        suppressCaptions();
         ytPendingQueue.splice(0).forEach((fn) => fn());
+      },
+      // onApiChange feuert, sobald z.B. das Untertitel-Modul tatsaechlich
+      // verfuegbar ist - genau der Zeitpunkt, an dem unloadModule zuverlaessig wirkt.
+      onApiChange: () => suppressCaptions(),
+      onStateChange: (event) => {
+        suppressCaptions();
+        const isPaused = event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED;
+        updatePauseOverlay(isPaused);
       },
     },
   });
@@ -140,21 +185,61 @@ function hidePlayerScreen() {
 function handleYoutubeMessage(msg) {
   if (msg.type === "youtube_play") {
     showPlayerScreen();
-    withYtPlayer(() => ytPlayer.loadVideoById(msg.video_id));
+    updatePauseOverlay(false);
+    withYtPlayer(() => {
+      ytPlayer.loadVideoById(msg.video_id);
+      suppressCaptions();
+    });
   } else if (msg.type === "youtube_pause") {
     withYtPlayer(() => ytPlayer.pauseVideo());
   } else if (msg.type === "youtube_resume") {
     withYtPlayer(() => ytPlayer.playVideo());
   } else if (msg.type === "youtube_stop") {
     withYtPlayer(() => ytPlayer.stopVideo());
+    updatePauseOverlay(false);
     hidePlayerScreen();
+  } else if (msg.type === "youtube_seek") {
+    withYtPlayer(() => {
+      const target = ytPlayer.getCurrentTime() + msg.seconds;
+      ytPlayer.seekTo(Math.max(0, target), true);
+    });
+  } else if (msg.type === "youtube_seek_to") {
+    withYtPlayer(() => ytPlayer.seekTo(Math.max(0, msg.seconds), true));
   }
+}
+
+let wsConn = null;
+
+function sendWs(payload) {
+  if (wsConn && wsConn.readyState === WebSocket.OPEN) {
+    wsConn.send(JSON.stringify(payload));
+  }
+}
+
+// Meldet Fortschritt/Titel periodisch an den Server, damit die Fernbedienung
+// (die die YouTube IFrame API selbst nicht sieht) Fortschrittsbalken/Titel
+// anzeigen kann - siehe GET /api/remote/now-playing.
+function startProgressReporting() {
+  if (progressIntervalId) return;
+  progressIntervalId = setInterval(() => {
+    if (!ytReady || !ytPlayer || typeof ytPlayer.getPlayerState !== "function") return;
+    const state = ytPlayer.getPlayerState();
+    if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.PAUSED) return;
+    const data = ytPlayer.getVideoData() || {};
+    sendWs({
+      type: "youtube_progress",
+      current_time: ytPlayer.getCurrentTime(),
+      duration: ytPlayer.getDuration(),
+      playing: state === YT.PlayerState.PLAYING,
+      title: data.title || "",
+    });
+  }, 1000);
 }
 
 function connectWebSocket() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/ws`);
-  ws.onmessage = (event) => {
+  wsConn = new WebSocket(`${proto}://${location.host}/ws`);
+  wsConn.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
       if (msg.type === "shutdown") {
@@ -166,7 +251,7 @@ function connectWebSocket() {
       console.error("WS-Nachricht ungueltig", err);
     }
   };
-  ws.onclose = () => {
+  wsConn.onclose = () => {
     setTimeout(connectWebSocket, 3000);
   };
 }
@@ -192,3 +277,4 @@ setInterval(updateClock, 1000);
 setInterval(refreshState, STATE_POLL_MS);
 connectWebSocket();
 startBootSequence();
+startProgressReporting();

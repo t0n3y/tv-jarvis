@@ -79,39 +79,30 @@ else
   echo "Autostart-Eintrag bereits vorhanden."
 fi
 
-echo "\n-- systemd-Units generieren --"
-read -r WAKE_WEEKDAY WAKE_WEEKEND LEAVE_WEEKDAY LEAVE_WEEKEND < <(
-  "$INSTALL_DIR/.venv/bin/python" - "$INSTALL_DIR/config.yaml" <<'PYEOF'
-import sys, yaml
-with open(sys.argv[1], encoding="utf-8") as f:
-    cfg = yaml.safe_load(f)
-s = cfg["schedule"]
-print(s["weekday"]["wake_time"], s["weekend"]["wake_time"], s["weekday"]["leave_time"], s["weekend"]["leave_time"])
-PYEOF
-)
+echo "\n-- Alte Zeitplan-Timer entfernen (fruehere Version, jetzt durch den --"
+echo "-- in-Prozess-Scheduler in dashboard.service ersetzt) --"
+systemctl disable --now morning-routine.timer leave-routine.timer >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/morning-routine.timer /etc/systemd/system/morning-routine.service
+rm -f /etc/systemd/system/leave-routine.timer /etc/systemd/system/leave-routine.service
 
+echo "\n-- systemd-Unit generieren --"
 TMP_DIR="$(mktemp -d)"
-for tpl in "$INSTALL_DIR"/systemd/*.template; do
-  out="$TMP_DIR/$(basename "${tpl%.template}")"
-  sed \
-    -e "s#__INSTALL_DIR__#$INSTALL_DIR#g" \
-    -e "s#__RUN_USER__#$RUN_USER#g" \
-    -e "s#__WAKE_WEEKDAY__#$WAKE_WEEKDAY#g" \
-    -e "s#__WAKE_WEEKEND__#$WAKE_WEEKEND#g" \
-    -e "s#__LEAVE_WEEKDAY__#$LEAVE_WEEKDAY#g" \
-    -e "s#__LEAVE_WEEKEND__#$LEAVE_WEEKEND#g" \
-    "$tpl" > "$out"
-  cp "$out" "/etc/systemd/system/$(basename "$out")"
-done
+sed \
+  -e "s#__INSTALL_DIR__#$INSTALL_DIR#g" \
+  -e "s#__RUN_USER__#$RUN_USER#g" \
+  "$INSTALL_DIR/systemd/dashboard.service.template" > "$TMP_DIR/dashboard.service"
+cp "$TMP_DIR/dashboard.service" "/etc/systemd/system/dashboard.service"
 rm -rf "$TMP_DIR"
 
 systemctl daemon-reload
 systemctl enable --now dashboard.service
-systemctl enable morning-routine.timer leave-routine.timer
-systemctl start morning-routine.timer leave-routine.timer
+systemctl restart dashboard.service
 
 echo "\n== Fertig =="
 echo "Dashboard laeuft unter http://localhost:$("$INSTALL_DIR/.venv/bin/python" -c "from app.config import load_config; print(load_config().dashboard.port)" 2>/dev/null || echo 8080)/"
+echo "Weckzeiten werden jetzt von dashboard.service selbst ueberwacht (kein"
+echo "separater Timer mehr) und lassen sich in der Einstellungen-App unter"
+echo "/remote.html live aendern - config.yaml liefert nur den Startwert."
 echo "Naechste Schritte: config.yaml und .env pruefen/anpassen, dann testen mit:"
 echo "  sudo systemctl status dashboard.service"
 echo "  sudo -u $RUN_USER $INSTALL_DIR/.venv/bin/python -m app.routines.morning_routine"

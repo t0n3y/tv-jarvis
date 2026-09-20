@@ -15,7 +15,7 @@ import subprocess
 
 logger = logging.getLogger(__name__)
 
-VOLUME_STEP_PERCENT = 5
+VOLUME_STEP_PERCENT = 10
 
 
 def _wpctl(*args: str) -> None:
