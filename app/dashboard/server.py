@@ -92,6 +92,18 @@ async def _start_scheduler() -> None:
     Scheduler(get_config()).start()
 
 
+@app.middleware("http")
+async def _no_cache(request: Request, call_next):
+    # Ohne das cachen mobile Browser (v.a. Safari/iOS) remote.html/css/js nach
+    # einem Deploy teils ueber mehrere Seitenaufrufe hinweg, ohne den Server
+    # ueberhaupt erneut zu fragen - "no-cache" erzwingt immer eine
+    # Revalidierung (billiger 304 dank ETag/Last-Modified von StaticFiles),
+    # verhindert aber, dass je eine veraltete Version angezeigt wird.
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 def require_remote_secret(
     x_remote_secret: str | None = Header(default=None),
     secret: str | None = Query(default=None),
