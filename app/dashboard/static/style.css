@@ -22,6 +22,13 @@ html, body {
   overflow: hidden;
 }
 
+/* Kiosk-Fernseher hat keine Maus-Interaktion - der Zeiger soll nie zu sehen
+   sein. Gilt nicht fuer die Fernbedienung (remote.html, body.remote-body),
+   die auch mal am Desktop mit Maus getestet wird. */
+body:not(.remote-body) {
+  cursor: none;
+}
+
 .hidden { display: none !important; }
 
 /* ---------- Boot-Screen ---------- */
@@ -149,25 +156,38 @@ html, body {
 }
 
 header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
+  min-height: 132px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 20px;
   margin-bottom: 28px;
 }
 
+/* Absolut zentriert statt per flex/grid-Spalte, damit die Uhr unabhaengig
+   von der Breite des rechten Headerbereichs (Brand/On-Air) wirklich mittig
+   auf dem ganzen Header sitzt. */
+.header-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
 .clock {
   font-family: "Orbitron", sans-serif;
-  font-size: 64px;
+  font-size: 96px;
   font-weight: 700;
   color: var(--accent);
-  text-shadow: 0 0 18px var(--accent-glow);
+  text-shadow: 0 0 26px var(--accent-glow);
   line-height: 1;
 }
 
 .date {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 20px;
   letter-spacing: 2px;
   color: var(--text-dim);

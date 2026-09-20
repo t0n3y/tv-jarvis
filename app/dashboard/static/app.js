@@ -225,6 +225,10 @@ function startProgressReporting() {
     if (!ytReady || !ytPlayer || typeof ytPlayer.getPlayerState !== "function") return;
     const state = ytPlayer.getPlayerState();
     if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.PAUSED) return;
+    // YouTube laedt das Untertitel-Modul teils asynchron nach und schaltet es
+    // dann trotz vorherigem unloadModule() wieder ein - deshalb hier bei
+    // jedem Tick erneut unterdruecken, nicht nur bei Ready/Statuswechsel.
+    suppressCaptions();
     const data = ytPlayer.getVideoData() || {};
     sendWs({
       type: "youtube_progress",
