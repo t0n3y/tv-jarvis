@@ -465,11 +465,12 @@ button {
   box-shadow: 0 6px 16px -10px rgba(var(--app-rgb), 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Darf etwas in den Spaltenabstand ragen - "Einstellungen" ist breiter als
+   ein Icon auf Handybreite und wuerde sonst abgeschnitten. */
 .app-name {
-  max-width: 100%;
+  font-size: 13px;
+  letter-spacing: 0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ---------- Buttons ---------- */
