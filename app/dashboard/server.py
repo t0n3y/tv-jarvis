@@ -143,7 +143,7 @@ jellyfin_now_playing: dict = {
 }
 # Fortlaufende id, damit die Fernbedienung jeden Fehler genau einmal anzeigt
 jellyfin_error: dict = {"id": 0, "message": None}
-_jellyfin_last_sync = {"at": 0.0}
+_jellyfin_last_sync = {"at": 0.0, "position": -1.0}
 _background_tasks: set[asyncio.Task] = set()
 _http_client: httpx.AsyncClient | None = None
 
@@ -203,7 +203,7 @@ def _schedule_jellyfin_save(position: float | None = None) -> None:
     if position is None:
         position = jellyfin_now_playing["current_time"]
     duration = jellyfin_now_playing["duration"]
-    _jellyfin_last_sync["at"] = time.monotonic()
+    _jellyfin_last_sync.update(at=time.monotonic(), position=position)
     _spawn(asyncio.to_thread(_save_jellyfin_progress, item_id, position, duration))
 
 
@@ -334,7 +334,7 @@ def _apply_command_state(body: dict) -> None:
             duration=_as_float(body.get("duration")),
             playing=True,
         )
-        _jellyfin_last_sync["at"] = time.monotonic()
+        _jellyfin_last_sync.update(at=time.monotonic(), position=jellyfin_now_playing["current_time"])
     elif msg_type == "jellyfin_pause":
         jellyfin_now_playing["playing"] = False
         _schedule_jellyfin_save()
@@ -652,7 +652,11 @@ def _handle_kiosk_report(msg: dict) -> None:
         if duration > 0:
             jellyfin_now_playing["duration"] = duration
         jellyfin_now_playing["playing"] = bool(msg.get("playing"))
-        if time.monotonic() - _jellyfin_last_sync["at"] >= JELLYFIN_SYNC_INTERVAL_SECONDS:
+        due = time.monotonic() - _jellyfin_last_sync["at"] >= JELLYFIN_SYNC_INTERVAL_SECONDS
+        # Waehrend einer Pause meldet der Kiosk weiter jede Sekunde dieselbe
+        # Position - die muss nicht alle 15 s erneut gespeichert werden.
+        moved = abs(jellyfin_now_playing["current_time"] - _jellyfin_last_sync["position"]) >= 1
+        if due and moved:
             _schedule_jellyfin_save()
     elif msg_type == "jellyfin_ended":
         _finish_jellyfin_session(position=jellyfin_now_playing["duration"])

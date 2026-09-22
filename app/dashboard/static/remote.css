@@ -647,7 +647,12 @@ button {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(4, 10, 20, 0.05) 30%, rgba(6, 14, 26, 0.92) 100%);
+  background: linear-gradient(180deg, rgba(4, 10, 20, 0) 25%, rgba(6, 14, 26, 0.6) 55%, rgba(6, 14, 26, 0.96) 100%);
+}
+
+.np-art-meta .kicker {
+  color: var(--text-2);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
 }
 
 .np-art-meta {
