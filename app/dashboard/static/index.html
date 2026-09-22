@@ -61,11 +61,29 @@
     <footer id="errors" class="hidden"></footer>
   </div>
 
-  <div id="player-screen" class="hidden">
+  <div id="player-screen" class="media-screen hidden">
     <div id="youtube-player"></div>
-    <div id="player-pause-overlay" class="hidden">
+    <div id="yt-pause" class="pause-overlay hidden">
       <div class="pause-icon">&#10073;&#10073;</div>
-      <div class="pause-title" id="pause-title"></div>
+      <div class="pause-title" id="yt-pause-title"></div>
+    </div>
+  </div>
+
+  <div id="jellyfin-screen" class="media-screen hidden">
+    <video id="jf-video" preload="auto" playsinline></video>
+    <div id="jf-loading" class="media-loading hidden">
+      <div class="loader-rings"><span></span><span></span><span></span></div>
+      <div class="media-loading-label">LADE</div>
+      <div class="media-loading-title" id="jf-loading-title"></div>
+    </div>
+    <div id="jf-pause" class="pause-overlay hidden">
+      <div class="pause-icon">&#10073;&#10073;</div>
+      <div class="pause-title" id="jf-pause-title"></div>
+      <div class="pause-sub" id="jf-pause-sub"></div>
+    </div>
+    <div id="jf-error" class="media-error hidden">
+      <div class="media-error-icon">!</div>
+      <div class="media-error-text" id="jf-error-text"></div>
     </div>
   </div>
 

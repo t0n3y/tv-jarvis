@@ -2,159 +2,296 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>JARVIS Fernbedienung</title>
-<link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="remote.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#02060d" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="JARVIS" />
+<title>JARVIS</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="remote.css" />
 </head>
-<body class="remote-body">
+<body>
 
-  <header class="remote-header">
-    <div class="brand">JARVIS</div>
-    <div class="remote-sub">FERNBEDIENUNG</div>
-  </header>
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.8l8.5 6.7"/><path d="M5.5 9.3V20h4.8v-5.6h3.4V20h4.8V9.3"/></symbol>
+  <symbol id="i-vol-down" viewBox="0 0 24 24"><path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="M15.5 12h5"/></symbol>
+  <symbol id="i-vol-up" viewBox="0 0 24 24"><path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="M15.5 12h5M18 9.5v5"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="m15.8 9.7 4.6 4.6M20.4 9.7l-4.6 4.6"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M3.5 9.5H7l4.5-4v13L7 14.5H3.5z"/><path d="M15 9a4.2 4.2 0 0 1 0 6"/><path d="M17.6 6.6a7.8 7.8 0 0 1 0 10.8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.2v13.6L19.2 12z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.3" y="5" width="4.1" height="14" rx="1.3" fill="currentColor" stroke="none"/><rect x="13.6" y="5" width="4.1" height="14" rx="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4.3v4.4h4.4"/></symbol>
+  <symbol id="i-forward" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4.3v4.4h-4.4"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8"/><path d="M6.6 6.4a8 8 0 1 0 10.8 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13.5a4 4 0 0 0 5.7.3l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M14 10.5a4 4 0 0 0-5.7-.3l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.2-1.2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15"/><path d="M9.5 7V4.5h5V7"/><path d="m6.5 7 1 12.5h9l1-12.5"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7.5 4.5v15M16.5 4.5v15M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 2"/><path d="M4.5 5.5 7 3.5M19.5 5.5 17 3.5"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M8.2 8.2a5.4 5.4 0 0 0 0 7.6M15.8 8.2a5.4 5.4 0 0 1 0 7.6M5.3 5.3a9.5 9.5 0 0 0 0 13.4M18.7 5.3a9.5 9.5 0 0 1 0 13.4"/></symbol>
+  <symbol id="i-youtube" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-jellyfin" viewBox="0 0 24 24"><path d="M12 3.2 2.8 19.6h18.4z"/><path d="M12 10.2 8.6 16.3h6.8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+</svg>
 
-  <main class="remote-main">
+<div class="bg" aria-hidden="true"></div>
 
-    <!-- ---------- Homescreen ---------- -->
-    <section id="view-home" class="app-view">
-      <div class="remote-card home-power-card">
-        <h2>Fernseher</h2>
-        <div class="button-row">
-          <button id="btn-power-on" class="btn btn-accent">Ein</button>
-          <button id="btn-power-off" class="btn">Aus</button>
+<header class="topbar">
+  <div class="brand">
+    <span class="reactor" aria-hidden="true"></span>
+    <span class="wordmark">JARVIS</span>
+  </div>
+  <div class="status-pill" id="tv-pill">
+    <span class="status-dot"></span><span id="tv-pill-label">TV aus</span>
+  </div>
+</header>
+
+<main class="views">
+
+  <!-- ================= Homescreen ================= -->
+  <section class="view" id="view-home">
+    <div class="hero">
+      <div class="hero-greeting" id="hero-greeting">Hallo</div>
+      <div class="hero-clock" id="hero-clock">--:--</div>
+      <div class="hero-date" id="hero-date">&nbsp;</div>
+    </div>
+
+    <div class="card mini-player hidden" id="mini-player" role="button" tabindex="0">
+      <div class="mini-art" id="mini-art"></div>
+      <div class="mini-meta">
+        <div class="kicker"><span class="live-dot"></span><span id="mini-source">Läuft</span></div>
+        <div class="mini-title" id="mini-title"></div>
+        <div class="mini-sub" id="mini-sub"></div>
+      </div>
+      <button class="round-btn round-sm" id="mini-toggle" aria-label="Pause/Weiter"><svg class="icon"><use href="#i-pause"/></svg></button>
+    </div>
+
+    <div class="card power-card">
+      <div class="power-info">
+        <div class="kicker">Fernseher</div>
+        <div class="power-state" id="power-state">Aus</div>
+      </div>
+      <div class="segmented" id="power-segmented">
+        <button class="seg-btn" id="btn-power-on"><svg class="icon"><use href="#i-power"/></svg>Ein</button>
+        <button class="seg-btn" id="btn-power-off">Aus</button>
+      </div>
+    </div>
+
+    <div class="section-label">Apps</div>
+    <div class="app-grid">
+      <button class="app-tile" data-open="jellyfin" style="--app-rgb: 167, 118, 255">
+        <span class="app-icon"><svg class="icon"><use href="#i-jellyfin"/></svg></span>
+        <span class="app-name">Jellyfin</span>
+      </button>
+      <button class="app-tile" data-open="youtube" style="--app-rgb: 255, 94, 98">
+        <span class="app-icon"><svg class="icon"><use href="#i-youtube"/></svg></span>
+        <span class="app-name">YouTube</span>
+      </button>
+      <button class="app-tile" data-open="radio" style="--app-rgb: 79, 216, 255">
+        <span class="app-icon"><svg class="icon"><use href="#i-radio"/></svg></span>
+        <span class="app-name">Radio</span>
+      </button>
+      <button class="app-tile" data-open="settings" style="--app-rgb: 170, 190, 214">
+        <span class="app-icon"><svg class="icon"><use href="#i-sliders"/></svg></span>
+        <span class="app-name">Einstellungen</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= Jellyfin ================= -->
+  <section class="view hidden" id="view-jellyfin">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Jellyfin</h1>
+    </div>
+
+    <div class="card np-card hidden" id="jf-now">
+      <div class="np-art" id="jf-art">
+        <div class="np-art-meta">
+          <div class="kicker"><span class="live-dot"></span>Auf dem Fernseher</div>
+          <div class="np-title" id="jf-title"></div>
+          <div class="np-sub" id="jf-sub"></div>
+        </div>
+        <button class="icon-btn np-close" id="jf-stop" aria-label="Stopp"><svg class="icon"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="scrubber">
+        <input type="range" class="range" id="jf-progress" min="0" max="0" step="1" value="0" aria-label="Position" />
+        <div class="times"><span id="jf-cur">0:00</span><span id="jf-dur">0:00</span></div>
+      </div>
+      <div class="transport">
+        <button class="round-btn" id="jf-back" aria-label="10 Sekunden zurück"><svg class="icon"><use href="#i-replay"/></svg><span class="seek-label">10</span></button>
+        <button class="pill-btn" id="jf-toggle"><svg class="icon"><use href="#i-pause"/></svg><span>Pause</span></button>
+        <button class="round-btn" id="jf-fwd" aria-label="10 Sekunden vor"><svg class="icon"><use href="#i-forward"/></svg><span class="seek-label">10</span></button>
+      </div>
+    </div>
+
+    <label class="field">
+      <svg class="icon"><use href="#i-search"/></svg>
+      <input id="jf-search" type="search" placeholder="Filme &amp; Serien durchsuchen" autocomplete="off" enterkeyhint="search" />
+      <button class="field-clear hidden" id="jf-search-clear" type="button" aria-label="Suche leeren"><svg class="icon"><use href="#i-close"/></svg></button>
+    </label>
+
+    <div class="chips" id="jf-chips"></div>
+
+    <div class="jf-section hidden" id="jf-resume-section">
+      <div class="section-label">Weiterschauen</div>
+      <div class="rail" id="jf-resume"></div>
+    </div>
+
+    <div class="crumbs hidden" id="jf-crumbs">
+      <button class="icon-btn icon-btn-sm" id="jf-up" aria-label="Eine Ebene zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <span id="jf-crumb-title"></span>
+    </div>
+
+    <div class="poster-grid" id="jf-grid"></div>
+    <div class="empty-state hidden" id="jf-empty"></div>
+  </section>
+
+  <!-- ================= YouTube ================= -->
+  <section class="view hidden" id="view-youtube">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>YouTube</h1>
+    </div>
+
+    <div class="card np-card hidden" id="yt-now">
+      <div class="np-art" id="yt-art">
+        <div class="np-art-meta">
+          <div class="kicker"><span class="live-dot"></span>Auf dem Fernseher</div>
+          <div class="np-title" id="yt-title"></div>
         </div>
       </div>
-
-      <div class="app-grid">
-        <button class="app-icon" data-view="youtube">
-          <span class="app-icon-glyph">&#9654;</span>
-          <span class="app-icon-label">YouTube</span>
-        </button>
-        <button class="app-icon" data-view="radio">
-          <span class="app-icon-glyph">&#9835;</span>
-          <span class="app-icon-label">Radio</span>
-        </button>
-        <button class="app-icon" data-view="settings">
-          <span class="app-icon-glyph">&#9881;</span>
-          <span class="app-icon-label">Einstellungen</span>
-        </button>
+      <div class="scrubber">
+        <input type="range" class="range" id="yt-progress" min="0" max="0" step="1" value="0" aria-label="Position" />
+        <div class="times"><span id="yt-cur">0:00</span><span id="yt-dur">0:00</span></div>
       </div>
-    </section>
-
-    <!-- ---------- YouTube-App ---------- -->
-    <section id="view-youtube" class="app-view hidden">
-      <div class="app-view-header">
-        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
-        <h2>YouTube</h2>
+      <div class="transport">
+        <button class="round-btn" id="yt-back" aria-label="10 Sekunden zurück"><svg class="icon"><use href="#i-replay"/></svg><span class="seek-label">10</span></button>
+        <button class="pill-btn" id="yt-toggle"><svg class="icon"><use href="#i-pause"/></svg><span>Pause</span></button>
+        <button class="round-btn" id="yt-fwd" aria-label="10 Sekunden vor"><svg class="icon"><use href="#i-forward"/></svg><span class="seek-label">10</span></button>
       </div>
+    </div>
 
-      <div class="remote-card now-playing-card">
-        <div class="np-thumb" id="yt-thumb"></div>
-        <div class="np-title" id="yt-title">Kein Video geladen</div>
-        <div class="np-progress-wrap">
-          <input id="yt-progress" class="np-progress" type="range" min="0" max="100" value="0" step="0.5" />
-          <div class="np-time-row">
-            <span id="yt-time-current">0:00</span>
-            <span id="yt-time-duration">0:00</span>
-          </div>
-        </div>
-        <div class="button-row">
-          <button id="btn-seek-back" class="btn">&laquo; 10s</button>
-          <button id="btn-play-pause" class="btn btn-accent">Pause</button>
-          <button id="btn-seek-fwd" class="btn">10s &raquo;</button>
-        </div>
+    <div class="card stack">
+      <div class="kicker">Link abspielen</div>
+      <label class="field">
+        <svg class="icon"><use href="#i-link"/></svg>
+        <input id="yt-url" type="url" placeholder="YouTube-Link einfügen …" autocomplete="off" enterkeyhint="go" />
+        <button class="field-clear hidden" id="yt-clear" type="button" aria-label="Stopp"><svg class="icon"><use href="#i-close"/></svg></button>
+      </label>
+      <button class="btn btn-primary btn-block" id="yt-play"><svg class="icon"><use href="#i-play"/></svg>Auf dem Fernseher abspielen</button>
+      <p class="hint">In der YouTube-App: Teilen → Link kopieren → hier einfügen. Das × stoppt das laufende Video.</p>
+    </div>
+  </section>
+
+  <!-- ================= Radio ================= -->
+  <section class="view hidden" id="view-radio">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Radio</h1>
+    </div>
+
+    <div class="card radio-hero" id="radio-hero">
+      <div class="radio-disc">
+        <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
       </div>
+      <div class="radio-station" id="radio-station">–</div>
+      <div class="radio-status" id="radio-status">Gestoppt</div>
+      <button class="btn btn-primary" id="radio-toggle"><svg class="icon"><use href="#i-play"/></svg><span>Abspielen</span></button>
+    </div>
 
-      <div class="remote-card">
-        <h2>Neuer Link</h2>
-        <div class="input-wrap">
-          <input id="yt-url" class="text-input" type="text" placeholder="YouTube-Link einfügen…" />
-          <button id="btn-yt-stop" class="input-clear-btn" aria-label="Stopp">&times;</button>
-        </div>
-        <div class="button-row">
-          <button id="btn-yt-play" class="btn btn-accent">Abspielen</button>
-        </div>
+    <div class="section-label">Sender</div>
+    <div class="list" id="station-list"></div>
+  </section>
+
+  <!-- ================= Einstellungen ================= -->
+  <section class="view hidden" id="view-settings">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Einstellungen</h1>
+    </div>
+
+    <div class="section-label">Wecker</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="row-label"><svg class="icon"><use href="#i-alarm"/></svg>Wecker aktiv</span>
+        <label class="switch"><input type="checkbox" id="sched-enabled" /><span class="switch-slider"></span></label>
       </div>
-    </section>
-
-    <!-- ---------- Radio-App ---------- -->
-    <section id="view-radio" class="app-view hidden">
-      <div class="app-view-header">
-        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
-        <h2>Radio</h2>
+      <div class="group-row">
+        <span class="row-label">Wochentags wecken</span>
+        <input type="time" class="time-input" id="sched-weekday-wake" />
       </div>
-
-      <div class="remote-card">
-        <ul id="station-list" class="station-list"></ul>
-        <div class="button-row">
-          <button id="btn-radio-stop" class="btn">Stopp</button>
-        </div>
+      <div class="group-row">
+        <span class="row-label">Wochentags verlassen</span>
+        <input type="time" class="time-input" id="sched-weekday-leave" />
       </div>
-    </section>
-
-    <!-- ---------- Einstellungen-App ---------- -->
-    <section id="view-settings" class="app-view hidden">
-      <div class="app-view-header">
-        <button class="back-btn" data-back aria-label="Zurück">&larr;</button>
-        <h2>Einstellungen</h2>
+      <div class="group-row">
+        <span class="row-label">Wochenende wecken</span>
+        <input type="time" class="time-input" id="sched-weekend-wake" />
       </div>
-
-      <div class="remote-card">
-        <h2>Wecker</h2>
-        <div class="settings-row settings-row-toggle">
-          <span>Aktiv</span>
-          <label class="switch">
-            <input type="checkbox" id="sched-enabled" />
-            <span class="switch-slider"></span>
-          </label>
-        </div>
-        <h3>Unter der Woche</h3>
-        <div class="settings-row">
-          <label for="sched-weekday-wake">Wecken</label>
-          <input type="time" id="sched-weekday-wake" class="time-input" />
-        </div>
-        <div class="settings-row">
-          <label for="sched-weekday-leave">Verlassen</label>
-          <input type="time" id="sched-weekday-leave" class="time-input" />
-        </div>
-        <h3>Wochenende</h3>
-        <div class="settings-row">
-          <label for="sched-weekend-wake">Wecken</label>
-          <input type="time" id="sched-weekend-wake" class="time-input" />
-        </div>
-        <div class="settings-row">
-          <label for="sched-weekend-leave">Verlassen</label>
-          <input type="time" id="sched-weekend-leave" class="time-input" />
-        </div>
-        <div class="button-row">
-          <button id="btn-schedule-save" class="btn btn-accent">Speichern</button>
-        </div>
+      <div class="group-row">
+        <span class="row-label">Wochenende verlassen</span>
+        <input type="time" class="time-input" id="sched-weekend-leave" />
       </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="btn-schedule-save"><svg class="icon"><use href="#i-check"/></svg>Zeitplan speichern</button>
 
-      <div class="remote-card">
-        <h2>Radiosender</h2>
-        <ul id="settings-station-list" class="station-list"></ul>
-        <div class="add-station-row">
-          <input id="new-station-name" class="text-input" type="text" placeholder="Name" />
-          <input id="new-station-url" class="text-input" type="text" placeholder="Stream-URL" />
-          <button id="btn-add-station" class="btn btn-accent">+</button>
-        </div>
-      </div>
-    </section>
+    <div class="section-label">Radiosender</div>
+    <div class="group" id="settings-station-list"></div>
+    <div class="card stack">
+      <div class="kicker">Sender hinzufügen</div>
+      <label class="field"><input id="new-station-name" type="text" placeholder="Name" autocomplete="off" /></label>
+      <label class="field"><input id="new-station-url" type="url" placeholder="Stream-URL (http…)" autocomplete="off" /></label>
+      <button class="btn btn-ghost btn-block" id="btn-add-station"><svg class="icon"><use href="#i-plus"/></svg>Hinzufügen</button>
+    </div>
+  </section>
+</main>
 
-    <div id="status-line" class="status-line"></div>
-  </main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <nav id="control-dock">
-    <button id="dock-home" class="dock-btn" aria-label="Home">&#8962;</button>
-    <button id="dock-vol-down" class="dock-btn" aria-label="Leiser">&minus;</button>
-    <button id="dock-play-pause" class="dock-btn dock-btn-accent" aria-label="Pause/Weiter">&#10073;&#10073;</button>
-    <button id="dock-vol-up" class="dock-btn" aria-label="Lauter">&plus;</button>
-    <button id="dock-mute" class="dock-btn" aria-label="Stumm">&#128264;</button>
-  </nav>
+<div class="volume-hud" id="volume-hud" aria-hidden="true">
+  <svg class="icon"><use href="#i-speaker"/></svg>
+  <div class="vol-bar"><div class="vol-fill" id="vol-fill"></div></div>
+  <span class="vol-label" id="vol-label">–</span>
+</div>
+
+<nav class="dock" aria-label="Steuerung">
+  <button class="dock-btn" id="dock-home" aria-label="Home"><svg class="icon"><use href="#i-home"/></svg></button>
+  <button class="dock-btn" id="dock-vol-down" aria-label="Leiser"><svg class="icon"><use href="#i-vol-down"/></svg></button>
+  <button class="dock-btn dock-main idle" id="dock-play" aria-label="Pause/Weiter"><svg class="icon"><use href="#i-play"/></svg></button>
+  <button class="dock-btn" id="dock-vol-up" aria-label="Lauter"><svg class="icon"><use href="#i-vol-up"/></svg></button>
+  <button class="dock-btn" id="dock-mute" aria-label="Stumm"><svg class="icon"><use href="#i-mute"/></svg></button>
+</nav>
+
+<div class="sheet-backdrop hidden" id="sheet-backdrop"></div>
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="sheet-hero" id="sheet-hero">
+    <span class="sheet-grabber"></span>
+    <button class="icon-btn sheet-close" id="sheet-close" aria-label="Schließen"><svg class="icon"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-title" id="sheet-title"></div>
+    <div class="sheet-meta" id="sheet-meta"></div>
+    <div class="sheet-progress hidden" id="sheet-progress"><span id="sheet-progress-fill"></span></div>
+    <p class="sheet-overview" id="sheet-overview"></p>
+    <div class="sheet-warning hidden" id="sheet-warning"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-primary btn-block" id="sheet-play"><svg class="icon"><use href="#i-play"/></svg><span id="sheet-play-label">Abspielen</span></button>
+      <button class="btn btn-ghost btn-block hidden" id="sheet-restart"><svg class="icon"><use href="#i-replay"/></svg>Von vorne</button>
+    </div>
+  </div>
+</div>
 
 <script src="remote.js"></script>
 </body>

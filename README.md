@@ -161,34 +161,53 @@ aus) - ohne `config.yaml` oder die systemd-Timer zu verändern.
 ## Fernbedienung (iPhone/iPad)
 
 Der Dashboard-Server hostet unter `/remote.html` eine mobile Fernbedienung im
-Tablet-Look, solange `dashboard.host: "0.0.0.0"` in `config.yaml` gesetzt ist
-(Standard). Im selben WLAN wie der Pi im Browser öffnen (am besten "Zum
-Home-Bildschirm" hinzufügen für App-artigen Vollbild-Zugriff):
+Tablet-Look. Im selben WLAN wie der Pi im Browser öffnen und am besten über
+"Teilen → Zum Home-Bildschirm" als App ablegen (eigenes Icon, Vollbild):
 
 ```
-http://<pi-ip>:8080/remote.html
+http://pi.local:8080/remote.html
 ```
+
+`pi.local` statt einer festen IP-Adresse: die ändert der Router gelegentlich,
+der Name bleibt. Dafür muss `dashboard.host: "::"` gesetzt sein (Standard) -
+dann lauscht der Server per IPv4 **und** IPv6.
 
 Aufbau wie ein Tablet-Homescreen:
 
-- **Homescreen**: Fernseher an/aus, darunter App-Icons für YouTube, Radio und
+- **Homescreen**: Uhr + Begrüßung, "Jetzt läuft"-Karte (tippen öffnet die
+  passende App), Fernseher an/aus, App-Icons für Jellyfin, YouTube, Radio und
   Einstellungen.
+- **Jellyfin-App**: eigene Bibliothek mit Postern durchsuchen (Filme, Serien -
+  Serien/Staffeln lassen sich aufklappen), Suche, "Weiterschauen"-Leiste.
+  Antippen öffnet eine Detailansicht mit Beschreibung und "Abspielen" bzw.
+  "Fortsetzen ab …"/"Von vorne". Das Video läuft in einem eigenen Player im
+  Kiosk; die Position wird alle 15 s und beim Pausieren/Stoppen in Jellyfin
+  gespeichert (Weiterschauen funktioniert also auch in den anderen
+  Jellyfin-Apps). Ab ~92 % gilt ein Film als gesehen.
 - **YouTube-App**: Link einfügen und abspielen (Stopp-Knopf als "×" im
   Eingabefeld), Now-Playing-Karte mit Thumbnail, Titel und scrubbarem
-  Fortschrittsbalken (an eine beliebige Stelle springen durch Ziehen), 10s
-  zurück/vor sowie ein Pause/Weiter-Knopf, der seine Beschriftung automatisch
-  umschaltet.
+  Fortschrittsbalken, 10s zurück/vor sowie ein Pause/Weiter-Knopf.
 - **Radio-App**: zwischen den konfigurierten Sendern wechseln (Standard:
   Sunshine Live, 1LIVE) sowie Stopp.
 - **Einstellungen-App**: Wecker an/aus + Weck-/Verlasszeiten für Wochentag und
   Wochenende (wirkt sofort, siehe oben), Radiosender hinzufügen/entfernen.
 - **Control-Dock**: am unteren Rand fest sichtbar, egal welche App gerade
-  offen ist - Home, Lautstärke -/+, Stumm und ein Pause/Weiter-Knopf, der
-  automatisch YouTube oder Radio steuert (je nachdem, was gerade läuft).
+  offen ist - Home, Lautstärke -/+ (zeigt den neuen Pegel an), Stumm und ein
+  Pause/Weiter-Knopf, der automatisch das steuert, was gerade läuft.
 
-YouTube läuft direkt im Kiosk-Fenster (YouTube IFrame API, Untertitel und das
-eigene Pause-Overlay von YouTube sind unterdrückt); beim Abspielen wird das
-Radio automatisch gestoppt und umgekehrt.
+Abspielen bei ausgeschaltetem Fernseher schaltet ihn automatisch ein und
+startet das Video, sobald der Kiosk bereit ist. Es läuft immer nur eine Quelle
+(Jellyfin, YouTube oder Radio) - jede neue stoppt die vorherige. YouTube-
+Untertitel und YouTubes eigenes Pause-Overlay sind unterdrückt.
+
+**Jellyfin-App einrichten:** In Jellyfin unter Dashboard → API-Schlüssel einen
+Schlüssel anlegen, in `.env` als `JELLYFIN_API_KEY` eintragen und in
+`config.yaml` unter `jellyfin.username` den Jellyfin-Benutzer angeben. Der Key
+hat Admin-Rechte und bleibt deshalb serverseitig: Streams und Poster laufen
+über den Dashboard-Server (der Stream-Proxy antwortet nur dem Kiosk auf dem Pi
+selbst). Abgespielt wird per Direct Play ohne Transcoding - Formate, die der
+Kiosk-Browser nicht kann (z. B. HEVC/H.265, DTS-Ton), lehnt die App vor dem
+Start mit einer klaren Meldung ab.
 
 **Absicherung:** Ohne `REMOTE_CONTROL_SECRET` in `.env` ist die Fernbedienung
 ohne Passwort nutzbar (ok fürs eigene, vertrauenswürdige WLAN). Zum Absichern
@@ -210,7 +229,8 @@ app/
                               morning_routine/leave_routine zur konfigurierten
                               Zeit aus (ersetzt die frueheren systemd-Timer)
   tv_power.py                 Gemeinsames An/Aus (Routinen + Fernbedienung)
-  kiosk_media.py                YouTube-Steuerung (WebSocket-Broadcast)
+  kiosk_media.py                YouTube-/Jellyfin-Steuerung (WebSocket-Broadcast)
+  jellyfin_client.py             Jellyfin-REST-API (Bibliothek, Details, Position)
   audio_control.py               Lautstaerke ueber PipeWire/wpctl
   sources/                        Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
   tv_control/                      CEC- und Steckdosen-Backend (austauschbar)

@@ -1,9 +1,19 @@
 const BOOT_DURATION_MS = 4000;
 const STATE_POLL_MS = 15000;
+const PROGRESS_REPORT_MS = 1000;
+const ERROR_DISPLAY_MS = 5000;
 const WEEKDAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
 function $(id) {
   return document.getElementById(id);
+}
+
+function formatTime(seconds) {
+  const total = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
 
 function updateClock() {
@@ -99,31 +109,49 @@ async function refreshState() {
   }
 }
 
-// ---------- YouTube-Player (gesteuert per WebSocket von /remote.html) ----------
+// ---------- Bildschirme: Dashboard / YouTube / Jellyfin ----------
+
+let currentScreen = "dashboard";
+let resolveBoot;
+// Abspiel-Befehle, die waehrend der Boot-Animation eintreffen (Fernseher wurde
+// gerade fuers Abspielen eingeschaltet), starten erst danach.
+const bootDone = new Promise((resolve) => {
+  resolveBoot = resolve;
+});
+
+function showScreen(name) {
+  if (currentScreen === "youtube" && name !== "youtube") stopYoutubePlayback();
+  if (currentScreen === "jellyfin" && name !== "jellyfin") stopJellyfinPlayback();
+  currentScreen = name;
+  $("dashboard").classList.toggle("hidden", name !== "dashboard");
+  $("player-screen").classList.toggle("hidden", name !== "youtube");
+  $("jellyfin-screen").classList.toggle("hidden", name !== "jellyfin");
+}
+
+// ---------- YouTube (IFrame API) ----------
 
 let ytPlayer = null;
 let ytReady = false;
 const ytPendingQueue = [];
-let progressIntervalId = null;
 
 function suppressCaptions() {
-  // cc_load_policy/hl allein reichen bei manchen Videos nicht - YouTube
-  // erzwingt Untertitel trotzdem. Deshalb an mehreren Stellen im Lebenszyklus
-  // (ready, sobald die Modul-API verfuegbar ist, bei jedem Statuswechsel)
-  // zusaetzlich aktiv das Untertitel-Modul entladen/leeren.
+  // cc_load_policy allein reicht bei manchen Videos nicht - YouTube erzwingt
+  // Untertitel trotzdem. Deshalb an mehreren Stellen im Lebenszyklus (ready,
+  // sobald die Modul-API verfuegbar ist, bei jedem Statuswechsel, jede
+  // Sekunde waehrend der Wiedergabe) aktiv das Untertitel-Modul entladen/leeren.
   if (!ytPlayer) return;
   try { ytPlayer.unloadModule("captions"); } catch (err) {}
   try { ytPlayer.setOption("captions", "track", {}); } catch (err) {}
 }
 
-function updatePauseOverlay(show) {
-  const overlay = $("player-pause-overlay");
+function setYoutubePause(show) {
+  const overlay = $("yt-pause");
   if (!show) {
     overlay.classList.add("hidden");
     return;
   }
   const data = (ytPlayer && ytPlayer.getVideoData && ytPlayer.getVideoData()) || {};
-  $("pause-title").textContent = data.title || "";
+  $("yt-pause-title").textContent = data.title || "";
   overlay.style.backgroundImage = data.video_id
     ? `url(https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg)`
     : "none";
@@ -157,8 +185,8 @@ function onYouTubeIframeAPIReady() {
       onApiChange: () => suppressCaptions(),
       onStateChange: (event) => {
         suppressCaptions();
-        const isPaused = event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED;
-        updatePauseOverlay(isPaused);
+        if (currentScreen !== "youtube") return;
+        setYoutubePause(event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED);
       },
     },
   });
@@ -172,41 +200,168 @@ function withYtPlayer(fn) {
   }
 }
 
-function showPlayerScreen() {
-  $("player-screen").classList.remove("hidden");
-  $("dashboard").classList.add("hidden");
-}
-
-function hidePlayerScreen() {
-  $("player-screen").classList.add("hidden");
-  $("dashboard").classList.remove("hidden");
+function stopYoutubePlayback() {
+  withYtPlayer(() => ytPlayer.stopVideo());
+  setYoutubePause(false);
 }
 
 function handleYoutubeMessage(msg) {
   if (msg.type === "youtube_play") {
-    showPlayerScreen();
-    updatePauseOverlay(false);
-    withYtPlayer(() => {
-      ytPlayer.loadVideoById(msg.video_id);
-      suppressCaptions();
+    bootDone.then(() => {
+      showScreen("youtube");
+      setYoutubePause(false);
+      withYtPlayer(() => {
+        ytPlayer.loadVideoById(msg.video_id);
+        suppressCaptions();
+      });
     });
-  } else if (msg.type === "youtube_pause") {
-    withYtPlayer(() => ytPlayer.pauseVideo());
-  } else if (msg.type === "youtube_resume") {
-    withYtPlayer(() => ytPlayer.playVideo());
   } else if (msg.type === "youtube_stop") {
-    withYtPlayer(() => ytPlayer.stopVideo());
-    updatePauseOverlay(false);
-    hidePlayerScreen();
-  } else if (msg.type === "youtube_seek") {
-    withYtPlayer(() => {
-      const target = ytPlayer.getCurrentTime() + msg.seconds;
-      ytPlayer.seekTo(Math.max(0, target), true);
-    });
-  } else if (msg.type === "youtube_seek_to") {
-    withYtPlayer(() => ytPlayer.seekTo(Math.max(0, msg.seconds), true));
+    if (currentScreen === "youtube") showScreen("dashboard");
+  } else if (currentScreen === "youtube") {
+    if (msg.type === "youtube_pause") {
+      withYtPlayer(() => ytPlayer.pauseVideo());
+    } else if (msg.type === "youtube_resume") {
+      withYtPlayer(() => ytPlayer.playVideo());
+    } else if (msg.type === "youtube_seek") {
+      withYtPlayer(() => ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() + msg.seconds), true));
+    } else if (msg.type === "youtube_seek_to") {
+      withYtPlayer(() => ytPlayer.seekTo(Math.max(0, msg.seconds), true));
+    }
   }
 }
+
+// ---------- Jellyfin (natives <video> ueber den Stream-Proxy) ----------
+
+const jfVideo = $("jf-video");
+let jfCurrent = null;
+let jfLoadToken = 0;
+let jfErrorTimer = null;
+
+function setJellyfinLoading(show) {
+  $("jf-loading").classList.toggle("hidden", !show);
+}
+
+function setJellyfinPause(show) {
+  const overlay = $("jf-pause");
+  if (!show || !jfCurrent) {
+    overlay.classList.add("hidden");
+    return;
+  }
+  const duration = Number.isFinite(jfVideo.duration) ? jfVideo.duration : jfCurrent.duration;
+  const parts = [jfCurrent.subtitle, `${formatTime(jfVideo.currentTime)} / ${formatTime(duration)}`];
+  $("jf-pause-title").textContent = jfCurrent.title || "";
+  $("jf-pause-sub").textContent = parts.filter(Boolean).join("  ·  ");
+  overlay.style.backgroundImage = jfCurrent.backdrop ? `url("${jfCurrent.backdrop}")` : "none";
+  overlay.classList.remove("hidden");
+}
+
+function stopJellyfinPlayback() {
+  // jfCurrent zuerst leeren: das Entfernen der Quelle loest pause/error-Events
+  // aus, die sonst als echter Fehler/Pause gemeldet wuerden.
+  jfCurrent = null;
+  jfLoadToken += 1;
+  setJellyfinPause(false);
+  setJellyfinLoading(false);
+  jfVideo.pause();
+  jfVideo.removeAttribute("src");
+  jfVideo.load();
+}
+
+function startJellyfin(msg) {
+  showScreen("jellyfin");
+  clearTimeout(jfErrorTimer);
+  $("jf-error").classList.add("hidden");
+  jfCurrent = {
+    itemId: msg.item_id,
+    title: msg.title,
+    subtitle: msg.subtitle,
+    backdrop: msg.backdrop_url,
+    duration: Number(msg.duration) || 0,
+  };
+  setJellyfinPause(false);
+  $("jf-loading-title").textContent = msg.title || "";
+  setJellyfinLoading(true);
+
+  const token = ++jfLoadToken;
+  const start = Number(msg.start_seconds) || 0;
+  jfVideo.addEventListener(
+    "loadedmetadata",
+    () => {
+      if (token !== jfLoadToken) return;
+      if (start > 0 && (!jfVideo.duration || start < jfVideo.duration - 5)) jfVideo.currentTime = start;
+      jfVideo.play().catch(() => {});
+    },
+    { once: true }
+  );
+  jfVideo.src = msg.stream_url;
+}
+
+function showJellyfinError(message) {
+  jfCurrent = null;
+  setJellyfinLoading(false);
+  setJellyfinPause(false);
+  $("jf-error-text").textContent = message;
+  $("jf-error").classList.remove("hidden");
+  clearTimeout(jfErrorTimer);
+  jfErrorTimer = setTimeout(() => {
+    $("jf-error").classList.add("hidden");
+    if (currentScreen === "jellyfin") showScreen("dashboard");
+  }, ERROR_DISPLAY_MS);
+}
+
+jfVideo.addEventListener("playing", () => {
+  setJellyfinLoading(false);
+  setJellyfinPause(false);
+});
+jfVideo.addEventListener("waiting", () => {
+  if (jfCurrent) setJellyfinLoading(true);
+});
+jfVideo.addEventListener("seeked", () => {
+  if (!jfCurrent || !jfVideo.paused) return;
+  setJellyfinLoading(false);
+  setJellyfinPause(true);
+});
+jfVideo.addEventListener("pause", () => {
+  if (!jfCurrent || jfVideo.ended) return;
+  setJellyfinLoading(false);
+  setJellyfinPause(true);
+});
+jfVideo.addEventListener("ended", () => {
+  if (!jfCurrent) return;
+  sendWs({ type: "jellyfin_ended", item_id: jfCurrent.itemId });
+  showScreen("dashboard");
+});
+jfVideo.addEventListener("error", () => {
+  if (!jfCurrent) return;
+  const unsupported = jfVideo.error && jfVideo.error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED;
+  const message = unsupported
+    ? "Dieses Video kann der Fernseher nicht direkt abspielen."
+    : "Die Wiedergabe ist fehlgeschlagen.";
+  sendWs({ type: "jellyfin_error", item_id: jfCurrent.itemId, message });
+  showJellyfinError(message);
+});
+
+function handleJellyfinMessage(msg) {
+  if (msg.type === "jellyfin_play") {
+    bootDone.then(() => startJellyfin(msg));
+    return;
+  }
+  if (currentScreen !== "jellyfin" || !jfCurrent) return;
+  if (msg.type === "jellyfin_stop") {
+    showScreen("dashboard");
+  } else if (msg.type === "jellyfin_pause") {
+    jfVideo.pause();
+  } else if (msg.type === "jellyfin_resume") {
+    jfVideo.play().catch(() => {});
+  } else if (msg.type === "jellyfin_seek") {
+    const end = Number.isFinite(jfVideo.duration) ? jfVideo.duration - 1 : Infinity;
+    jfVideo.currentTime = Math.max(0, Math.min(jfVideo.currentTime + Number(msg.seconds || 0), end));
+  } else if (msg.type === "jellyfin_seek_to") {
+    jfVideo.currentTime = Math.max(0, Number(msg.seconds) || 0);
+  }
+}
+
+// ---------- WebSocket + Fortschrittsmeldungen ----------
 
 let wsConn = null;
 
@@ -216,28 +371,39 @@ function sendWs(payload) {
   }
 }
 
-// Meldet Fortschritt/Titel periodisch an den Server, damit die Fernbedienung
-// (die die YouTube IFrame API selbst nicht sieht) Fortschrittsbalken/Titel
-// anzeigen kann - siehe GET /api/remote/now-playing.
-function startProgressReporting() {
-  if (progressIntervalId) return;
-  progressIntervalId = setInterval(() => {
-    if (!ytReady || !ytPlayer || typeof ytPlayer.getPlayerState !== "function") return;
-    const state = ytPlayer.getPlayerState();
-    if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.PAUSED) return;
-    // YouTube laedt das Untertitel-Modul teils asynchron nach und schaltet es
-    // dann trotz vorherigem unloadModule() wieder ein - deshalb hier bei
-    // jedem Tick erneut unterdruecken, nicht nur bei Ready/Statuswechsel.
-    suppressCaptions();
-    const data = ytPlayer.getVideoData() || {};
-    sendWs({
-      type: "youtube_progress",
-      current_time: ytPlayer.getCurrentTime(),
-      duration: ytPlayer.getDuration(),
-      playing: state === YT.PlayerState.PLAYING,
-      title: data.title || "",
-    });
-  }, 1000);
+// Die Fernbedienung sieht die Player selbst nicht - Fortschritt/Titel gehen
+// deshalb jede Sekunde an den Server (GET /api/remote/now-playing).
+function reportYoutubeProgress() {
+  if (!ytReady || !ytPlayer || typeof ytPlayer.getPlayerState !== "function") return;
+  const state = ytPlayer.getPlayerState();
+  if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.PAUSED) return;
+  // YouTube laedt das Untertitel-Modul teils asynchron nach und schaltet es
+  // dann trotz vorherigem unloadModule() wieder ein.
+  suppressCaptions();
+  const data = ytPlayer.getVideoData() || {};
+  sendWs({
+    type: "youtube_progress",
+    current_time: ytPlayer.getCurrentTime(),
+    duration: ytPlayer.getDuration(),
+    playing: state === YT.PlayerState.PLAYING,
+    title: data.title || "",
+  });
+}
+
+function reportJellyfinProgress() {
+  if (!jfCurrent || jfVideo.readyState < 1) return;
+  sendWs({
+    type: "jellyfin_progress",
+    item_id: jfCurrent.itemId,
+    current_time: jfVideo.currentTime,
+    duration: Number.isFinite(jfVideo.duration) ? jfVideo.duration : jfCurrent.duration,
+    playing: !jfVideo.paused && !jfVideo.ended,
+  });
+}
+
+function reportProgress() {
+  if (currentScreen === "youtube") reportYoutubeProgress();
+  else if (currentScreen === "jellyfin") reportJellyfinProgress();
 }
 
 function connectWebSocket() {
@@ -250,6 +416,8 @@ function connectWebSocket() {
         playShutdownAnimation();
       } else if (msg.type && msg.type.startsWith("youtube_")) {
         handleYoutubeMessage(msg);
+      } else if (msg.type && msg.type.startsWith("jellyfin_")) {
+        handleJellyfinMessage(msg);
       }
     } catch (err) {
       console.error("WS-Nachricht ungueltig", err);
@@ -271,7 +439,8 @@ function playShutdownAnimation() {
 function startBootSequence() {
   setTimeout(() => {
     $("boot-screen").classList.add("hidden");
-    $("dashboard").classList.remove("hidden");
+    showScreen(currentScreen);
+    resolveBoot();
     refreshState();
   }, BOOT_DURATION_MS);
 }
@@ -279,6 +448,6 @@ function startBootSequence() {
 updateClock();
 setInterval(updateClock, 1000);
 setInterval(refreshState, STATE_POLL_MS);
+setInterval(reportProgress, PROGRESS_REPORT_MS);
 connectWebSocket();
 startBootSequence();
-startProgressReporting();

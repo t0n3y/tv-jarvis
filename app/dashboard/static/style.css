@@ -331,9 +331,9 @@ footer#errors {
   color: rgba(255, 140, 66, 0.7);
 }
 
-/* ---------- YouTube-Player ---------- */
+/* ---------- Medien-Bildschirme (YouTube + Jellyfin) ---------- */
 
-#player-screen {
+.media-screen {
   position: fixed;
   inset: 0;
   background: #000;
@@ -347,10 +347,18 @@ footer#errors {
   border: none;
 }
 
-/* Deckt YouTubes eigenes Pause-/Endscreen-Overlay (Videovorschlaege, Logo)
-   vollstaendig ab - das laesst sich im eingebetteten iframe nicht per CSS
-   entfernen (anderer Origin), daher stattdessen komplett verdecken. */
-#player-pause-overlay {
+#jf-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+/* Bei YouTube verdeckt das Overlay dessen eigenes Pause-/Endscreen-Overlay
+   (Videovorschlaege, Logo) - das laesst sich im eingebetteten iframe nicht
+   per CSS entfernen (anderer Origin), daher komplett verdecken. */
+.pause-overlay {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -363,32 +371,135 @@ footer#errors {
   background-position: center;
 }
 
-#player-pause-overlay::before {
+.pause-overlay::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(3, 8, 16, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(3, 8, 16, 0.82);
+  backdrop-filter: blur(10px);
 }
 
-#player-pause-overlay .pause-icon,
-#player-pause-overlay .pause-title {
+.pause-overlay > * {
   position: relative;
 }
 
-#player-pause-overlay .pause-icon {
+.pause-icon {
   font-size: 64px;
   color: var(--accent);
   text-shadow: 0 0 24px var(--accent-glow);
   animation: core-pulse 1.6s ease-in-out infinite;
 }
 
-#player-pause-overlay .pause-title {
+.pause-title {
   font-family: "Orbitron", sans-serif;
-  font-size: 22px;
+  font-size: 26px;
   letter-spacing: 2px;
   color: var(--text);
   text-align: center;
   max-width: 80%;
   text-shadow: 0 0 12px var(--accent-glow);
+}
+
+.pause-sub {
+  margin-top: -8px;
+  font-size: 20px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.media-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: radial-gradient(circle at center, rgba(8, 23, 34, 0.75) 0%, rgba(3, 8, 16, 0.55) 70%);
+}
+
+.loader-rings {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.loader-rings span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--accent);
+  box-shadow: 0 0 18px -4px var(--accent-glow);
+  animation: loader-spin 1.1s linear infinite;
+}
+
+.loader-rings span:nth-child(2) {
+  inset: 18px;
+  border-top-color: transparent;
+  border-right-color: rgba(79, 216, 255, 0.7);
+  animation-duration: 1.6s;
+  animation-direction: reverse;
+}
+
+.loader-rings span:nth-child(3) {
+  inset: 42px;
+  border: none;
+  background: var(--accent);
+  box-shadow: 0 0 30px 6px var(--accent-glow);
+  animation: core-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+.media-loading-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 16px;
+  letter-spacing: 8px;
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+
+.media-loading-title {
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--text);
+  max-width: 70%;
+  text-align: center;
+}
+
+.media-error {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: rgba(3, 8, 16, 0.94);
+}
+
+.media-error-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-size: 48px;
+  color: var(--accent-warn);
+  border: 3px solid var(--accent-warn);
+  box-shadow: 0 0 30px -4px rgba(255, 140, 66, 0.7);
+}
+
+.media-error-text {
+  font-size: 26px;
+  color: var(--text);
+  max-width: 70%;
+  text-align: center;
 }

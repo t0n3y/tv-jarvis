@@ -89,7 +89,9 @@ def start(cfg: Config) -> None:
         )
     _clear_stale_profile_lock()
 
-    url = f"http://{cfg.dashboard.host}:{cfg.dashboard.port}/"
+    # Immer localhost statt cfg.dashboard.host: der Server lauscht ggf. auf
+    # "::"/"0.0.0.0" (fuers Handy im WLAN) - das sind keine gueltigen Ziele.
+    url = f"http://127.0.0.1:{cfg.dashboard.port}/"
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 

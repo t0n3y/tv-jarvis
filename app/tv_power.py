@@ -50,7 +50,7 @@ def power_on(cfg: Config) -> None:
 def power_off(cfg: Config, farewell: bool = False) -> None:
     logger.info("Stoppe Radio ...")
     radio.stop()
-    kiosk_media.stop_youtube(cfg)
+    kiosk_media.stop_all_media(cfg)
 
     if farewell:
         logger.info("Verabschiedung ...")

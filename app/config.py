@@ -107,6 +107,15 @@ class RadioConfig:
 
 
 @dataclass
+class JellyfinConfig:
+    # Vom Pi aus gesehen - Dashboard-Server und Jellyfin laufen auf demselben
+    # Geraet, daher bewusst localhost statt der oeffentlichen Tunnel-Adresse.
+    url: str
+    # Wessen Bibliothek/"Weiterschauen"-Stand die Fernbedienung nutzt.
+    username: str
+
+
+@dataclass
 class TTSConfig:
     voice: str
     model_dir: Path
@@ -131,6 +140,7 @@ class Secrets:
     notion_token: str | None
     todos_webhook_secret: str | None
     remote_control_secret: str | None
+    jellyfin_api_key: str | None
 
 
 @dataclass
@@ -143,6 +153,7 @@ class Config:
     todos: TodosConfig
     audio: AudioConfig
     radio: RadioConfig
+    jellyfin: JellyfinConfig
     tts: TTSConfig
     dashboard: DashboardConfig
     secrets: Secrets
@@ -170,6 +181,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
     todos = raw.get("todos", {})
     audio = raw.get("audio", {})
     radio = raw.get("radio", {})
+    jellyfin = raw.get("jellyfin", {})
     tts = raw.get("tts", {})
     dash = raw.get("dashboard", {})
 
@@ -215,6 +227,10 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
             stream_url=radio.get("stream_url", ""),
             volume=int(radio.get("volume", 25)),
         ),
+        jellyfin=JellyfinConfig(
+            url=str(jellyfin.get("url", "http://127.0.0.1:8096")).rstrip("/"),
+            username=jellyfin.get("username", ""),
+        ),
         tts=TTSConfig(
             voice=tts.get("voice", "de_DE-thorsten-medium"),
             model_dir=resolve_path(tts.get("model_dir", "data/piper-voices")),
@@ -235,6 +251,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
             notion_token=os.environ.get("NOTION_TOKEN") or None,
             todos_webhook_secret=os.environ.get("TODOS_WEBHOOK_SECRET") or None,
             remote_control_secret=os.environ.get("REMOTE_CONTROL_SECRET") or None,
+            jellyfin_api_key=os.environ.get("JELLYFIN_API_KEY") or None,
         ),
     )
 

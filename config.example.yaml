@@ -74,16 +74,24 @@ radio:
   stream_url: "https://stream.sunshine-live.de/live/mp3-192/stream.sunshine-live.de"
   volume: 25
 
+jellyfin:
+  # Vom Pi aus gesehen - laeuft Jellyfin auf demselben Pi, localhost lassen.
+  url: "http://127.0.0.1:8096"
+  # Wessen Bibliothek/"Weiterschauen"-Stand die Fernbedienung nutzt. Dazu
+  # JELLYFIN_API_KEY in .env setzen (siehe README, Abschnitt Jellyfin-App).
+  username: ""
+
 tts:
   voice: "de_DE-thorsten-medium"
   model_dir: "data/piper-voices"
   speed: 1.0
 
 dashboard:
-  # 0.0.0.0 = im ganzen WLAN erreichbar (fuer die Fernbedienung vom
-  # iPhone/iPad unter http://<pi-ip>:8080/remote.html). Auf "127.0.0.1"
-  # setzen, um den Zugriff auf den Pi selbst zu beschraenken.
-  host: "0.0.0.0"
+  # "::" = im ganzen WLAN per IPv4 UND IPv6 erreichbar (fuer die
+  # Fernbedienung vom iPhone/iPad unter http://pi.local:8080/remote.html -
+  # pi.local loest oft zuerst per IPv6 auf). "0.0.0.0" = nur IPv4,
+  # "127.0.0.1" = nur auf dem Pi selbst.
+  host: "::"
   port: 8080
   title: "JARVIS"
   boot_animation_seconds: 4

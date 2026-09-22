@@ -3,6 +3,7 @@ uvicorn[standard]>=0.30
 pyyaml>=6.0
 python-dotenv>=1.0
 requests>=2.31
+httpx>=0.27
 icalendar>=5.0
 recurring-ical-events>=2.1
 caldav>=1.3
