@@ -785,6 +785,12 @@ button {
   box-shadow: 0 0 20px -6px rgba(var(--tint), 0.9);
 }
 
+.jf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .rail {
   display: flex;
   gap: 12px;
