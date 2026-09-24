@@ -27,6 +27,7 @@ UNIVERSE_SIZE = 512
 _REQUEST_TYPE_OUT = 0x40
 _CMD_SET_CHANNEL_RANGE = 2
 _TIMEOUT_MS = 1000
+_EOVERFLOW = 75
 
 
 class UDMXError(RuntimeError):
@@ -58,6 +59,10 @@ class UDMX:
                 len(data), start_channel - 1, data, _TIMEOUT_MS,
             )
         except usb.core.USBError as exc:
+            # Nachbauten (Seriennummer "ilLUTZminator") quittieren den Transfer
+            # mit EOVERFLOW, uebernehmen die Werte aber korrekt (am Geraet geprueft).
+            if exc.errno == _EOVERFLOW:
+                return
             # Adapter abgezogen/neu verbunden: beim naechsten Mal neu suchen
             self._device = None
             if exc.errno == 13:
