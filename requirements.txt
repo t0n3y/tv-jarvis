@@ -11,3 +11,4 @@ beautifulsoup4>=4.12
 notion-client>=2.2
 websockets>=12.0
 piper-tts>=1.8
+pyusb>=1.2
