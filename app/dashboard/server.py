@@ -33,6 +33,7 @@ from starlette.datastructures import MutableHeaders
 from app import audio_control, jellyfin_client, kiosk_media, radio, radio_stations, schedule_store, tv_power
 from app.config import ROOT_DIR, get_config
 from app.dashboard import kiosk
+from app.lighting import engine as lighting
 from app.scheduler import Scheduler
 from app.sources import todos_icloud_shortcut
 
@@ -216,6 +217,7 @@ def _finish_jellyfin_session(position: float | None = None) -> None:
 @app.on_event("startup")
 async def _start_scheduler() -> None:
     Scheduler(get_config()).start()
+    lighting.get_engine().start()
 
 
 @app.on_event("shutdown")
@@ -592,6 +594,26 @@ async def remote_radio(request: Request) -> dict:
     return {"ok": True, "playing": radio.is_playing()}
 
 
+# ---------- Licht (DMX) ----------
+
+LIGHT_FIELDS = {"on", "brightness", "color", "effect", "bpm", "fixtures", "tap"}
+
+
+@app.get("/api/remote/light", dependencies=[Depends(require_remote_secret)])
+async def get_light() -> dict:
+    return {**lighting.get_engine().state(), "effects": lighting.effect_catalog()}
+
+
+@app.post("/api/remote/light", dependencies=[Depends(require_remote_secret)])
+async def set_light(request: Request) -> dict:
+    body = await request.json()
+    changes = {k: v for k, v in body.items() if k in LIGHT_FIELDS}
+    try:
+        return lighting.get_engine().update(changes)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 # ---------- Status / Einstellungen ----------
 
 @app.get("/api/remote/now-playing", dependencies=[Depends(require_remote_secret)])
@@ -603,6 +625,7 @@ async def get_now_playing() -> dict:
         "jellyfin": jellyfin_now_playing,
         "jellyfin_error": jellyfin_error,
         "radio": {"playing": radio.is_playing(), "station": radio_stations.current_station(cfg)},
+        "light": lighting.get_engine().state(),
     }
 
 

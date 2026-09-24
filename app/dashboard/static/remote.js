@@ -207,6 +207,7 @@ let currentView = "home";
 const VIEW_HOOKS = {
   jellyfin: () => jellyfinLoadHome(),
   radio: () => loadStations(),
+  light: () => loadLight(),
   settings: () => loadSettings(),
 };
 
@@ -873,6 +874,271 @@ onTap($("radio-toggle"), async () => {
   poll();
 });
 
+// ---------- Licht ----------
+
+const LIGHT_SWATCHES = [
+  ["Rot", "#ff1a1a"],
+  ["Orange", "#ff5a00"],
+  ["Warmweiß", "#ff9a3c"],
+  ["Weiß", "#ffffff"],
+  ["Grün", "#00ff4c"],
+  ["Cyan", "#00e1ff"],
+  ["Blau", "#1a3bff"],
+  ["Lila", "#9a2bff"],
+  ["Pink", "#ff2bb4"],
+];
+// Standlicht steht mit in der Soft-Gruppe, sonst stuende es allein in einer Zeile
+const LIGHT_GROUPS = [
+  { id: "soft", name: "Soft", sub: "Standlicht & weiche Verläufe", members: ["static", "soft"] },
+  { id: "hard", name: "Hard", sub: "harte Wechsel auf dem Schlag", members: ["hard"] },
+  { id: "ramp", name: "Ramp", sub: "dimmt im Takt hoch", members: ["ramp"] },
+];
+const LIGHT_HOLD_MS = 2000;
+const LIGHT_THROTTLE_MS = 90;
+const TAP_RESET_MS = 2000;
+const TAP_MAX = 8;
+const BPM_MIN = 40;
+const BPM_MAX = 220;
+
+let light = null;
+let lightEffects = [];
+let lightHoldUntil = 0;
+let lightSeq = 0;
+let lightDragging = null;
+let taps = [];
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
+
+function clampBpm(bpm) {
+  return Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(bpm)));
+}
+
+// Regler senden waehrend des Ziehens hoechstens alle LIGHT_THROTTLE_MS
+function throttle(fn, ms) {
+  let last = 0;
+  let timer = null;
+  let pending;
+  return (arg) => {
+    pending = arg;
+    const wait = last + ms - Date.now();
+    if (wait <= 0) {
+      last = Date.now();
+      fn(pending);
+    } else if (!timer) {
+      timer = setTimeout(() => {
+        timer = null;
+        last = Date.now();
+        fn(pending);
+      }, wait);
+    }
+  };
+}
+
+async function lightSend(changes) {
+  if (!light) return;
+  // Sofort anzeigen; der Status-Poll darf den lokalen Stand kurz nicht ueberschreiben
+  lightHoldUntil = Date.now() + LIGHT_HOLD_MS;
+  const { tap, ...visible } = changes;
+  Object.assign(light, visible);
+  renderLight();
+  const seq = ++lightSeq;
+  try {
+    const result = await api.post("/api/remote/light", changes);
+    if (seq === lightSeq) {
+      light = result;
+      renderLight();
+    }
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+const sendThrottled = throttle(lightSend, LIGHT_THROTTLE_MS);
+
+async function loadLight() {
+  try {
+    const data = await api.get("/api/remote/light");
+    const { effects, ...rest } = data;
+    if (!lightEffects.length) {
+      lightEffects = effects || [];
+      buildEffectTiles();
+    }
+    light = rest;
+    renderLight();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+function buildSwatches() {
+  const custom = h("input", { type: "color", id: "light-custom", "aria-label": "Eigene Farbe" });
+  custom.addEventListener("input", () => sendThrottled({ color: custom.value, on: true }));
+  $("light-swatches").replaceChildren(
+    ...LIGHT_SWATCHES.map(([name, hex]) =>
+      h("button", {
+        class: "swatch",
+        type: "button",
+        style: `--swatch:${hex}`,
+        "data-color": hex,
+        "aria-label": name,
+        onclick: () => lightSend({ color: hex, on: true }),
+      })
+    ),
+    h("label", { class: "swatch swatch-custom", "aria-label": "Eigene Farbe" }, custom)
+  );
+}
+
+function buildEffectTiles() {
+  $("light-effects").replaceChildren(
+    ...LIGHT_GROUPS.map((group) => {
+      const effects = lightEffects.filter((effect) => group.members.includes(effect.group));
+      return h(
+        "div",
+        null,
+        h("div", { class: "fx-group-label" }, group.name, h("span", null, group.sub)),
+        h(
+          "div",
+          { class: "fx-grid" },
+          ...effects.map((effect) =>
+            h(
+              "button",
+              {
+                class: `fx-tile fx-${effect.group}`,
+                type: "button",
+                "data-effect": effect.id,
+                onclick: () => lightSend({ effect: effect.id, on: true }),
+              },
+              h("span", { class: "fx-preview" }, h("i"), h("i"), h("i"), h("i")),
+              h("span", { class: "fx-name" }, effect.name)
+            )
+          )
+        )
+      );
+    })
+  );
+}
+
+function paintRange(range) {
+  const min = Number(range.min) || 0;
+  const max = Number(range.max) || 100;
+  range.style.setProperty("--pct", `${((Number(range.value) - min) / (max - min)) * 100}%`);
+}
+
+function renderLight() {
+  if (!light) return;
+  const view = $("view-light");
+  const effect = lightEffects.find((e) => e.id === light.effect);
+  const animated = light.on && light.effect !== "static";
+  view.style.setProperty("--lamp", hexToRgb(light.color));
+  view.style.setProperty("--beat", `${(60 / light.bpm).toFixed(3)}s`);
+
+  const hero = $("light-hero");
+  hero.classList.toggle("on", light.on);
+  hero.classList.toggle("off", !light.on);
+  hero.classList.toggle("animated", animated);
+  hero.style.setProperty("--orb-level", String(Math.max(0.3, light.brightness / 100)));
+  $("light-kicker").textContent = light.on ? (animated ? `An · ${Math.round(light.bpm)} BPM` : "An") : "Aus";
+  $("light-effect-name").textContent = effect ? effect.name : "Standlicht";
+  setIcon($("light-power"), "power", light.on ? "Ausschalten" : "Einschalten");
+
+  if (lightDragging !== "brightness") {
+    $("light-brightness").value = String(light.brightness);
+    paintRange($("light-brightness"));
+  }
+  $("light-brightness-label").textContent = `${light.brightness}%`;
+
+  if (lightDragging !== "bpm") {
+    $("light-bpm-range").value = String(Math.round(light.bpm));
+    paintRange($("light-bpm-range"));
+  }
+  $("light-bpm").textContent = String(Math.round(light.bpm));
+
+  document.querySelectorAll("#light-swatches .swatch[data-color]").forEach((el) => {
+    el.classList.toggle("active", el.dataset.color === light.color);
+  });
+  const custom = $("light-custom");
+  if (custom && document.activeElement !== custom) custom.value = light.color;
+  document.querySelectorAll("#light-effects .fx-tile").forEach((el) => {
+    el.classList.toggle("active", el.dataset.effect === light.effect);
+  });
+
+  $("light-fixtures").textContent = String(light.fixtures);
+  const addresses = (light.addresses || []).map((a) => `d${String(a).padStart(3, "0")}`);
+  $("light-addresses").textContent = `${addresses.length > 1 ? "DMX-Adressen" : "DMX-Adresse"} ${addresses.join(", ")}`;
+
+  $("light-error").classList.toggle("hidden", !light.error);
+  $("light-error").textContent = light.error || "";
+}
+
+function syncLightFromPoll() {
+  if (!state.light || !light || lightDragging || Date.now() < lightHoldUntil) return;
+  light = state.light;
+  renderLight();
+}
+
+function bindLightRange(id, key, toValue) {
+  const range = $(id);
+  range.addEventListener("input", () => {
+    lightDragging = key;
+    paintRange(range);
+    const value = toValue(Number(range.value));
+    if (key === "brightness") $("light-brightness-label").textContent = `${value}%`;
+    else $("light-bpm").textContent = String(value);
+    sendThrottled({ [key]: value });
+  });
+  range.addEventListener("change", () => {
+    lightDragging = null;
+    lightSend({ [key]: toValue(Number(range.value)) });
+  });
+}
+
+bindLightRange("light-brightness", "brightness", (v) => v);
+bindLightRange("light-bpm-range", "bpm", clampBpm);
+
+onTap($("light-power"), () => lightSend({ on: !(light && light.on) }));
+onTap($("bpm-half"), () => lightSend({ bpm: clampBpm(light.bpm / 2) }));
+onTap($("bpm-double"), () => lightSend({ bpm: clampBpm(light.bpm * 2) }));
+onTap($("fixtures-minus"), () => lightSend({ fixtures: Math.max(1, light.fixtures - 1) }));
+onTap($("fixtures-plus"), () => lightSend({ fixtures: Math.min(8, light.fixtures + 1) }));
+
+// Tap-Sync: jeder Tipp legt den Schlag auf "jetzt", ab dem zweiten Tipp wird
+// aus den Abstaenden (Mittel der letzten Taps) das Tempo berechnet.
+function restartBeatAnimation() {
+  const el = $("tap-beat");
+  el.style.animation = "none";
+  void el.offsetWidth;
+  el.style.animation = "";
+}
+
+$("tap-btn").addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  if (!light) return;
+  const now = performance.now();
+  if (taps.length && now - taps[taps.length - 1] > TAP_RESET_MS) taps = [];
+  taps.push(now);
+  taps = taps.slice(-TAP_MAX);
+  const changes = { tap: true };
+  if (taps.length >= 2) {
+    const average = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
+    changes.bpm = clampBpm(60000 / average);
+    $("tap-hint").textContent = `${taps.length} Taps · ${changes.bpm} BPM`;
+  } else {
+    $("tap-hint").textContent = "Weiter im Takt tippen …";
+  }
+  $("tap-btn").classList.add("pressed");
+  restartBeatAnimation();
+  lightSend(changes);
+});
+
+["pointerup", "pointercancel", "pointerleave"].forEach((type) =>
+  $("tap-btn").addEventListener(type, () => $("tap-btn").classList.remove("pressed"))
+);
+
+buildSwatches();
+
 // ---------- Einstellungen ----------
 
 async function loadSettings() {
@@ -982,6 +1248,7 @@ function renderAll() {
   renderYoutube();
   renderJellyfinNow();
   renderRadio();
+  syncLightFromPoll();
 }
 
 let pollTimer = null;

@@ -42,6 +42,8 @@
   <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M8.2 8.2a5.4 5.4 0 0 0 0 7.6M15.8 8.2a5.4 5.4 0 0 1 0 7.6M5.3 5.3a9.5 9.5 0 0 0 0 13.4M18.7 5.3a9.5 9.5 0 0 1 0 13.4"/></symbol>
   <symbol id="i-youtube" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-jellyfin" viewBox="0 0 24 24"><path d="M12 3.2 2.8 19.6h18.4z"/><path d="M12 10.2 8.6 16.3h6.8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
 </svg>
 
@@ -101,6 +103,10 @@
       <button class="app-tile" data-open="radio" style="--app-rgb: 79, 216, 255">
         <span class="app-icon"><svg class="icon"><use href="#i-radio"/></svg></span>
         <span class="app-name">Radio</span>
+      </button>
+      <button class="app-tile" data-open="light" style="--app-rgb: 255, 176, 59">
+        <span class="app-icon"><svg class="icon"><use href="#i-sun"/></svg></span>
+        <span class="app-name">Licht</span>
       </button>
       <button class="app-tile" data-open="settings" style="--app-rgb: 170, 190, 214">
         <span class="app-icon"><svg class="icon"><use href="#i-sliders"/></svg></span>
@@ -213,6 +219,68 @@
 
     <div class="section-label">Sender</div>
     <div class="list" id="station-list"></div>
+  </section>
+
+  <!-- ================= Licht ================= -->
+  <section class="view hidden" id="view-light">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Licht</h1>
+    </div>
+
+    <div class="light-error hidden" id="light-error"></div>
+
+    <div class="card light-hero" id="light-hero">
+      <div class="light-orb" id="light-orb"><span class="light-orb-core"></span></div>
+      <div class="light-hero-main">
+        <div class="kicker" id="light-kicker">Aus</div>
+        <div class="light-effect-name" id="light-effect-name">Standlicht</div>
+        <button class="pill-btn light-power" id="light-power"><svg class="icon"><use href="#i-power"/></svg><span>Einschalten</span></button>
+      </div>
+      <div class="light-dim">
+        <svg class="icon"><use href="#i-sun"/></svg>
+        <input type="range" class="range" id="light-brightness" min="0" max="100" step="1" value="80" aria-label="Helligkeit" />
+        <span class="light-dim-value" id="light-brightness-label">80%</span>
+      </div>
+    </div>
+
+    <div class="section-label">Farbe</div>
+    <div class="swatches" id="light-swatches"></div>
+
+    <div class="section-label">Tempo</div>
+    <div class="card tempo-card">
+      <div class="tempo-top">
+        <div>
+          <div class="tempo-bpm"><span id="light-bpm">120</span><small>BPM</small></div>
+          <div class="tempo-hint" id="tap-hint">Im Takt tippen zum Synchronisieren</div>
+        </div>
+        <div class="tempo-steps">
+          <button class="icon-btn" id="bpm-half" aria-label="Halbes Tempo">½</button>
+          <button class="icon-btn" id="bpm-double" aria-label="Doppeltes Tempo">2×</button>
+        </div>
+      </div>
+      <input type="range" class="range" id="light-bpm-range" min="40" max="220" step="1" value="120" aria-label="BPM" />
+      <button class="tap-btn" id="tap-btn"><span class="tap-beat" id="tap-beat"></span>TAP</button>
+    </div>
+
+    <div class="section-label">Effekte</div>
+    <div class="fx-groups" id="light-effects"></div>
+
+    <div class="section-label">Lampen</div>
+    <div class="group">
+      <div class="group-row">
+        <span class="row-main">
+          <div>Angeschlossene Lampen</div>
+          <div class="row-sub" id="light-addresses">DMX-Adresse d001</div>
+        </span>
+        <div class="stepper">
+          <button class="icon-btn icon-btn-sm" id="fixtures-minus" aria-label="Eine Lampe weniger"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <span class="stepper-value" id="light-fixtures">1</span>
+          <button class="icon-btn icon-btn-sm" id="fixtures-plus" aria-label="Eine Lampe mehr"><svg class="icon"><use href="#i-plus"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Jede weitere Lampe bekommt am Gerät die nächste Adresse im 8er-Abstand (d009, d017, d025 …) und den 8-Kanal-Modus – dann läuft sie automatisch im Takt mit.</p>
   </section>
 
   <!-- ================= Einstellungen ================= -->
