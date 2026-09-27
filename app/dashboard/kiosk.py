@@ -91,7 +91,10 @@ def start(cfg: Config) -> None:
 
     # Immer localhost statt cfg.dashboard.host: der Server lauscht ggf. auf
     # "::"/"0.0.0.0" (fuers Handy im WLAN) - das sind keine gueltigen Ziele.
-    url = f"http://127.0.0.1:{cfg.dashboard.port}/"
+    # Bewusst der Name "localhost", nicht 127.0.0.1: eingebettete Musikvideos
+    # (Label-/"Topic"-Videos) lehnt YouTube bei einer IP als Herkunft mit
+    # Fehler 150 ab, bei localhost spielen sie.
+    url = f"http://localhost:{cfg.dashboard.port}/"
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
 
