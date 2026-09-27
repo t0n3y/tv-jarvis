@@ -175,8 +175,8 @@ dann lauscht der Server per IPv4 **und** IPv6.
 Aufbau wie ein Tablet-Homescreen:
 
 - **Homescreen**: Uhr + Begrüßung, "Jetzt läuft"-Karte (tippen öffnet die
-  passende App), Fernseher an/aus, App-Icons für Jellyfin, YouTube, Radio und
-  Einstellungen.
+  passende App), Fernseher an/aus, App-Icons für Jellyfin, YouTube, Radio,
+  Platten, Licht und Einstellungen.
 - **Jellyfin-App**: eigene Bibliothek mit Postern durchsuchen (Filme, Serien -
   Serien/Staffeln lassen sich aufklappen), Suche, "Weiterschauen"-Leiste.
   Antippen öffnet eine Detailansicht mit Beschreibung und "Abspielen" bzw.
@@ -189,6 +189,21 @@ Aufbau wie ein Tablet-Homescreen:
   Fortschrittsbalken, 10s zurück/vor sowie ein Pause/Weiter-Knopf.
 - **Radio-App**: zwischen den konfigurierten Sendern wechseln (Standard:
   Sunshine Live, 1LIVE) sowie Stopp.
+- **Platten-App (Plattenschrank)**: eigene Retro-Optik (angelehnt an
+  wgv-sv.de/platten) mit einem Holzschrank pro Genre. Platte antippen →
+  "Platte auflegen", "Mischen" oder einen einzelnen Song; pro Schrank
+  abspielen/mischen, oben "Zufallsmix" über alles. Solange etwas läuft,
+  zeigt ein Hi-Fi-Deck Titel, Fortschritt und Tasten (zurück, Pause, weiter,
+  Stopp). **Neue Musik:** "Platte dazu" → Album oder einzelnen Song suchen
+  (Cover + Tracklist über die iTunes-Suche, ohne Account) → Lieblingssongs
+  antippen → Schrank wählen. Das passende YouTube-Video je Song sucht der Pi
+  selbst ("<Künstler> <Song> topic", yt-dlp als Rückfallebene). Auf dem
+  Fernseher läuft ein Plattenspieler-Bildschirm (drehende Platte mit Cover als
+  Etikett, Tonarm folgt dem Songfortschritt, Tracklist); der YouTube-Player
+  spielt unsichtbar dahinter. Sammlung: `data/vinyl.json` (beim ersten Start
+  aus `app/vinyl_seed.json` befüllt).
+- **Licht-App**: DMX-Scheinwerfer über den uDMX-Adapter – Farbe, Helligkeit,
+  Effekte (Soft/Hard/Ramp) im BPM-Takt mit Fader und Tap-Sync.
 - **Einstellungen-App**: Wecker an/aus + Weck-/Verlasszeiten für Wochentag und
   Wochenende (wirkt sofort, siehe oben), Radiosender hinzufügen/entfernen.
 - **Control-Dock**: am unteren Rand fest sichtbar, egal welche App gerade
@@ -197,8 +212,11 @@ Aufbau wie ein Tablet-Homescreen:
 
 Abspielen bei ausgeschaltetem Fernseher schaltet ihn automatisch ein und
 startet das Video, sobald der Kiosk bereit ist. Es läuft immer nur eine Quelle
-(Jellyfin, YouTube oder Radio) - jede neue stoppt die vorherige. YouTube-
-Untertitel und YouTubes eigenes Pause-Overlay sind unterdrückt.
+(Jellyfin, YouTube, Plattenspieler oder Radio) - jede neue stoppt die
+vorherige. YouTube-Untertitel und YouTubes eigenes Pause-Overlay sind
+unterdrückt. Der Kiosk lädt die Seite bewusst über `localhost` (nicht
+127.0.0.1): bei einer IP als Herkunft verweigert YouTube eingebettete
+Musikvideos mit Fehler 150.
 
 **Jellyfin-App einrichten:** In Jellyfin unter Dashboard → API-Schlüssel einen
 Schlüssel anlegen, in `.env` als `JELLYFIN_API_KEY` eintragen und in
@@ -231,6 +249,8 @@ app/
   tv_power.py                 Gemeinsames An/Aus (Routinen + Fernbedienung)
   kiosk_media.py                YouTube-/Jellyfin-Steuerung (WebSocket-Broadcast)
   jellyfin_client.py             Jellyfin-REST-API (Bibliothek, Details, Position)
+  vinyl_library.py               Plattenschrank: Sammlung + Suche (iTunes, YouTube)
+  lighting/                      uDMX-Treiber + Licht-Engine (BPM-Effekte)
   audio_control.py               Lautstaerke ueber PipeWire/wpctl
   sources/                        Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
   tv_control/                      CEC- und Steckdosen-Backend (austauschbar)
