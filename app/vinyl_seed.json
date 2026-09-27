@@ -32,14 +32,6 @@
       "genre": "soul-jazz",
       "songs": [
         {
-          "title": "Smooth Operator",
-          "youtube": "rS7Va0sBYAM"
-        },
-        {
-          "title": "Kiss of Life",
-          "youtube": "uEcKk2U_U7A"
-        },
-        {
           "title": "Your Love Is King",
           "youtube": "c_lgse6-JKo"
         },
@@ -48,12 +40,60 @@
           "youtube": "4h1_x0dtLXE"
         },
         {
+          "title": "Smooth Operator",
+          "youtube": "rS7Va0sBYAM"
+        },
+        {
+          "title": "Jezebel",
+          "youtube": "Y5ErvkbZ7GQ"
+        },
+        {
+          "title": "The Sweetest Taboo",
+          "youtube": "7s9VY9kqgfE"
+        },
+        {
+          "title": "Is It a Crime?",
+          "youtube": "FrD01XVOl80"
+        },
+        {
+          "title": "Never As Good As the First Time",
+          "youtube": "8nskZIpOODs"
+        },
+        {
+          "title": "Love Is Stronger Than Pride",
+          "youtube": "0ZARYxRmNWg"
+        },
+        {
           "title": "Paradise",
           "youtube": "HywzuV7yYmg"
         },
         {
+          "title": "Nothing Can Come Between Us",
+          "youtube": "MDw6zODvxFI"
+        },
+        {
+          "title": "No Ordinary Love",
+          "youtube": "k1k6EUW0czc"
+        },
+        {
+          "title": "Like a Tattoo",
+          "youtube": "oP4sBeV7llE"
+        },
+        {
+          "title": "Kiss of Life",
+          "youtube": "uEcKk2U_U7A"
+        },
+        {
+          "title": "Please Send Me Someone to Love",
+          "youtube": "T_s8tpR8EME"
+        },
+        {
           "title": "Cherish the Day",
           "youtube": "Y7JuCab6yqs"
+        },
+        {
+          "title": "Pearls",
+          "youtube": "lfxEbZr8Tjo"
         }
       ]
     },
@@ -71,8 +111,36 @@
           "youtube": "A2VpR8HahKc"
         },
         {
+          "title": "Aerodynamic",
+          "youtube": "Mjpu0-o9iek"
+        },
+        {
+          "title": "Digital Love",
+          "youtube": "4whD6uAryMs"
+        },
+        {
           "title": "Harder, Better, Faster, Stronger",
           "youtube": "yydNF8tuVmU"
+        },
+        {
+          "title": "Crescendolls",
+          "youtube": "oor2uIqys8M"
+        },
+        {
+          "title": "Nightvision",
+          "youtube": "NQ-mm1H7uJw"
+        },
+        {
+          "title": "Superheroes",
+          "youtube": "UBGfS7S9BYg"
+        },
+        {
+          "title": "High Life",
+          "youtube": "KlUtJOTmmk8"
+        },
+        {
+          "title": "Something About Us",
+          "youtube": "em0MknB6wFo"
         },
         {
           "title": "Voyager",
@@ -81,6 +149,18 @@
         {
           "title": "Veridis Quo",
           "youtube": "TCd6PfxOy0Y"
+        },
+        {
+          "title": "Short Circuit",
+          "youtube": "9hhVnRTNVmM"
+        },
+        {
+          "title": "Face to Face",
+          "youtube": "UKYWWfR_GKA"
+        },
+        {
+          "title": "Too Long",
+          "youtube": "ROF4uNjrB4U"
         }
       ]
     },
@@ -94,9 +174,29 @@
       "genre": "soul-jazz",
       "songs": [
         {
+          "title": "Winelight",
+          "youtube": "wPH1IuMtFGc"
+        },
+        {
+          "title": "Let It Flow (For \"Dr. J\")",
+          "youtube": "GF97EeXmahM"
+        },
+        {
+          "title": "In the Name of Love",
+          "youtube": "KZTJGFvRGiU"
+        },
+        {
+          "title": "Take Me There",
+          "youtube": "QNNDGvdwhGM"
+        },
+        {
           "title": "Just the Two of Us",
           "youtube": "6IO74QV6wHY",
           "artist": "Grover Washington, Jr. feat. Bill Withers"
+        },
+        {
+          "title": "Make Me a Memory",
+          "youtube": "vLv2tua4i-U"
         }
       ]
     },
@@ -110,8 +210,25 @@
       "genre": "electronic-house",
       "songs": [
         {
+          "title": "Give Life Back to Music",
+          "youtube": "IluRBvnYMoY"
+        },
+        {
+          "title": "The Game of Love",
+          "youtube": "ajGKWk0auOc"
+        },
+        {
           "title": "Giorgio by Moroder",
           "youtube": "zhl-Cs1-sG4"
+        },
+        {
+          "title": "Within",
+          "youtube": "cuj__JnGWLg"
+        },
+        {
+          "title": "Instant Crush",
+          "youtube": "a5uQMwRMHcs",
+          "artist": "Daft Punk & Julian Casablancas"
         },
         {
           "title": "Lose Yourself to Dance",
@@ -119,14 +236,36 @@
           "artist": "Daft Punk feat. Pharrell Williams"
         },
         {
+          "title": "Touch",
+          "youtube": "0Gkhol2Q1og",
+          "artist": "Daft Punk & Paul Williams"
+        },
+        {
           "title": "Get Lucky",
           "youtube": "5NV6Rdv1a3I",
           "artist": "Daft Punk feat. Pharrell Williams & Nile Rodgers"
         },
         {
+          "title": "Beyond",
+          "youtube": "3T0NqvdUiWI"
+        },
+        {
+          "title": "Motherboard",
+          "youtube": "wz7YiQdNmZ8"
+        },
+        {
+          "title": "Fragments of Time",
+          "youtube": "_ScM9pKlCfo",
+          "artist": "Daft Punk & Todd Edwards"
+        },
+        {
           "title": "Doin' It Right",
           "youtube": "LL-gyhZVvx0",
           "artist": "Daft Punk feat. Panda Bear"
+        },
+        {
+          "title": "Contact",
+          "youtube": "JI5noh4OyXc"
         }
       ]
     },
@@ -139,6 +278,42 @@
       "color": "#8c6a3f",
       "genre": "pop-rock",
       "songs": [
+        {
+          "title": "Rosanna",
+          "youtube": "qmOLtTGvsbM"
+        },
+        {
+          "title": "Make Believe",
+          "youtube": "3WlRcAGbkpw"
+        },
+        {
+          "title": "I Won't Hold You Back",
+          "youtube": "Z--Sp9qcuHY"
+        },
+        {
+          "title": "Good for You",
+          "youtube": "THg_SstzMKI"
+        },
+        {
+          "title": "It's a Feeling",
+          "youtube": "_UUicUdVras"
+        },
+        {
+          "title": "Afraid of Love",
+          "youtube": "WXlJNzS0Kx4"
+        },
+        {
+          "title": "Lovers In the Night",
+          "youtube": "-drNs_prTwI"
+        },
+        {
+          "title": "We Made It",
+          "youtube": "DYXe6gO0bAs"
+        },
+        {
+          "title": "Waiting for Your Love",
+          "youtube": "G0tfSrDV7eY"
+        },
         {
           "title": "Africa",
           "youtube": "TP_eAvRXtpM"
@@ -170,6 +345,62 @@
       "genre": "disco-funk",
       "songs": [
         {
+          "title": "Spicks and Specks",
+          "youtube": "WpK7ZmRaeys"
+        },
+        {
+          "title": "New York Mining Disaster 1941",
+          "youtube": "S43YhQ_eGTw"
+        },
+        {
+          "title": "To Love Somebody",
+          "youtube": "mD3UicxoQGE"
+        },
+        {
+          "title": "Massachusetts",
+          "youtube": "ZZR23dPiVMs"
+        },
+        {
+          "title": "Words",
+          "youtube": "UmoAMZg8MvI"
+        },
+        {
+          "title": "I've Gotta Get a Message To You",
+          "youtube": "FRV_7eEgobw"
+        },
+        {
+          "title": "I Started a Joke",
+          "youtube": "4ZWKR2zJESk"
+        },
+        {
+          "title": "Lonely Days",
+          "youtube": "ggdikBPPPSM"
+        },
+        {
+          "title": "How Can You Mend a Broken Heart",
+          "youtube": "kL9wJAND1WI"
+        },
+        {
+          "title": "Jive Talkin'",
+          "youtube": "oALKAh_bL5g"
+        },
+        {
+          "title": "Nights On Broadway",
+          "youtube": "5g2bJbrwLmk"
+        },
+        {
+          "title": "Fanny (Be Tender With My Love)",
+          "youtube": "CE5weQdQOn4"
+        },
+        {
+          "title": "You Should Be Dancing",
+          "youtube": "1sqE6P3XyiQ"
+        },
+        {
+          "title": "How Deep Is Your Love (From \"Saturday Night Fever\" Soundtrack)",
+          "youtube": "lQkB4i0KQa8"
+        },
+        {
           "title": "Stayin' Alive",
           "youtube": "GbsFCYEJGZ0"
         },
@@ -180,6 +411,22 @@
         {
           "title": "More Than a Woman",
           "youtube": "uQ9_MwZIaoc"
+        },
+        {
+          "title": "Too Much Heaven",
+          "youtube": "Yugkaa67tqM"
+        },
+        {
+          "title": "Tragedy",
+          "youtube": "I248-SyRDnU"
+        },
+        {
+          "title": "Love You Inside Out",
+          "youtube": "W4Rw2CnX43I"
+        },
+        {
+          "title": "You Win Again",
+          "youtube": "xviuC-0FwQ0"
         }
       ]
     },
@@ -195,6 +442,54 @@
         {
           "title": "Pass the Dutchie",
           "youtube": "SDudKSh62Eo"
+        },
+        {
+          "title": "Heartbreaker",
+          "youtube": "QECNc_KDCyY"
+        },
+        {
+          "title": "Gone Straight",
+          "youtube": "C1e4q6s1Pe4"
+        },
+        {
+          "title": "Blind Boy",
+          "youtube": "si6xn2owztY"
+        },
+        {
+          "title": "Rockers",
+          "youtube": "Nv4WiGeszys"
+        },
+        {
+          "title": "Youth Of Today",
+          "youtube": "w_jImS22Ivs"
+        },
+        {
+          "title": "Young Generation",
+          "youtube": "wTT2mZrGx-4"
+        },
+        {
+          "title": "Mirror Mirror",
+          "youtube": "UzlWIb9c8kA"
+        },
+        {
+          "title": "Children Of Zion",
+          "youtube": "Q1jcd9xQVwo"
+        },
+        {
+          "title": "Never Gonna Give You Up",
+          "youtube": "OU3UfgKJoCk"
+        },
+        {
+          "title": "Rub 'N' Dub",
+          "youtube": "Zl37UK23Btw"
+        },
+        {
+          "title": "Schoolgirl",
+          "youtube": "cyesMfo4zVI"
+        },
+        {
+          "title": "(Please) Give Love A Chance",
+          "youtube": "61Vt-2igokg"
         }
       ]
     },
@@ -208,21 +503,69 @@
       "genre": "pop-rock",
       "songs": [
         {
-          "title": "Easy Lover",
-          "youtube": "tWLdAdjYx7k",
-          "artist": "Philip Bailey & Phil Collins"
+          "title": "Something Happened on the Way to Heaven",
+          "youtube": "cbLh9tpbGss"
+        },
+        {
+          "title": "Against All Odds (Take a Look at Me Now)",
+          "youtube": "wuvtoyVi7vY"
         },
         {
           "title": "Another Day in Paradise",
           "youtube": "sXAqwZt0aEI"
         },
         {
-          "title": "You Can't Hurry Love",
-          "youtube": "oXSn_N2jmBs"
+          "title": "Take Me Home",
+          "youtube": "jq1oyB1CNa4"
+        },
+        {
+          "title": "True Colors",
+          "youtube": "2FMtxACKlYM"
+        },
+        {
+          "title": "Easy Lover",
+          "youtube": "tWLdAdjYx7k",
+          "artist": "Philip Bailey & Phil Collins"
+        },
+        {
+          "title": "One More Night",
+          "youtube": "xNY_ddMxhZE"
+        },
+        {
+          "title": "Sussudio",
+          "youtube": "1wv4yTSFlHI"
+        },
+        {
+          "title": "A Groovy Kind of Love",
+          "youtube": "HsC_SARyPzk"
+        },
+        {
+          "title": "I Wish It Would Rain Down",
+          "youtube": "vZAkqukvfSE"
+        },
+        {
+          "title": "Everyday",
+          "youtube": "g3eTiqUbjkU"
         },
         {
           "title": "In the Air Tonight",
           "youtube": "cuHvKksNriE"
+        },
+        {
+          "title": "You Can't Hurry Love",
+          "youtube": "oXSn_N2jmBs"
+        },
+        {
+          "title": "Two Hearts",
+          "youtube": "SidxJz94Svs"
+        },
+        {
+          "title": "Don't Lose My Number",
+          "youtube": "cG9Ei-HyymE"
+        },
+        {
+          "title": "Do You Remember?",
+          "youtube": "NTvR7HySgHo"
         }
       ]
     },
@@ -242,6 +585,2199 @@
         {
           "title": "Nothing Left to Lose",
           "youtube": "M6QKZJeK-5w"
+        }
+      ]
+    },
+    {
+      "id": "691eb246d8",
+      "album": "What's Going On",
+      "artist": "Marvin Gaye",
+      "year": 1971,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/76/36/2d/76362d74-cb7a-8ef9-104e-cde1d858e9a9/20UMGIM95279.rgb.jpg/600x600bb.jpg",
+      "color": "#7a2e3a",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "What's Going On",
+          "youtube": "H-kA3UtBj4M"
+        },
+        {
+          "title": "What's Happening Brother",
+          "youtube": "UyRws-t7ks4"
+        },
+        {
+          "title": "Flyin' High (In the Friendly Sky)",
+          "youtube": "ia89aijDluk"
+        },
+        {
+          "title": "Save the Children",
+          "youtube": "m7f8EuV0t5I"
+        },
+        {
+          "title": "God Is Love",
+          "youtube": "eW8Kx-vwBV4"
+        },
+        {
+          "title": "Mercy Mercy Me (The Ecology)",
+          "youtube": "idIcs4YyzmQ"
+        },
+        {
+          "title": "Right On",
+          "youtube": "vimVy3eRl9k"
+        },
+        {
+          "title": "Wholy Holy",
+          "youtube": "Sds2Y88YGBE"
+        },
+        {
+          "title": "Inner City Blues (Make Me Wanna Holler)",
+          "youtube": "1RvZvD3UgvA"
+        }
+      ]
+    },
+    {
+      "id": "7e88b810c6",
+      "album": "Innervisions",
+      "artist": "Stevie Wonder",
+      "year": 1973,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/ff/c2/5f/ffc25f04-cb3b-b56e-dd28-8b77ae63e613/00602537070824.rgb.jpg/600x600bb.jpg",
+      "color": "#9c36b5",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Too High",
+          "youtube": "UvtYEdYjkJM"
+        },
+        {
+          "title": "Visions",
+          "youtube": "fy4fMlLj_B8"
+        },
+        {
+          "title": "Living For the City",
+          "youtube": "Nu95a_RiH54"
+        },
+        {
+          "title": "Golden Lady",
+          "youtube": "CXCTjAMR3eA"
+        },
+        {
+          "title": "Higher Ground",
+          "youtube": "1esf0efHbjM"
+        },
+        {
+          "title": "Jesus Children of America",
+          "youtube": "8o8FVoib92w"
+        },
+        {
+          "title": "All In Love Is Fair",
+          "youtube": "1surYguNfEg"
+        },
+        {
+          "title": "Don't You Worry 'Bout a Thing",
+          "youtube": "RxsBc5p-dPU"
+        },
+        {
+          "title": "He's Misstra Know-It-All",
+          "youtube": "uivvYGyQiow"
+        }
+      ]
+    },
+    {
+      "id": "f431875c76",
+      "album": "Menagerie",
+      "artist": "Bill Withers",
+      "year": 1977,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/17/26/59/17265978-5651-8466-6482-e6abf49fd1a6/886445193275.jpg/600x600bb.jpg",
+      "color": "#e0a526",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Lovely Day",
+          "youtube": "bEeaS6fuUoA"
+        },
+        {
+          "title": "I Want to Spend the Night",
+          "youtube": "xE5e7a_vPDg"
+        },
+        {
+          "title": "Lovely Night for Dancing",
+          "youtube": "HqkWc-FXOR4"
+        },
+        {
+          "title": "Then You Smile at Me",
+          "youtube": "FrjO_Ry8O18"
+        },
+        {
+          "title": "She Wants To (Get on Down)",
+          "youtube": "w6APQB2LU-Y"
+        },
+        {
+          "title": "It Ain't Because of Me Baby",
+          "youtube": "lAvIENmYcso"
+        },
+        {
+          "title": "Tender Things",
+          "youtube": "zY8QNUXPJf4"
+        },
+        {
+          "title": "Wintertime",
+          "youtube": "xFTCPjZMqXU"
+        },
+        {
+          "title": "Let Me Be the One You Need",
+          "youtube": "Dgnof7vCoU8"
+        }
+      ]
+    },
+    {
+      "id": "5024b610bb",
+      "album": "Diamond Life",
+      "artist": "Sade",
+      "year": 1984,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/51/d0/6a/mzi.zxcjkymx.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Smooth Operator",
+          "youtube": "rS7Va0sBYAM"
+        },
+        {
+          "title": "Your Love Is King",
+          "youtube": "k1ljpLQ1V6Y"
+        },
+        {
+          "title": "Hang On to Your Love",
+          "youtube": "4h1_x0dtLXE"
+        },
+        {
+          "title": "Frankie's First Affair",
+          "youtube": "k9ZpJKVw04o"
+        },
+        {
+          "title": "When Am I Going to Make a Living",
+          "youtube": "O-KqMHxpirI"
+        },
+        {
+          "title": "Cherry Pie",
+          "youtube": "bNkbbA_xW5E"
+        },
+        {
+          "title": "Sally",
+          "youtube": "6WQq8Mvb7ss"
+        },
+        {
+          "title": "I Will Be Your Friend",
+          "youtube": "uB-IwYVLVDA"
+        },
+        {
+          "title": "Why Can't We Live Together",
+          "youtube": "eFl32g-Ro3U"
+        }
+      ]
+    },
+    {
+      "id": "e04f56a5cd",
+      "album": "Breakin' Away",
+      "artist": "Al Jarreau",
+      "year": 1981,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/96/c8/b7/mzi.jbeqnlza.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Closer to Your Love",
+          "youtube": "a-QaFbRFYb8"
+        },
+        {
+          "title": "My Old Friend",
+          "youtube": "AB89MQpJbDo"
+        },
+        {
+          "title": "We're In This Love Together",
+          "youtube": "qFnSA-V4iZc"
+        },
+        {
+          "title": "Easy",
+          "youtube": "3ln4vZJz1HM"
+        },
+        {
+          "title": "Our Love",
+          "youtube": "V3gLpiqOxX8"
+        },
+        {
+          "title": "Breakin' Away",
+          "youtube": "aZ67bpvH3_U"
+        },
+        {
+          "title": "Roof Garden",
+          "youtube": "AD7PQySHAZc"
+        },
+        {
+          "title": "(Round, Round, Round) Blue Rondo a la Turk",
+          "youtube": "ArXmVGR4hhU"
+        },
+        {
+          "title": "Teach Me Tonight",
+          "youtube": "BdQC59WYfYM"
+        }
+      ]
+    },
+    {
+      "id": "296b523f3b",
+      "album": "Give Me the Night",
+      "artist": "George Benson",
+      "year": 1980,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/77/ef/c2/77efc2f1-1296-4117-94f2-bab1d27db761/mzi.bqejlnju.jpg/600x600bb.jpg",
+      "color": "#e0a526",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Love X Love",
+          "youtube": "sBrHa_RgvvU"
+        },
+        {
+          "title": "Off Broadway",
+          "youtube": "uwXFE08GV14"
+        },
+        {
+          "title": "Moody's Mood",
+          "youtube": "a0TVgow_CVM"
+        },
+        {
+          "title": "Give Me the Night",
+          "youtube": "Omnpu8mzX4c"
+        },
+        {
+          "title": "What's On Your Mind",
+          "youtube": "rc_t5mNfm_4"
+        },
+        {
+          "title": "Dinorah, Dinorah",
+          "youtube": "HXCKJoFEXn4"
+        },
+        {
+          "title": "Love Dance",
+          "youtube": "rF6RJSG3vOY"
+        },
+        {
+          "title": "Star of a Story",
+          "youtube": "n4FpY5xUvoU"
+        },
+        {
+          "title": "Midnight Love Affair",
+          "youtube": "aiaHiZfXyLQ"
+        },
+        {
+          "title": "Turn Out the Lamplight",
+          "youtube": "lRA_hN3Rmks"
+        }
+      ]
+    },
+    {
+      "id": "a8379fbbef",
+      "album": "Back to Black",
+      "artist": "Amy Winehouse",
+      "year": 2006,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/cf/3f/09/cf3f0994-980d-d8ed-088d-ae89af256b73/15UMGIM24224.rgb.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Rehab",
+          "youtube": "KUmZp8pR1uc"
+        },
+        {
+          "title": "You Know I'm No Good",
+          "youtube": "Xs_d5kwYqX8"
+        },
+        {
+          "title": "Me & Mr. Jones",
+          "youtube": "8kvb-pJEeEI"
+        },
+        {
+          "title": "Just Friends",
+          "youtube": "FrsL1gljHrM"
+        },
+        {
+          "title": "Back to Black",
+          "youtube": "TJAfLE39ZZ8"
+        },
+        {
+          "title": "Love Is a Losing Game",
+          "youtube": "nMO5Ko_77Hk"
+        },
+        {
+          "title": "Tears Dry On Their Own",
+          "youtube": "3jHYzJUoGB0"
+        },
+        {
+          "title": "Wake Up Alone",
+          "youtube": "bS8-qQojlhA"
+        },
+        {
+          "title": "Some Unholy War",
+          "youtube": "4daRkj5OADQ"
+        },
+        {
+          "title": "He Can Only Hold Her",
+          "youtube": "lzKQ9I-2AXY"
+        },
+        {
+          "title": "Addicted",
+          "youtube": "cJITJRgNv9w"
+        }
+      ]
+    },
+    {
+      "id": "8e1e8d5d94",
+      "album": "Kind of Blue",
+      "artist": "Miles Davis",
+      "year": 1959,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/1a/02/77/1a02770a-a45e-ebed-6eff-5b87ce390dc4/886444350761.jpg/600x600bb.jpg",
+      "color": "#b8452e",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "So What",
+          "youtube": "ylXk1LBvIqU"
+        },
+        {
+          "title": "Freddie Freeloader",
+          "youtube": "ZZcuSBouhVA"
+        },
+        {
+          "title": "Blue in Green",
+          "youtube": "TLDflhhdPCg"
+        },
+        {
+          "title": "All Blues",
+          "youtube": "-488UORrfJ0"
+        },
+        {
+          "title": "Flamenco Sketches",
+          "youtube": "nTwp1sgUJrM"
+        }
+      ]
+    },
+    {
+      "id": "7c6ea9b7fb",
+      "album": "Homework",
+      "artist": "Daft Punk",
+      "year": 1997,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Features115/v4/34/8d/c7/348dc71c-d75e-9baf-671a-994e9e74b018/dj.pimdxdmf.jpg/600x600bb.jpg",
+      "color": "#d9480f",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Daftendirekt",
+          "youtube": "yuoghR-5-Xs"
+        },
+        {
+          "title": "Wdpk 837 FM",
+          "youtube": "OzZAHvq_UqI"
+        },
+        {
+          "title": "Revolution 909",
+          "youtube": "Wtd6DvLoCsU"
+        },
+        {
+          "title": "Da Funk",
+          "youtube": "PwILkY9gRrc"
+        },
+        {
+          "title": "Phoenix",
+          "youtube": "5AJ8yHebaok"
+        },
+        {
+          "title": "Fresh",
+          "youtube": "LMNlm7khYwA"
+        },
+        {
+          "title": "Around the World",
+          "youtube": "K0HSD_i2DvA"
+        },
+        {
+          "title": "Rollin' & Scratchin'",
+          "youtube": "q27KtfR1ESA"
+        },
+        {
+          "title": "Teachers",
+          "youtube": "3yq-NFiEywo"
+        },
+        {
+          "title": "High Fidelity",
+          "youtube": "JXWkKO4eplY"
+        },
+        {
+          "title": "Rock'n Roll",
+          "youtube": "ZW7WfdTuth8"
+        },
+        {
+          "title": "Oh Yeah",
+          "youtube": "zr28TRk9vCg"
+        },
+        {
+          "title": "Burnin'",
+          "youtube": "E2lGIsrhlGA"
+        },
+        {
+          "title": "Indo Silver Club",
+          "youtube": "VubH7FuW6TQ"
+        },
+        {
+          "title": "Alive",
+          "youtube": "WY8hqzYT_uk"
+        },
+        {
+          "title": "Funk Ad",
+          "youtube": "YqUyNvGsM9s"
+        }
+      ]
+    },
+    {
+      "id": "256cb8a368",
+      "album": "Modjo",
+      "artist": "Modjo",
+      "year": 2001,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/f5/25/2b/f5252b6e-0659-890b-7e9d-0e691944b95b/cover.jpg/600x600bb.jpg",
+      "color": "#7a2e3a",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Acknowledgement",
+          "youtube": "MkXeCNYVqgY"
+        },
+        {
+          "title": "Chillin'",
+          "youtube": "Gpq5-D1E1lo"
+        },
+        {
+          "title": "Lady (Hear Me Tonight)",
+          "youtube": "mMfxI3r_LyA"
+        },
+        {
+          "title": "Too Good to Be True",
+          "youtube": "179hLhO6ixE"
+        },
+        {
+          "title": "Peace of Mind",
+          "youtube": "1qJ8o1S9TP4"
+        },
+        {
+          "title": "What I Mean",
+          "youtube": "oG6iD9Qbpcs"
+        },
+        {
+          "title": "Music Takes You Back",
+          "youtube": "QSPgM7WZf58"
+        },
+        {
+          "title": "No More Tears",
+          "youtube": "8IQNl3850I8"
+        },
+        {
+          "title": "Rollercoaster",
+          "youtube": "93ovuZ9E14E"
+        },
+        {
+          "title": "On Fire",
+          "youtube": "WkhiPedYbD0"
+        },
+        {
+          "title": "Savior Eyes",
+          "youtube": "23X_BfAgrNc"
+        }
+      ]
+    },
+    {
+      "id": "66c0d5658c",
+      "album": "Things to Make and Do",
+      "artist": "Moloko",
+      "year": 2000,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/1f/b1/22/1fb122d3-a5e9-c3d9-7fb9-2852d06d94c8/0886443963085.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Radio Moscow",
+          "youtube": "BGvY-YLCduA"
+        },
+        {
+          "title": "Pure Pleasure Seeker (Todd Edwards Pure Pleasure Disco Vocal)",
+          "youtube": "l70Z65lNxdc"
+        },
+        {
+          "title": "Absent Minded Friends",
+          "youtube": "JxznMFRSNdU"
+        },
+        {
+          "title": "Indigo",
+          "youtube": "5K7EVpxL3lI"
+        },
+        {
+          "title": "Being Is Bewildering",
+          "youtube": "vUn-AYK3hpA"
+        },
+        {
+          "title": "Remain the Same",
+          "youtube": "kpr7H0yU3uI"
+        },
+        {
+          "title": "A Drop in the Ocean",
+          "youtube": "d9z28cN7ifE"
+        },
+        {
+          "title": "Dumb Inc.",
+          "youtube": "s1lRYEzAAUI"
+        },
+        {
+          "title": "The Time Is Now",
+          "youtube": "mA01o7xneqE"
+        },
+        {
+          "title": "Mother",
+          "youtube": "91Vq0ZRu28U"
+        },
+        {
+          "title": "It's Your Problem",
+          "youtube": "6lTarUFdrf4"
+        },
+        {
+          "title": "It's Nothing",
+          "youtube": "-Z2VyQd0zek"
+        },
+        {
+          "title": "Bingo Massacre",
+          "youtube": "hmjpV0e054k"
+        },
+        {
+          "title": "Somebody Somewhere",
+          "youtube": "lvgNTYSRAyM"
+        },
+        {
+          "title": "Just You and Me Dancing",
+          "youtube": "Y1MWL3U2LVU"
+        },
+        {
+          "title": "If You Have a Cross to Bear You May As Well Use It As a Crutch",
+          "youtube": "pCyIPLNROH4"
+        },
+        {
+          "title": "Keep Stepping",
+          "youtube": "SNznYjB_mLY"
+        },
+        {
+          "title": "Sing It Back (Boris Dlugosch Musical Mix)",
+          "youtube": "u_G_YliYNkg"
+        }
+      ]
+    },
+    {
+      "id": "e40174ee92",
+      "album": "Play",
+      "artist": "Moby",
+      "year": 1999,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/33/d0/df/33d0df83-1ebe-f791-cf78-0c8e77283883/0724347387159.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Honey",
+          "youtube": "-MhKXZo845w"
+        },
+        {
+          "title": "Find My Baby",
+          "youtube": "Ep3I7gf8h58"
+        },
+        {
+          "title": "Porcelain",
+          "youtube": "13EifDb4GYs"
+        },
+        {
+          "title": "Why Does My Heart Feel So Bad?",
+          "youtube": "R_7mzmfvBAI"
+        },
+        {
+          "title": "South Side",
+          "youtube": "GXKg0sNTKXE"
+        },
+        {
+          "title": "Rushing",
+          "youtube": "VWD3lvE8wCY"
+        },
+        {
+          "title": "Bodyrock",
+          "youtube": "oNIIa6mpi10"
+        },
+        {
+          "title": "Natural Blues",
+          "youtube": "z3YMxM1_S48"
+        },
+        {
+          "title": "Machete",
+          "youtube": "tR4YuZE_BZs"
+        },
+        {
+          "title": "7",
+          "youtube": "7aIUurXKid0"
+        },
+        {
+          "title": "Run On",
+          "youtube": "7tn64z2cCdk"
+        },
+        {
+          "title": "Down Slow",
+          "youtube": "y5WWRGenMEs"
+        },
+        {
+          "title": "If Things Were Perfect",
+          "youtube": "fnkrlSF8r6E"
+        },
+        {
+          "title": "Everloving",
+          "youtube": "gMNB8BqAJdY"
+        },
+        {
+          "title": "Inside",
+          "youtube": "531MZcx_y6o"
+        },
+        {
+          "title": "Guitar Flute & String",
+          "youtube": "ef3Th1XKrks"
+        },
+        {
+          "title": "The Sky Is Broken",
+          "youtube": "c6ZwcJTHCpg"
+        },
+        {
+          "title": "My Weakness",
+          "youtube": "8miMg3xBN2s"
+        }
+      ]
+    },
+    {
+      "id": "d83caa5472",
+      "album": "Justice",
+      "artist": "Justice",
+      "year": 2007,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/62/e4/01/62e40187-e672-17e5-f31f-9aee262703a3/mzi.bifzeufu.jpg/600x600bb.jpg",
+      "color": "#7a2e3a",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Genesis",
+          "youtube": "VKzWLUQizz8"
+        },
+        {
+          "title": "Let There Be Light",
+          "youtube": "_0-tWLi0Kp4"
+        },
+        {
+          "title": "D.A.N.C.E",
+          "youtube": "tCnBrrnOefs"
+        },
+        {
+          "title": "Newjack",
+          "youtube": "ykYN0ZSwdns"
+        },
+        {
+          "title": "Phantom",
+          "youtube": "NS0rFECHFKU"
+        },
+        {
+          "title": "Phantom, Pt. II",
+          "youtube": "5QCBkwmsOk0"
+        },
+        {
+          "title": "Valentine",
+          "youtube": "-d4UJWQXaVw"
+        },
+        {
+          "title": "The Party",
+          "youtube": "OsCu-Wg02Fg"
+        },
+        {
+          "title": "DVNO",
+          "youtube": "eLOtl3nLR7Q"
+        },
+        {
+          "title": "Stress",
+          "youtube": "0qXmxVySMzw"
+        },
+        {
+          "title": "Waters of Nazareth",
+          "youtube": "1SEgoi7kjw8"
+        },
+        {
+          "title": "One Minute to Midnight",
+          "youtube": "wXp1C6Byd2E"
+        }
+      ]
+    },
+    {
+      "id": "c8a91dcaf3",
+      "album": "Moon Safari",
+      "artist": "Air",
+      "year": 1998,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Features114/v4/ed/cf/a2/edcfa2bc-4a9a-75f6-80b5-6576d826742c/dj.romspvqk.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "La femme d'argent",
+          "youtube": "YUX8fUrKRNU"
+        },
+        {
+          "title": "Sexy Boy",
+          "youtube": "R6Yfk-RL_9A"
+        },
+        {
+          "title": "All I Need",
+          "artist": "Air & Beth Hirsch",
+          "youtube": "xpahYJ7UpP4"
+        },
+        {
+          "title": "Kelly Watch the Stars",
+          "youtube": "62hGO3ptI2c"
+        },
+        {
+          "title": "Talisman",
+          "youtube": "2RSVa_vF3NI"
+        },
+        {
+          "title": "Remember",
+          "youtube": "zKRNP39nIds"
+        },
+        {
+          "title": "You Make It Easy",
+          "artist": "Air & Beth Hirsch",
+          "youtube": "k-FDyIeyqoE"
+        },
+        {
+          "title": "Ce matin-là",
+          "youtube": "jIQziWqjnOc"
+        },
+        {
+          "title": "New Star in the Sky",
+          "youtube": "fwZ1hXvAc70"
+        },
+        {
+          "title": "Le voyage de Pénélope",
+          "youtube": "y0ErSht3SKw"
+        }
+      ]
+    },
+    {
+      "id": "69b5efca6f",
+      "album": "C'est chic",
+      "artist": "Chic",
+      "year": 1978,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/e1/02/e8/e102e8ad-c541-3f97-960d-98708e1d236e/075678155222.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Chic Cheer",
+          "youtube": "D2famy0TJhc"
+        },
+        {
+          "title": "Le Freak",
+          "youtube": "aXgSHL7efKg"
+        },
+        {
+          "title": "Savoir Faire",
+          "youtube": "9SKvFmdceDs"
+        },
+        {
+          "title": "Happy Man",
+          "youtube": "atT_Pc-oMds"
+        },
+        {
+          "title": "I Want Your Love",
+          "youtube": "NBMYzO0Fv4M"
+        },
+        {
+          "title": "At Last I Am Free",
+          "youtube": "WA3zjc3TBtA"
+        },
+        {
+          "title": "Sometimes You Win",
+          "youtube": "fppUxNPVnPI"
+        },
+        {
+          "title": "(Funny) Bone",
+          "youtube": "yipzB_GhYyw"
+        }
+      ]
+    },
+    {
+      "id": "2f0926b63a",
+      "album": "I Am",
+      "artist": "Earth, Wind & Fire",
+      "year": 1979,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/f5/e8/07/f5e80744-6cf3-d663-c847-58324746ad6b/mzi.ogtxruar.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "In the Stone",
+          "youtube": "6Z2xClustQo"
+        },
+        {
+          "title": "Can't Let Go",
+          "youtube": "owk9KNH0Qdg"
+        },
+        {
+          "title": "After the Love Has Gone",
+          "youtube": "CUCLNPOjPZw"
+        },
+        {
+          "title": "Let Your Feelings Show",
+          "youtube": "f9qW_5wB5R4"
+        },
+        {
+          "title": "Boogie Wonderland (feat. The Emotions)",
+          "youtube": "_93PWvC2_vU"
+        },
+        {
+          "title": "Star",
+          "youtube": "EM2bMvmHjds"
+        },
+        {
+          "title": "Wait",
+          "youtube": "SaZFSoA7tZA"
+        },
+        {
+          "title": "Rock That!",
+          "youtube": "HmjPSusZ9zY"
+        },
+        {
+          "title": "You and I",
+          "youtube": "o00GMmCz_X4"
+        },
+        {
+          "title": "Diana",
+          "youtube": "y9_hqPi9Hh0"
+        },
+        {
+          "title": "Dirty (Interlude featuring Junior Wells)",
+          "artist": "Earth, Wind & Fire featuring Junior Wells",
+          "youtube": "_ZxPqN7VyWY"
+        }
+      ]
+    },
+    {
+      "id": "5711410af2",
+      "album": "Bad Girls",
+      "artist": "Donna Summer",
+      "year": 1979,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/66/a7/b0/66a7b03a-c02c-73c2-c7f2-f2afdf05a8dc/06UMGIM04498.rgb.jpg/600x600bb.jpg",
+      "color": "#3b5bdb",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Hot Stuff",
+          "youtube": "tJxOXzE5A8w"
+        },
+        {
+          "title": "Bad Girls",
+          "youtube": "nhyUICuE65Y"
+        },
+        {
+          "title": "Love Will Always Find You",
+          "youtube": "19wwNSn9r1g"
+        },
+        {
+          "title": "Walk Away",
+          "youtube": "VpWpX6iGgIo"
+        },
+        {
+          "title": "Dim All the Lights",
+          "youtube": "zqMXVxyFmQg"
+        },
+        {
+          "title": "Journey to the Center of Your Heart",
+          "youtube": "4RQhKQKzduA"
+        },
+        {
+          "title": "One Night In a Lifetime",
+          "youtube": "DV20C1AS5tk"
+        },
+        {
+          "title": "Can't Get to Sleep at Night",
+          "youtube": "ao4Pk4f7vkw"
+        },
+        {
+          "title": "On My Honor",
+          "youtube": "F3lXCOwUdGA"
+        },
+        {
+          "title": "There Will Always Be a You",
+          "youtube": "DBHnPHztmJI"
+        },
+        {
+          "title": "All Through the Night",
+          "youtube": "-2LtTdDfa_k"
+        },
+        {
+          "title": "My Baby Understands",
+          "youtube": "aNzettpAJpw"
+        },
+        {
+          "title": "Our Love",
+          "youtube": "fu2cLyA0eqo"
+        },
+        {
+          "title": "Lucky",
+          "youtube": "l0i5rsRLoAA"
+        },
+        {
+          "title": "Sunset People",
+          "youtube": "nvA30nff2iY"
+        }
+      ]
+    },
+    {
+      "id": "a6f83d0962",
+      "album": "Celebrate!",
+      "artist": "Kool & The Gang",
+      "year": 1980,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/ad/28/93/ad2893b3-364e-70d4-96df-e991092fc562/06UMGIM01158.rgb.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Celebration",
+          "youtube": "Ctmup-jJhSE"
+        },
+        {
+          "title": "Jones vs. Jones",
+          "youtube": "oTZyOB-HF6c"
+        },
+        {
+          "title": "Take It to the Top",
+          "youtube": "9fEsxmD_3-E"
+        },
+        {
+          "title": "Morning Star",
+          "youtube": "4IeiMUs4Ep8"
+        },
+        {
+          "title": "Love Festival",
+          "artist": "Kool & The Gang & Eumir Deodato",
+          "youtube": "gb0PcFgANLU"
+        },
+        {
+          "title": "Just Friends",
+          "artist": "Kool & The Gang & Eumir Deodato",
+          "youtube": "6PVTC-I_5Vs"
+        },
+        {
+          "title": "Night People",
+          "artist": "Kool & The Gang & Eumir Deodato",
+          "youtube": "wmofW-LgyNk"
+        },
+        {
+          "title": "Love Affair",
+          "artist": "Kool & The Gang & Eumir Deodato",
+          "youtube": "lwy9U83f6IE"
+        }
+      ]
+    },
+    {
+      "id": "6ab596ecb1",
+      "album": "Off the Wall",
+      "artist": "Michael Jackson",
+      "year": 1979,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0c/fe/a3/0cfea324-57c1-d530-5248-9bb591bbd7bf/074643574525.jpg/600x600bb.jpg",
+      "color": "#495057",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Don't Stop 'Til You Get Enough",
+          "youtube": "DkjwyAk2GRw"
+        },
+        {
+          "title": "Rock with You",
+          "youtube": "aCjxP58Ydik"
+        },
+        {
+          "title": "Workin' Day and Night",
+          "youtube": "MWnyCxva6bA"
+        },
+        {
+          "title": "Get on the Floor",
+          "youtube": "UdYwglFL6iM"
+        },
+        {
+          "title": "Off the Wall",
+          "youtube": "_BfcRjZn6y4"
+        },
+        {
+          "title": "Girlfriend",
+          "youtube": "O8rc8FNCHcU"
+        },
+        {
+          "title": "She's Out of My Life",
+          "youtube": "BtjO1gyBzPg"
+        },
+        {
+          "title": "I Can't Help It",
+          "youtube": "re3MOe1SBOs"
+        },
+        {
+          "title": "It's the Falling in Love",
+          "youtube": "D8DE_cvnGXQ"
+        },
+        {
+          "title": "Burn This Disco Out",
+          "youtube": "_F06umiWDDw"
+        }
+      ]
+    },
+    {
+      "id": "f1ae230b1f",
+      "album": "We Are Family",
+      "artist": "Sister Sledge",
+      "year": 1979,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/da/e8/56/mzi.ptvoczcg.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "He's the Greatest Dancer",
+          "youtube": "TDwutKpVyas"
+        },
+        {
+          "title": "Lost in Music",
+          "youtube": "43qB9FpfCR8"
+        },
+        {
+          "title": "Somebody Loves Me",
+          "youtube": "aQ9esAseMBg"
+        },
+        {
+          "title": "Thinking of You",
+          "youtube": "WrJNFXX0YOg"
+        },
+        {
+          "title": "We Are Family",
+          "youtube": "uyGY2NfYpeE"
+        },
+        {
+          "title": "Easier to Love",
+          "youtube": "_QhqvvvnMDU"
+        },
+        {
+          "title": "You're a Friend to Me",
+          "youtube": "zImRWMMZl-A"
+        },
+        {
+          "title": "One More Time",
+          "youtube": "9DObx4QhWp4"
+        }
+      ]
+    },
+    {
+      "id": "c7fb5c4acc",
+      "album": "I Feel for You",
+      "artist": "Chaka Khan",
+      "year": 1984,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/9d/c2/c4/9dc2c49d-82ba-a79c-7274-e1b7c537caad/mzi.pdtcyntm.jpg/600x600bb.jpg",
+      "color": "#2f9e44",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "This Is My Night",
+          "youtube": "UNOB74lgRfU"
+        },
+        {
+          "title": "Stronger Than Before",
+          "youtube": "lmjVNwDGzKM"
+        },
+        {
+          "title": "My Love Is Alive",
+          "youtube": "N2fqonY1EuI"
+        },
+        {
+          "title": "Eye to Eye",
+          "youtube": "fAOuQQSG1iQ"
+        },
+        {
+          "title": "La Flamme",
+          "youtube": "UM5kj41tFQo"
+        },
+        {
+          "title": "I Feel for You",
+          "youtube": "YW0sxgYAmLM"
+        },
+        {
+          "title": "Hold Her",
+          "youtube": "dF6bqxyVCF0"
+        },
+        {
+          "title": "Through the Fire",
+          "youtube": "TjWmw-8-OEk"
+        },
+        {
+          "title": "Caught In the Act",
+          "youtube": "PSQBESA5mvM"
+        },
+        {
+          "title": "Chinatown",
+          "youtube": "BQLY6xOrkXI"
+        }
+      ]
+    },
+    {
+      "id": "618876c6ea",
+      "album": "Triumph",
+      "artist": "The Jacksons",
+      "year": 1980,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music20/v4/24/89/0f/24890f4b-2948-3730-c5e5-d26347064e4c/dj.xaynkspd.jpg/600x600bb.jpg",
+      "color": "#9c36b5",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Can You Feel It",
+          "youtube": "rlpZmqGS8rc"
+        },
+        {
+          "title": "Lovely One",
+          "youtube": "T0xNL42V-J0"
+        },
+        {
+          "title": "Your Ways",
+          "youtube": "gPBk8CQPk4w"
+        },
+        {
+          "title": "Everybody",
+          "youtube": "fdNCgg8e-rI"
+        },
+        {
+          "title": "This Place Hotel",
+          "youtube": "Zg5AIaduI1E"
+        },
+        {
+          "title": "Time Waits for No One",
+          "youtube": "G7PsZl0JHTI"
+        },
+        {
+          "title": "Walk Right Now",
+          "youtube": "SnIUDnDikLY"
+        },
+        {
+          "title": "Give It Up",
+          "youtube": "1pive5bwNSM"
+        },
+        {
+          "title": "Wondering Who",
+          "youtube": "VRRaTiVT_io"
+        }
+      ]
+    },
+    {
+      "id": "d9227cf03d",
+      "album": "Travelling Without Moving",
+      "artist": "Jamiroquai",
+      "year": 1996,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/81/ec/ef/81ecef00-2a0b-807b-154c-ff0e5fb90571/886443439115.jpg/600x600bb.jpg",
+      "color": "#e0a526",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Virtual Insanity",
+          "youtube": "N4g4502eGfk"
+        },
+        {
+          "title": "Cosmic Girl",
+          "youtube": "LBhjE__IhqE"
+        },
+        {
+          "title": "Use the Force",
+          "youtube": "YfUxdCvCXk0"
+        },
+        {
+          "title": "Everyday",
+          "youtube": "nBUxr7uiLR0"
+        },
+        {
+          "title": "Alright",
+          "youtube": "URhmqy9qGRQ"
+        },
+        {
+          "title": "High Times",
+          "youtube": "wNjPjh6oIFI"
+        },
+        {
+          "title": "Drifting Along",
+          "youtube": "xEa1Zxeqauo"
+        },
+        {
+          "title": "Didjerama",
+          "youtube": "ID-nRwTexgg"
+        },
+        {
+          "title": "Didjital Vibrations",
+          "youtube": "TXah7y6XVxg"
+        },
+        {
+          "title": "Travelling Without Moving",
+          "youtube": "3WA6Y5uJB7g"
+        },
+        {
+          "title": "You Are My Love",
+          "youtube": "HE6GuiDdI0k"
+        },
+        {
+          "title": "Spend a Lifetime",
+          "youtube": "dwEdWXje50I"
+        },
+        {
+          "title": "Funktion",
+          "youtube": "VTpHM_bkuks"
+        }
+      ]
+    },
+    {
+      "id": "1f1f95e39e",
+      "album": "Thriller",
+      "artist": "Michael Jackson",
+      "year": 1982,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/32/4f/fd/324ffda2-9e51-8f6a-0c2d-c6fd2b41ac55/074643811224.jpg/600x600bb.jpg",
+      "color": "#e0a526",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Wanna Be Startin' Somethin'",
+          "youtube": "8KWf_-ofYgI"
+        },
+        {
+          "title": "Baby Be Mine",
+          "youtube": "O3tnOVideSo"
+        },
+        {
+          "title": "The Girl Is Mine (with Paul McCartney)",
+          "youtube": "SX5vM6F57_E"
+        },
+        {
+          "title": "Thriller",
+          "youtube": "sO4vI8P88NM"
+        },
+        {
+          "title": "Beat It",
+          "youtube": "kOn-HdEg6AQ"
+        },
+        {
+          "title": "Billie Jean",
+          "youtube": "Kr4EQDVETuA"
+        },
+        {
+          "title": "Human Nature",
+          "youtube": "ElN_4vUvTPs"
+        },
+        {
+          "title": "P.Y.T. (Pretty Young Thing)",
+          "youtube": "1ZZQuj6htF4"
+        },
+        {
+          "title": "The Lady in My Life",
+          "youtube": "cJLH5yXoqi8"
+        }
+      ]
+    },
+    {
+      "id": "a4c9585efa",
+      "album": "Rumours",
+      "artist": "Fleetwood Mac",
+      "year": 1977,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/4d/13/ba/4d13bac3-d3d5-7581-2c74-034219eadf2b/081227970949.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Second Hand News",
+          "youtube": "bLfcwDZ5GzQ"
+        },
+        {
+          "title": "Dreams",
+          "youtube": "5oWyMakvQew"
+        },
+        {
+          "title": "Never Going Back Again",
+          "youtube": "0i3ZfrVY9iU"
+        },
+        {
+          "title": "Don't Stop",
+          "youtube": "0hGhl7ki3HM"
+        },
+        {
+          "title": "Go Your Own Way",
+          "youtube": "oiosqtFLBBA"
+        },
+        {
+          "title": "Songbird",
+          "youtube": "y9Hqn8x6a8s"
+        },
+        {
+          "title": "The Chain",
+          "youtube": "xwTPvcPYaOo"
+        },
+        {
+          "title": "You Make Loving Fun",
+          "youtube": "RqjXn2NflqU"
+        },
+        {
+          "title": "I Don't Want to Know",
+          "youtube": "MLs17vZqrBg"
+        },
+        {
+          "title": "Oh Daddy",
+          "youtube": "abticFBnddk"
+        },
+        {
+          "title": "Gold Dust Woman",
+          "youtube": "-Ti1b-RRBjI"
+        }
+      ]
+    },
+    {
+      "id": "4aa59da7d5",
+      "album": "Brothers In Arms (40th Anniversary)",
+      "artist": "Dire Straits",
+      "year": 1985,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/76/41/b9/7641b9cb-650e-8c9c-bad8-7196f8193a7d/25UMGIM39996.rgb.jpg/600x600bb.jpg",
+      "color": "#495057",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "So Far Away",
+          "youtube": "7CDgW-qulpk"
+        },
+        {
+          "title": "Money For Nothing",
+          "youtube": "wTP2RUD_cL0"
+        },
+        {
+          "title": "Walk Of Life",
+          "youtube": "h2a20YL5mvg"
+        },
+        {
+          "title": "Your Latest Trick",
+          "youtube": "blPf0-WphFQ"
+        },
+        {
+          "title": "Why Worry?",
+          "youtube": "YMh4jMVSO1Q"
+        },
+        {
+          "title": "Ride Across The River",
+          "youtube": "VW5abTdVVu8"
+        },
+        {
+          "title": "The Man's Too Strong",
+          "youtube": "tmatuQxzF4w"
+        },
+        {
+          "title": "One World",
+          "youtube": "QQmGbxgSNCM"
+        },
+        {
+          "title": "Brothers In Arms",
+          "youtube": "jhdFe3evXpk"
+        }
+      ]
+    },
+    {
+      "id": "aff9165fe9",
+      "album": "Hotel California",
+      "artist": "Eagles",
+      "year": 1976,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/88/16/2c/88162c3d-46db-8321-61f3-3a47404cfe76/075596050920.jpg/600x600bb.jpg",
+      "color": "#3b5bdb",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Hotel California",
+          "youtube": "dLl4PZtxia8"
+        },
+        {
+          "title": "New Kid In Town",
+          "youtube": "_fW2rw8SwoA"
+        },
+        {
+          "title": "Life In the Fast Lane",
+          "youtube": "Ybg_uZxdE0c"
+        },
+        {
+          "title": "Wasted Time",
+          "youtube": "evxkY964tqk"
+        },
+        {
+          "title": "Victim of Love",
+          "youtube": "eqAzOeDoQwE"
+        },
+        {
+          "title": "Pretty Maids All In a Row",
+          "youtube": "2DNVT_epln0"
+        },
+        {
+          "title": "Try and Love Again",
+          "youtube": "yNnH1sN0dw8"
+        },
+        {
+          "title": "The Last Resort",
+          "youtube": "72kQl0P2n3M"
+        }
+      ]
+    },
+    {
+      "id": "41b61c8424",
+      "album": "The Game",
+      "artist": "Queen",
+      "year": 1980,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/93/88/0e9388c0-c842-56dc-311c-417e9c07db85/602527717517.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Play The Game",
+          "youtube": "6_5O-nUiZ_0"
+        },
+        {
+          "title": "Dragon Attack",
+          "youtube": "spm5-SXo4Do"
+        },
+        {
+          "title": "Another One Bites The Dust",
+          "youtube": "rY0WxgSXdEE"
+        },
+        {
+          "title": "Need Your Loving Tonight",
+          "youtube": "af4bbLeZvLA"
+        },
+        {
+          "title": "Crazy Little Thing Called Love",
+          "youtube": "zO6D_BAuYCI"
+        },
+        {
+          "title": "Rock It (Prime Jive)",
+          "youtube": "UPOgN7MuOug"
+        },
+        {
+          "title": "Don't Try Suicide",
+          "youtube": "dn2z19QnEfQ"
+        },
+        {
+          "title": "Sail Away Sweet Sister",
+          "youtube": "kGXsIt4l1Tg"
+        },
+        {
+          "title": "Coming Soon",
+          "youtube": "Ts15B_PoA80"
+        },
+        {
+          "title": "Save Me",
+          "youtube": "Iw3izcZd9zU"
+        }
+      ]
+    },
+    {
+      "id": "bc27c9f585",
+      "album": "Hunting High & Low",
+      "artist": "a-ha",
+      "year": 1985,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/0b/5b/69/0b5b6991-cd46-7222-fca7-680b17318721/603497888191.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Take On Me",
+          "youtube": "MIgK3zOk0zg"
+        },
+        {
+          "title": "Train of Thought",
+          "youtube": "PkpfujUOMNA"
+        },
+        {
+          "title": "Hunting High and Low",
+          "youtube": "thvXWjJh7yg"
+        },
+        {
+          "title": "The Blue Sky",
+          "youtube": "uAw4_W6J7DE"
+        },
+        {
+          "title": "Living a Boy's Adventure Tale",
+          "youtube": "Y1BAPr-oBZA"
+        },
+        {
+          "title": "The Sun Always Shines On T.V.",
+          "youtube": "a3ir9HC9vYg"
+        },
+        {
+          "title": "And You Tell Me",
+          "youtube": "dGtBzlUceno"
+        },
+        {
+          "title": "Love Is Reason",
+          "youtube": "iU6xe14dCVY"
+        },
+        {
+          "title": "I Dream Myself Alive",
+          "youtube": "AF6iT8Be4xI"
+        },
+        {
+          "title": "Here I Stand and Face the Rain",
+          "youtube": "jPk9FhbSexs"
+        }
+      ]
+    },
+    {
+      "id": "e7875fcd02",
+      "album": "Songs from the Big Chair",
+      "artist": "Tears for Fears",
+      "year": 1985,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/74/41/43/744143ae-afad-8380-106e-1c1bc48922e4/14UMGIM34762.rgb.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Shout",
+          "youtube": "Ye7FKc1JQe4"
+        },
+        {
+          "title": "The Working Hour",
+          "youtube": "eroNADQ_mL8"
+        },
+        {
+          "title": "Everybody Wants to Rule the World",
+          "youtube": "aGCdLKXNF3w"
+        },
+        {
+          "title": "Mothers Talk",
+          "youtube": "Z70sl_noDuQ"
+        },
+        {
+          "title": "I Believe",
+          "youtube": "1n4OuEJMIEs"
+        },
+        {
+          "title": "Broken",
+          "youtube": "Vsva4qGh8l8"
+        },
+        {
+          "title": "Head Over Heels / Broken",
+          "youtube": "luOwnc5bqho"
+        },
+        {
+          "title": "Listen",
+          "youtube": "OTn2_Kx6qKA"
+        }
+      ]
+    },
+    {
+      "id": "6b51063e43",
+      "album": "Faith",
+      "artist": "George Michael",
+      "year": 1987,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/87/29/d2/8729d243-f06f-e588-3ddf-ffa87a2ce17e/mzi.yupygcca.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Faith",
+          "youtube": "N61LHFFfiik"
+        },
+        {
+          "title": "Father Figure",
+          "youtube": "m_9hfHvQSNo"
+        },
+        {
+          "title": "I Want Your Sex, Pts. 1 & 2",
+          "youtube": "-pIRNx6Q3aE"
+        },
+        {
+          "title": "One More Try",
+          "youtube": "QUyr3JBoVCo"
+        },
+        {
+          "title": "Hard Day",
+          "youtube": "lgWzdzSQA3M"
+        },
+        {
+          "title": "Hand to Mouth",
+          "youtube": "G-dEqEfw1yI"
+        },
+        {
+          "title": "Look at Your Hands",
+          "youtube": "1Nekw0XoB_M"
+        },
+        {
+          "title": "Monkey",
+          "youtube": "CHb2XYeXcJI"
+        },
+        {
+          "title": "Kissing a Fool",
+          "youtube": "omsBhh8vA7c"
+        },
+        {
+          "title": "A Last Request (I Want Your Sex, Pt. 3)",
+          "youtube": "_rrtoXKFnKI"
+        }
+      ]
+    },
+    {
+      "id": "81e6baa43b",
+      "album": "Legend – The Best Of Bob Marley & The Wailers",
+      "artist": "Bob Marley & The Wailers",
+      "year": 1984,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3c/c2/0d/3cc20dcc-8f4e-f060-36dd-7de52a7ec8fe/12UMGIM14712.rgb.jpg/600x600bb.jpg",
+      "color": "#b8452e",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Is This Love",
+          "youtube": "co2FK0WbXX0"
+        },
+        {
+          "title": "No Woman, No Cry (Live At The Lyceum, London/1975)",
+          "youtube": "ACClpTp-8cE"
+        },
+        {
+          "title": "Could You Be Loved",
+          "youtube": "1ti2YCFgCoI"
+        },
+        {
+          "title": "Three Little Birds",
+          "youtube": "HNBCVM4KbUM"
+        },
+        {
+          "title": "Buffalo Soldier",
+          "youtube": "uMUQMSXLlHM"
+        },
+        {
+          "title": "Get Up, Stand Up",
+          "artist": "The Wailers",
+          "youtube": "AeCHP-4iRbM"
+        },
+        {
+          "title": "Stir It Up",
+          "youtube": "1hwL3S3Gtzs"
+        },
+        {
+          "title": "Easy Skanking",
+          "youtube": "ZFn-wxC1XP0"
+        },
+        {
+          "title": "One Love / People Get Ready",
+          "youtube": "XPYFvE2i9Rc"
+        },
+        {
+          "title": "I Shot The Sheriff",
+          "artist": "The Wailers",
+          "youtube": "oe2hdbft5-U"
+        },
+        {
+          "title": "Waiting In Vain",
+          "youtube": "IWxbhC44p2w"
+        },
+        {
+          "title": "Redemption Song",
+          "youtube": "yv5xonFSC4c"
+        },
+        {
+          "title": "Satisfy My Soul",
+          "youtube": "rf2bCmYIUy0"
+        },
+        {
+          "title": "Exodus",
+          "youtube": "QBeNlUG0Vyc"
+        },
+        {
+          "title": "Jamming",
+          "youtube": "oqVy6eRXc7Q"
+        },
+        {
+          "title": "Punky Reggae Party (12\" Version)",
+          "youtube": "xXvIKEEdUg0"
+        }
+      ]
+    },
+    {
+      "id": "b165cadd59",
+      "album": "Exodus",
+      "artist": "Bob Marley & The Wailers",
+      "year": 1977,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/23/fa/f8/23faf820-c4fa-2bf1-d672-846971f5cf5c/06UMGIM31355.rgb.jpg/600x600bb.jpg",
+      "color": "#2f9e44",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Natural Mystic",
+          "youtube": "UZfaIx57UqU"
+        },
+        {
+          "title": "So Much Things To Say",
+          "youtube": "-AG32Hn8reU"
+        },
+        {
+          "title": "Guiltiness",
+          "youtube": "W5lAQJYLuWI"
+        },
+        {
+          "title": "The Heathen",
+          "youtube": "dfwu0iZp7OM"
+        },
+        {
+          "title": "Exodus",
+          "youtube": "QBeNlUG0Vyc"
+        },
+        {
+          "title": "Jamming",
+          "youtube": "oqVy6eRXc7Q"
+        },
+        {
+          "title": "Waiting In Vain",
+          "youtube": "IWxbhC44p2w"
+        },
+        {
+          "title": "Turn Your Lights Down Low",
+          "youtube": "fRid8Tjw_bU"
+        },
+        {
+          "title": "Three Little Birds",
+          "youtube": "HNBCVM4KbUM"
+        },
+        {
+          "title": "One Love / People Get Ready",
+          "youtube": "XPYFvE2i9Rc"
+        }
+      ]
+    },
+    {
+      "id": "10c393a8a6",
+      "album": "Labour of Love",
+      "artist": "UB40",
+      "year": 1983,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/84/c2/52/84c25239-f4a6-1b09-c046-9669784497d6/00077778641254.rgb.jpg/600x600bb.jpg",
+      "color": "#0c8599",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Cherry Oh Baby",
+          "youtube": "JXQhenTTKCk"
+        },
+        {
+          "title": "Keep On Moving",
+          "youtube": "z9WCDTjb0_U"
+        },
+        {
+          "title": "Please Don't Make Me Cry",
+          "youtube": "Ngv65SQkJAk"
+        },
+        {
+          "title": "Sweet Sensation",
+          "youtube": "UT6YF7DK3BA"
+        },
+        {
+          "title": "Johnny Too Bad",
+          "youtube": "2nsIuEXNR4M"
+        },
+        {
+          "title": "Red Red Wine (12'' Version)",
+          "youtube": "zXt56MB-3vc"
+        },
+        {
+          "title": "Guilty",
+          "youtube": "bYH78s8tQ08"
+        },
+        {
+          "title": "She Caught the Train",
+          "youtube": "nZOir-40lj8"
+        },
+        {
+          "title": "Version Girl",
+          "youtube": "VASVHCfYLcQ"
+        },
+        {
+          "title": "Many Rivers to Cross",
+          "youtube": "0ju9fGm8vZw"
+        }
+      ]
+    },
+    {
+      "id": "3fd512b387",
+      "album": "Legalize It",
+      "artist": "Peter Tosh",
+      "year": 1976,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2b/29/60/2b2960f7-ca5b-ab5b-9619-85d39746d8f7/dj.awruiyqo.jpg/600x600bb.jpg",
+      "color": "#b8452e",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Legalize It",
+          "youtube": "6cIePqdz03A"
+        },
+        {
+          "title": "Burial",
+          "youtube": "zLBVfatI8IM"
+        },
+        {
+          "title": "Whatcha Gonna Do",
+          "youtube": "G9QrgHK1fwo"
+        },
+        {
+          "title": "No Sympathy",
+          "youtube": "KX-dOAKeQwU"
+        },
+        {
+          "title": "Why Must I Cry",
+          "youtube": "7Q1ID2ZQCs8"
+        },
+        {
+          "title": "Igziabeher (Let Jah Be Praised)",
+          "youtube": "lu9Nk-JvOrs"
+        },
+        {
+          "title": "Ketchy Shuby",
+          "youtube": "1BE4emhbEMY"
+        },
+        {
+          "title": "Till Your Well Runs Dry",
+          "youtube": "oY8CJiz9Ug4"
+        },
+        {
+          "title": "Brand New Second Hand",
+          "youtube": "mg6u1Xudvi8"
+        }
+      ]
+    },
+    {
+      "id": "54a6128407",
+      "album": "The Harder They Come (Original Motion Picture Soundtrack)",
+      "artist": "Jimmy Cliff",
+      "year": 1972,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/ee/fe/57/eefe5722-cca2-ba78-c3c0-fca085c55651/20UMGIM71814.rgb.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "You Can Get It If You Really Want",
+          "youtube": "Jg7qsW8qboE"
+        },
+        {
+          "title": "Draw Your Brakes",
+          "artist": "Scotty",
+          "youtube": "pzL4G1KtwMc"
+        },
+        {
+          "title": "Rivers Of Babylon",
+          "artist": "The Melodians",
+          "youtube": "BXf1j8Hz2bU"
+        },
+        {
+          "title": "Many Rivers To Cross",
+          "youtube": "-y9Q7ud7Or0"
+        },
+        {
+          "title": "Sweet And Dandy",
+          "artist": "Toots & The Maytals",
+          "youtube": "FD1--38w230"
+        },
+        {
+          "title": "The Harder They Come",
+          "youtube": "pmc5H6zAi6M"
+        },
+        {
+          "title": "Johnny Too Bad",
+          "artist": "The Slickers",
+          "youtube": "Sz_QVTejXdY"
+        },
+        {
+          "title": "007 (Shanty Town)",
+          "artist": "Desmond Dekker",
+          "youtube": "0mC2orBm3tc"
+        },
+        {
+          "title": "Pressure Drop",
+          "artist": "Toots & The Maytals",
+          "youtube": "DKVB_CtU8XQ"
+        },
+        {
+          "title": "Sitting In Limbo",
+          "youtube": "XpTIwzkhmPw"
+        }
+      ]
+    },
+    {
+      "id": "3beba4db2b",
+      "album": "Funky Kingston",
+      "artist": "Toots & The Maytals",
+      "year": 1973,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/af/93/2e/af932e55-0e47-035f-bdf5-27103e623404/00602547748959.rgb.jpg/600x600bb.jpg",
+      "color": "#1c7ed6",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Time Tough",
+          "youtube": "g7MiWIUjY_U"
+        },
+        {
+          "title": "In the Dark",
+          "youtube": "w9aYJmfvCfA"
+        },
+        {
+          "title": "Funky Kingston",
+          "youtube": "Or2_x8hsGTs"
+        },
+        {
+          "title": "Love Is Gonna Let Me Down",
+          "youtube": "XBIPHIzWiv0"
+        },
+        {
+          "title": "Louie Louie",
+          "youtube": "BlFGvTtGMBI"
+        },
+        {
+          "title": "Pomps & Pride",
+          "youtube": "kbO0gRq9T8Y"
+        },
+        {
+          "title": "Got to Be There",
+          "youtube": "0fiuFx6jAmE"
+        },
+        {
+          "title": "Take Me Home, Country Roads",
+          "youtube": "raH3gShAylo"
+        },
+        {
+          "title": "Pressure Drop",
+          "youtube": "DKVB_CtU8XQ"
+        },
+        {
+          "title": "Sailing On",
+          "youtube": "itnsYaWbtQg"
+        }
+      ]
+    },
+    {
+      "id": "5f96ed2efc",
+      "album": "Bad to the Bone",
+      "artist": "Inner Circle",
+      "year": 1992,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/81/86/7e/81867e88-0dca-84cd-abc4-567050f882eb/196922636486.jpg/600x600bb.jpg",
+      "color": "#d9480f",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Sweat (A La La La La Long)",
+          "youtube": "AdIer7rKyq0"
+        },
+        {
+          "title": "Shock Out Jamaican Style",
+          "youtube": "XyuSuWr8Ps8"
+        },
+        {
+          "title": "Bad to the Bone",
+          "youtube": "WG_zlvFGBJQ"
+        },
+        {
+          "title": "Rock with You",
+          "youtube": "1Xggq_CkSec"
+        },
+        {
+          "title": "Long Time (Selassie A Warn Yu)",
+          "youtube": "CInH3maoM1w"
+        },
+        {
+          "title": "Hey Love",
+          "youtube": "uertz6K2jb0"
+        },
+        {
+          "title": "Slow it Down",
+          "youtube": "7_wHXzvGHHI"
+        },
+        {
+          "title": "Living It Up",
+          "youtube": "CPrhpfxkyeA"
+        },
+        {
+          "title": "Stuck in the Middle",
+          "youtube": "TSZpv99yBd4"
+        },
+        {
+          "title": "Looking for a Better Way",
+          "youtube": "NQAp1e1YZTk"
+        },
+        {
+          "title": "Wrapped Up in Your Love",
+          "youtube": "pBXPIbZ94w4"
+        },
+        {
+          "title": "Bad Boys",
+          "youtube": "2bOUjNKjZ4s"
+        },
+        {
+          "title": "Party Party",
+          "youtube": "skaCYwOOyS0"
+        },
+        {
+          "title": "Sunglasses at Nite",
+          "youtube": "Yv89ZUOF7ao"
+        },
+        {
+          "title": "Tear Down These Walls",
+          "youtube": "x8bfcjeCZBg"
+        },
+        {
+          "title": "Down by the River",
+          "youtube": "Qks4rG0Wky8"
+        },
+        {
+          "title": "Hold On to the Riddim",
+          "youtube": "wkB7pfAzirs"
+        },
+        {
+          "title": "Why Them Gwan So",
+          "youtube": "F-5NZFOtQZo"
+        }
+      ]
+    },
+    {
+      "id": "fa6fe3a0be",
+      "album": "Journey to Jah",
+      "artist": "Gentleman",
+      "year": 2002,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/9a/fd/c1/9afdc105-3302-6e11-1306-3f54a810307c/5099750765128.jpg/600x600bb.jpg",
+      "color": "#d9480f",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Dem Gone",
+          "youtube": "bw_C7bRbf_Q"
+        },
+        {
+          "title": "Ina Different Time (feat. Daddy Rings & Jahmali)",
+          "youtube": "OgGGdlTMtHc"
+        },
+        {
+          "title": "Runaway",
+          "youtube": "2HmoZO_D52g"
+        },
+        {
+          "title": "Man a Rise (feat. Bounty Killer)",
+          "youtube": "BEudQvkhbDc"
+        },
+        {
+          "title": "Love Chant",
+          "youtube": "gdcrjjn3-So"
+        },
+        {
+          "title": "See Dem Coming",
+          "youtube": "12LLFN7r2UE"
+        },
+        {
+          "title": "Man of My Own (feat. Morgan Heritage)",
+          "youtube": "DLVVqXuC9pQ"
+        },
+        {
+          "title": "Leave Us Alone",
+          "youtube": "3Z4UiEBIV0w"
+        },
+        {
+          "title": "Long Face",
+          "youtube": "DOuoNq84EL4"
+        },
+        {
+          "title": "Younger Generation (feat. Mickey General & Luciano)",
+          "youtube": "dfesqO0du9Y"
+        },
+        {
+          "title": "Dangerzone",
+          "youtube": "waH9MY3ULSY"
+        },
+        {
+          "title": "Empress",
+          "youtube": "LtutWEUkDso"
+        },
+        {
+          "title": "Fire Ago Bun Dem",
+          "youtube": "5beJ20L0MT0"
+        },
+        {
+          "title": "Jah Ina Yuh Life",
+          "youtube": "MXEAT1QalTs"
+        },
+        {
+          "title": "Children of Tomorrow (feat. Jack Radics)",
+          "youtube": "sVEmHx0nzGc"
+        }
+      ]
+    },
+    {
+      "id": "4df5f52978",
+      "album": "New Dubby Conquerors",
+      "artist": "Seeed",
+      "year": 2000,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/e4/5c/16/mzi.scorcimz.jpg/600x600bb.jpg",
+      "color": "#0c8599",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Dancehall Caballeros",
+          "youtube": "CYg9omPYx_M"
+        },
+        {
+          "title": "Riddim No 1",
+          "youtube": "cZ1ORYDx1Uk"
+        },
+        {
+          "title": "Papa Noah",
+          "youtube": "HZxFAs72gGM"
+        },
+        {
+          "title": "Walk Upright",
+          "youtube": "XX-V-EWVVcI"
+        },
+        {
+          "title": "Dickes B (feat. Black Kappa)",
+          "artist": "Seeed & Black Kappa",
+          "youtube": "ag8xNYui62E"
+        },
+        {
+          "title": "Psychedelic Kingdom",
+          "youtube": "Lul6-jEa5uE"
+        },
+        {
+          "title": "Sensimilla ( feat. Denyo)",
+          "artist": "Denyo, Denyo & Seeed",
+          "youtube": "dJa-YBUOlmE"
+        },
+        {
+          "title": "We Seeed (EP Mix)",
+          "youtube": "BDGxg8V2Vmw"
+        },
+        {
+          "title": "Tide Is High",
+          "youtube": "RNMVB_eoQrA"
+        },
+        {
+          "title": "Top of the City",
+          "youtube": "VV756rphTdA"
+        },
+        {
+          "title": "Fire the Hidden",
+          "youtube": "L37FBY4_JT4"
+        },
+        {
+          "title": "New Dubby Conquerors (Oct. 2000 Mix)",
+          "youtube": "tTGGbIAVfx8"
+        },
+        {
+          "title": "Miss Understanding",
+          "youtube": "XQVpelS9P2I"
         }
       ]
     }
