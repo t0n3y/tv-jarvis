@@ -1468,7 +1468,7 @@ function renderAddAlbum() {
   const scrollTop = $("vy-sheet").scrollTop;
 
   openVinylSheet(
-    h("button", { class: "retro-btn retro-btn-ghost", type: "button", onclick: renderAddSearch }, icon("back"), "Zur Suche"),
+    h("button", { class: "retro-back", type: "button", onclick: renderAddSearch }, icon("back"), "Zur Suche"),
     h("div", { class: "rs-hero" }, sleeveMedia(record)),
     h("div", { class: "rs-title" }, album.album),
     h("div", { class: "rs-meta" }, [album.artist, album.year].filter(Boolean).join(" · ")),

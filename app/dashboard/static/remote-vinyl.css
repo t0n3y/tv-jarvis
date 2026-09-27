@@ -97,6 +97,21 @@ body.retro .topbar { background: linear-gradient(180deg, rgba(21, 16, 12, 0.94) 
 
 .retro-btn-block { width: 100%; }
 
+.retro-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: -6px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: var(--r-ink-2);
+  font: 600 15px var(--sans);
+}
+
+.retro-back .icon { width: 18px; height: 18px; }
+
 /* ---------- Hi-Fi-Deck ---------- */
 
 .hifi {
@@ -689,7 +704,8 @@ body.retro .topbar { background: linear-gradient(180deg, rgba(21, 16, 12, 0.94) 
   color: transparent;
 }
 
-.rs-check .icon { width: 16px; height: 16px; stroke-width: 2.6; }
+/* sonst faerbt ".rs-track .icon" den Haken auch bei nicht gewaehlten Songs */
+.rs-track .rs-check .icon { width: 16px; height: 16px; stroke-width: 2.6; color: inherit; }
 .rs-track.selected .rs-check { background: rgb(var(--tint)); border-color: rgb(var(--tint)); color: #1c0d05; }
 
 .rs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
