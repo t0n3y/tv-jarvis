@@ -13,7 +13,9 @@
 <link rel="icon" type="image/png" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=DM+Sans:opsz,wght@9..40,400..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="remote.css" />
+<link rel="stylesheet" href="remote-vinyl.css" />
 </head>
 <body>
 
@@ -42,6 +44,11 @@
   <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M8.2 8.2a5.4 5.4 0 0 0 0 7.6M15.8 8.2a5.4 5.4 0 0 1 0 7.6M5.3 5.3a9.5 9.5 0 0 0 0 13.4M18.7 5.3a9.5 9.5 0 0 1 0 13.4"/></symbol>
   <symbol id="i-youtube" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-jellyfin" viewBox="0 0 24 24"><path d="M12 3.2 2.8 19.6h18.4z"/><path d="M12 10.2 8.6 16.3h6.8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-vinyl" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/><path d="M12 5.8a6.2 6.2 0 0 1 6.2 6.2"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M4 7h3.5c4 0 5 10 9 10H20"/><path d="M4 17h3.5c1.6 0 2.7-1.6 3.6-3.6M13 9.6C13.9 8 15 7 16.5 7H20"/><path d="m17.5 4.5 2.5 2.5-2.5 2.5M17.5 14.5l2.5 2.5-2.5 2.5"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6.5 5.5v13" /><path d="M18 5.8v12.4L8.8 12z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.5 5.5v13" /><path d="M6 5.8v12.4L15.2 12z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
@@ -103,6 +110,10 @@
       <button class="app-tile" data-open="radio" style="--app-rgb: 79, 216, 255">
         <span class="app-icon"><svg class="icon"><use href="#i-radio"/></svg></span>
         <span class="app-name">Radio</span>
+      </button>
+      <button class="app-tile" data-open="vinyl" style="--app-rgb: 255, 107, 61">
+        <span class="app-icon"><svg class="icon"><use href="#i-vinyl"/></svg></span>
+        <span class="app-name">Platten</span>
       </button>
       <button class="app-tile" data-open="light" style="--app-rgb: 255, 176, 59">
         <span class="app-icon"><svg class="icon"><use href="#i-sun"/></svg></span>
@@ -219,6 +230,45 @@
 
     <div class="section-label">Sender</div>
     <div class="list" id="station-list"></div>
+  </section>
+
+  <!-- ================= Plattenschrank ================= -->
+  <section class="view hidden" id="view-vinyl">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <div>
+        <div class="retro-kicker">Seite A · 33⅓ U/min</div>
+        <h1 class="retro-title">Plattenschrank</h1>
+      </div>
+    </div>
+
+    <!-- Hi-Fi-Deck: nur sichtbar, solange eine Platte laeuft -->
+    <div class="hifi hidden" id="hifi">
+      <div class="hifi-face">
+        <div class="hifi-display">
+          <div class="vfd-row"><span id="vfd-track">01/01</span><span id="vfd-state">PLAY</span><span id="vfd-time">0:00</span></div>
+          <div class="vfd-title"><span id="vfd-title"></span></div>
+          <div class="vfd-sub" id="vfd-sub"></div>
+          <div class="vfd-meter" id="vfd-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="hifi-disc" id="hifi-disc"><span></span></div>
+      </div>
+      <input type="range" class="hifi-range" id="hifi-progress" min="0" max="0" step="1" value="0" aria-label="Position" />
+      <div class="hifi-keys">
+        <button class="hifi-key" id="hifi-prev" aria-label="Zurück"><svg class="icon"><use href="#i-prev"/></svg><span>Zurück</span></button>
+        <button class="hifi-key hifi-key-main" id="hifi-toggle" aria-label="Pause/Weiter"><svg class="icon"><use href="#i-pause"/></svg><span>Pause</span></button>
+        <button class="hifi-key" id="hifi-next" aria-label="Weiter"><svg class="icon"><use href="#i-next"/></svg><span>Weiter</span></button>
+        <button class="hifi-key" id="hifi-stop" aria-label="Stopp"><svg class="icon"><use href="#i-stop"/></svg><span>Stopp</span></button>
+      </div>
+    </div>
+
+    <div class="retro-toolbar">
+      <button class="retro-btn" id="vy-shuffle-all"><svg class="icon"><use href="#i-shuffle"/></svg>Zufallsmix</button>
+      <button class="retro-btn retro-btn-accent" id="vy-add"><svg class="icon"><use href="#i-plus"/></svg>Platte dazu</button>
+    </div>
+
+    <div class="cabinets" id="vy-cabinets"></div>
+    <button class="retro-btn retro-btn-ghost" id="vy-new-cabinet"><svg class="icon"><use href="#i-plus"/></svg>Neuen Schrank bauen</button>
   </section>
 
   <!-- ================= Licht ================= -->
@@ -359,6 +409,14 @@
       <button class="btn btn-ghost btn-block hidden" id="sheet-restart"><svg class="icon"><use href="#i-replay"/></svg>Von vorne</button>
     </div>
   </div>
+</div>
+
+<!-- Plattenschrank: Platte ansehen / neue Platte hinzufuegen -->
+<div class="sheet-backdrop hidden" id="vy-sheet-backdrop"></div>
+<div class="sheet retro-sheet" id="vy-sheet" aria-hidden="true">
+  <span class="sheet-grabber"></span>
+  <button class="icon-btn sheet-close" id="vy-sheet-close" aria-label="Schließen"><svg class="icon"><use href="#i-close"/></svg></button>
+  <div class="retro-sheet-body" id="vy-sheet-body"></div>
 </div>
 
 <script src="remote.js"></script>

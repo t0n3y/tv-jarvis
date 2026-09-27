@@ -11,7 +11,9 @@ Laeuft dauerhaft (systemd/dashboard.service). Aufgaben:
    mobile Seite unter /remote.html (vom iPhone/iPad im selben WLAN).
 5. Proxyt Jellyfin-Streams und -Bilder, damit der Jellyfin-API-Key (Admin-
    Rechte, Jellyfin ist oeffentlich erreichbar) nie einen Browser erreicht.
-6. Loest ueber app/scheduler.py Morgen-/Verlassen-Routine zur Weckzeit aus.
+6. Plattenspieler: fuehrt die Warteschlange (Platte, Schrank, Zufallsmix)
+   und schickt dem Kiosk Song fuer Song (versteckter YouTube-Player).
+7. Loest ueber app/scheduler.py Morgen-/Verlassen-Routine zur Weckzeit aus.
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import random
 import re
 import time
 from pathlib import Path
@@ -30,7 +33,16 @@ from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 from starlette.datastructures import MutableHeaders
 
-from app import audio_control, jellyfin_client, kiosk_media, radio, radio_stations, schedule_store, tv_power
+from app import (
+    audio_control,
+    jellyfin_client,
+    kiosk_media,
+    radio,
+    radio_stations,
+    schedule_store,
+    tv_power,
+    vinyl_library,
+)
 from app.config import ROOT_DIR, get_config
 from app.dashboard import kiosk
 from app.lighting import engine as lighting
@@ -144,6 +156,25 @@ jellyfin_now_playing: dict = {
 }
 # Fortlaufende id, damit die Fernbedienung jeden Fehler genau einmal anzeigt
 jellyfin_error: dict = {"id": 0, "message": None}
+
+# Plattenspieler: die Warteschlange lebt hier (nicht im Kiosk), damit die
+# Fernbedienung vor/zurueck schalten kann. Jeder Song bekommt ein neues token;
+# Meldungen des Kiosks zu einem alten token werden ignoriert.
+vinyl_now_playing: dict = {
+    "token": 0,
+    "queue": [],          # [(record_id, song_index), ...]
+    "position": 0,
+    "context": None,      # z.B. "Electronic & House" oder "Zufallsmix"
+    "record": None,
+    "song_index": 0,
+    "title": None,
+    "artist": None,
+    "current_time": 0,
+    "duration": 0,
+    "playing": False,
+}
+vinyl_error: dict = {"id": 0, "message": None}
+_vinyl_failures = 0
 _jellyfin_last_sync = {"at": 0.0, "position": -1.0}
 _background_tasks: set[asyncio.Task] = set()
 _http_client: httpx.AsyncClient | None = None
@@ -187,6 +218,13 @@ def _reset_jellyfin_state() -> None:
         current_time=0,
         duration=0,
         playing=False,
+    )
+
+
+def _reset_vinyl_state() -> None:
+    vinyl_now_playing.update(
+        queue=[], position=0, context=None, record=None, song_index=0,
+        title=None, artist=None, current_time=0, duration=0, playing=False,
     )
 
 
@@ -308,6 +346,7 @@ def _apply_command_state(body: dict) -> None:
     msg_type = body.get("type")
     if msg_type == "youtube_play":
         _finish_jellyfin_session()
+        _reset_vinyl_state()
         video_id = body.get("video_id")
         youtube_now_playing.update(
             video_id=video_id,
@@ -326,6 +365,7 @@ def _apply_command_state(body: dict) -> None:
     elif msg_type == "jellyfin_play":
         _finish_jellyfin_session()
         _reset_youtube_state()
+        _reset_vinyl_state()
         jellyfin_now_playing.update(
             item_id=body.get("item_id"),
             title=body.get("title"),
@@ -344,19 +384,32 @@ def _apply_command_state(body: dict) -> None:
         jellyfin_now_playing["playing"] = True
     elif msg_type == "jellyfin_stop":
         _finish_jellyfin_session()
+    elif msg_type == "vinyl_play":
+        _finish_jellyfin_session()
+        _reset_youtube_state()
+    elif msg_type == "vinyl_pause":
+        vinyl_now_playing["playing"] = False
+    elif msg_type == "vinyl_resume":
+        vinyl_now_playing["playing"] = True
+    elif msg_type == "vinyl_stop":
+        _reset_vinyl_state()
+
+
+async def _send_to_kiosk(body: dict) -> bool:
+    _apply_command_state(body)
+    delivered = await manager.broadcast(body)
+    msg_type = body.get("type") or ""
+    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play"):
+        manager.pending_play = None if delivered else body
+    elif msg_type.endswith("_stop"):
+        manager.pending_play = None
+    return delivered
 
 
 @app.post("/api/kiosk-command", dependencies=[Depends(require_remote_secret)])
 async def kiosk_command(request: Request) -> dict:
     body = await request.json()
-    _apply_command_state(body)
-    delivered = await manager.broadcast(body)
-    msg_type = body.get("type") or ""
-    if msg_type in ("youtube_play", "jellyfin_play"):
-        manager.pending_play = None if delivered else body
-    elif msg_type.endswith("_stop"):
-        manager.pending_play = None
-    return {"ok": True, "delivered": delivered}
+    return {"ok": True, "delivered": await _send_to_kiosk(body)}
 
 
 @app.post("/api/remote/power", dependencies=[Depends(require_remote_secret)])
@@ -594,6 +647,216 @@ async def remote_radio(request: Request) -> dict:
     return {"ok": True, "playing": radio.is_playing()}
 
 
+# ---------- Plattenspieler ----------
+
+VINYL_RESTART_THRESHOLD_SECONDS = 5
+VINYL_MAX_FAILURES = 5
+
+
+async def _vinyl(fn, *args):
+    try:
+        return await asyncio.to_thread(fn, *args)
+    except vinyl_library.VinylError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def _vinyl_record_public(record: dict) -> dict:
+    return {
+        "id": record["id"],
+        "album": record["album"],
+        "artist": record["artist"],
+        "year": record.get("year"),
+        "cover": record.get("cover"),
+        "color": record.get("color"),
+        "songs": [s["title"] for s in record["songs"]],
+    }
+
+
+def _vinyl_queue(body: dict) -> tuple[list[tuple[str, int]], int, str]:
+    """Baut die Warteschlange: eine Platte (ab einem Song), ein Schrank oder alles."""
+    lib = vinyl_library.library()
+    records = lib["records"]
+    shuffle = bool(body.get("shuffle"))
+    if body.get("record_id"):
+        record = next((r for r in records if r["id"] == body["record_id"]), None)
+        if record is None:
+            raise HTTPException(status_code=404, detail="Diese Platte gibt es nicht mehr")
+        queue = [(record["id"], i) for i in range(len(record["songs"]))]
+        if shuffle:
+            random.shuffle(queue)
+            return queue, 0, record["album"]
+        start = max(0, min(int(body.get("song_index") or 0), len(queue) - 1))
+        return queue, start, record["album"]
+    if body.get("genre_id"):
+        genre = next((g for g in lib["genres"] if g["id"] == body["genre_id"]), None)
+        if genre is None:
+            raise HTTPException(status_code=404, detail="Diesen Schrank gibt es nicht mehr")
+        records = [r for r in records if r["genre"] == genre["id"]]
+        context = genre["name"]
+    else:
+        context = "Zufallsmix" if shuffle else "Alle Platten"
+    queue = [(r["id"], i) for r in records for i in range(len(r["songs"]))]
+    if shuffle:
+        random.shuffle(queue)
+    if not queue:
+        raise HTTPException(status_code=400, detail="Hier stehen noch keine Platten")
+    return queue, 0, context
+
+
+async def _vinyl_play_position(position: int) -> bool:
+    """Legt den Song an Stelle `position` auf. Songs ohne YouTube-Video
+    (oder geloeschte Platten) werden uebersprungen. False = Ende erreicht."""
+    queue = vinyl_now_playing["queue"]
+    record = None
+    while 0 <= position < len(queue):
+        record_id, song_index = queue[position]
+        record = vinyl_library.find_record(record_id)
+        if record and song_index < len(record["songs"]) and record["songs"][song_index].get("youtube"):
+            break
+        position += 1
+    else:
+        return False
+
+    song = record["songs"][song_index]
+    upcoming = None
+    for next_record_id, next_index in queue[position + 1:position + 2]:
+        next_record = vinyl_library.find_record(next_record_id)
+        if next_record and next_index < len(next_record["songs"]):
+            upcoming = {"title": next_record["songs"][next_index]["title"], "artist": next_record["artist"]}
+    vinyl_now_playing["token"] += 1
+    vinyl_now_playing.update(
+        position=position,
+        record=_vinyl_record_public(record),
+        song_index=song_index,
+        title=song["title"],
+        artist=song.get("artist") or record["artist"],
+        current_time=0,
+        duration=0,
+        playing=True,
+    )
+    await _send_to_kiosk({
+        "type": "vinyl_play",
+        "token": vinyl_now_playing["token"],
+        "video_id": song["youtube"],
+        "start": song.get("start") or 0,
+        "title": vinyl_now_playing["title"],
+        "artist": vinyl_now_playing["artist"],
+        "record": vinyl_now_playing["record"],
+        "song_index": song_index,
+        "position": position,
+        "queue_length": len(queue),
+        "context": vinyl_now_playing["context"],
+        "next": upcoming,
+    })
+    return True
+
+
+async def _vinyl_advance(step: int = 1) -> None:
+    if not vinyl_now_playing["queue"]:
+        return
+    if not await _vinyl_play_position(vinyl_now_playing["position"] + step):
+        await _send_to_kiosk({"type": "vinyl_stop"})
+
+
+def _vinyl_public_state() -> dict:
+    state = {k: v for k, v in vinyl_now_playing.items() if k != "queue"}
+    state["queue_length"] = len(vinyl_now_playing["queue"])
+    state["active"] = bool(vinyl_now_playing["queue"])
+    return state
+
+
+@app.get("/api/remote/vinyl/library", dependencies=[Depends(require_remote_secret)])
+async def vinyl_get_library() -> dict:
+    return await asyncio.to_thread(vinyl_library.library)
+
+
+@app.post("/api/remote/vinyl/genres", dependencies=[Depends(require_remote_secret)])
+async def vinyl_add_genre(request: Request) -> dict:
+    body = await request.json()
+    return await _vinyl(vinyl_library.add_genre, str(body.get("name") or ""))
+
+
+@app.patch("/api/remote/vinyl/genres/{genre_id}", dependencies=[Depends(require_remote_secret)])
+async def vinyl_rename_genre(genre_id: str, request: Request) -> dict:
+    body = await request.json()
+    await _vinyl(vinyl_library.rename_genre, genre_id, str(body.get("name") or ""))
+    return {"ok": True}
+
+
+@app.delete("/api/remote/vinyl/genres/{genre_id}", dependencies=[Depends(require_remote_secret)])
+async def vinyl_delete_genre(genre_id: str) -> dict:
+    await _vinyl(vinyl_library.delete_genre, genre_id)
+    return {"ok": True}
+
+
+@app.post("/api/remote/vinyl/records", dependencies=[Depends(require_remote_secret)])
+async def vinyl_add_record(request: Request) -> dict:
+    body = await request.json()
+    return await _vinyl(vinyl_library.add_record, body)
+
+
+@app.patch("/api/remote/vinyl/records/{record_id}", dependencies=[Depends(require_remote_secret)])
+async def vinyl_update_record(record_id: str, request: Request) -> dict:
+    body = await request.json()
+    changes = {k: body[k] for k in ("genre", "remove_song") if k in body}
+    return await _vinyl(vinyl_library.update_record, record_id, changes)
+
+
+@app.delete("/api/remote/vinyl/records/{record_id}", dependencies=[Depends(require_remote_secret)])
+async def vinyl_delete_record(record_id: str) -> dict:
+    await _vinyl(vinyl_library.delete_record, record_id)
+    return {"ok": True}
+
+
+@app.get("/api/remote/vinyl/search", dependencies=[Depends(require_remote_secret)])
+async def vinyl_search(q: str = "", kind: str = "album") -> dict:
+    return {"results": await _vinyl(vinyl_library.search, q[:100], kind)}
+
+
+@app.get("/api/remote/vinyl/album/{collection_id}", dependencies=[Depends(require_remote_secret)])
+async def vinyl_album(collection_id: int) -> dict:
+    return await _vinyl(vinyl_library.album_tracks, collection_id)
+
+
+@app.post("/api/remote/vinyl", dependencies=[Depends(require_remote_secret)])
+async def remote_vinyl(request: Request) -> dict:
+    global _vinyl_failures
+    body = await request.json()
+    action = body.get("action")
+
+    if action == "play":
+        queue, start, context = await asyncio.to_thread(_vinyl_queue, body)
+        await _ensure_tv_on()
+        # Radio und Videos teilen sich die TV-Lautsprecher
+        await asyncio.to_thread(radio.stop)
+        _vinyl_failures = 0
+        vinyl_now_playing.update(queue=queue, context=context)
+        if not await _vinyl_play_position(start):
+            _reset_vinyl_state()
+            raise HTTPException(status_code=400, detail="Für diese Songs ist kein YouTube-Video hinterlegt")
+    elif not vinyl_now_playing["queue"]:
+        raise HTTPException(status_code=409, detail="Gerade liegt keine Platte auf")
+    elif action == "pause":
+        await _send_to_kiosk({"type": "vinyl_pause"})
+    elif action == "resume":
+        await _send_to_kiosk({"type": "vinyl_resume"})
+    elif action == "next":
+        await _vinyl_advance(1)
+    elif action == "prev":
+        # Wie am CD-Player: erst an den Songanfang, beim zweiten Druck davor
+        if vinyl_now_playing["current_time"] > VINYL_RESTART_THRESHOLD_SECONDS or vinyl_now_playing["position"] == 0:
+            await _send_to_kiosk({"type": "vinyl_seek_to", "seconds": 0})
+        else:
+            await _vinyl_play_position(vinyl_now_playing["position"] - 1)
+    elif action == "seek_to":
+        await _send_to_kiosk({"type": "vinyl_seek_to", "seconds": _as_float(body.get("seconds"))})
+    elif action == "stop":
+        await _send_to_kiosk({"type": "vinyl_stop"})
+    else:
+        raise HTTPException(status_code=400, detail="unbekannte action")
+    return {"ok": True, "vinyl": _vinyl_public_state()}
+
+
 # ---------- Licht (DMX) ----------
 
 LIGHT_FIELDS = {"on", "brightness", "color", "effect", "bpm", "fixtures", "tap"}
@@ -624,6 +887,8 @@ async def get_now_playing() -> dict:
         "youtube": youtube_now_playing,
         "jellyfin": jellyfin_now_playing,
         "jellyfin_error": jellyfin_error,
+        "vinyl": _vinyl_public_state(),
+        "vinyl_error": vinyl_error,
         "radio": {"playing": radio.is_playing(), "station": radio_stations.current_station(cfg)},
         "light": lighting.get_engine().state(),
     }
@@ -657,8 +922,38 @@ async def set_schedule(request: Request) -> dict:
 
 # ---------- WebSocket zum Kiosk ----------
 
+def _handle_vinyl_report(msg: dict) -> None:
+    global _vinyl_failures
+    if msg.get("token") != vinyl_now_playing["token"] or not vinyl_now_playing["queue"]:
+        return  # Meldung zu einem inzwischen abgeloesten Song
+    msg_type = msg.get("type")
+    if msg_type == "vinyl_progress":
+        vinyl_now_playing["current_time"] = _as_float(msg.get("current_time"))
+        vinyl_now_playing["duration"] = _as_float(msg.get("duration"))
+        vinyl_now_playing["playing"] = bool(msg.get("playing"))
+        if vinyl_now_playing["playing"]:
+            _vinyl_failures = 0
+    elif msg_type == "vinyl_ended":
+        _spawn(_vinyl_advance(1))
+    elif msg_type == "vinyl_error":
+        # Meist: Video darf nicht eingebettet werden (YouTube-Fehler 101/150)
+        _vinyl_failures += 1
+        title = vinyl_now_playing["title"]
+        logger.warning("Plattenspieler: %s nicht abspielbar (YouTube-Fehler %s)", title, msg.get("code"))
+        vinyl_error["id"] += 1
+        if _vinyl_failures >= min(VINYL_MAX_FAILURES, len(vinyl_now_playing["queue"])):
+            vinyl_error["message"] = "Die Songs lassen sich gerade nicht abspielen"
+            _spawn(_send_to_kiosk({"type": "vinyl_stop"}))
+        else:
+            vinyl_error["message"] = f"„{title}“ ließ sich nicht abspielen – nächster Song"
+            _spawn(_vinyl_advance(1))
+
+
 def _handle_kiosk_report(msg: dict) -> None:
     msg_type = msg.get("type")
+    if isinstance(msg_type, str) and msg_type.startswith("vinyl_"):
+        _handle_vinyl_report(msg)
+        return
     if msg_type == "youtube_progress":
         youtube_now_playing["current_time"] = _as_float(msg.get("current_time"))
         youtube_now_playing["duration"] = _as_float(msg.get("duration"))

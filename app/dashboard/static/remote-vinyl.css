@@ -1,0 +1,744 @@
+/* ============================================================
+   Plattenschrank (Retro-App der Fernbedienung)
+   Eigene Optik wie wgv-sv.de/platten: warmes Braun, Orange, Fraunces-
+   Serif, DM Mono. Holzschraenke je Genre, Hi-Fi-Deck mit VFD-Anzeige.
+   ============================================================ */
+
+#view-vinyl,
+.retro-sheet {
+  --tint: 255, 107, 61;
+  --tint-ink: #1c0d05;
+  --r-ink: #f3e9dc;
+  --r-ink-2: #c9b8a4;
+  --r-ink-3: #8f7c69;
+  --r-gold: #e9b949;
+  --r-line: rgba(243, 233, 220, 0.12);
+  --serif: "Fraunces", Georgia, serif;
+  --mono: "DM Mono", ui-monospace, monospace;
+  --sans: "DM Sans", system-ui, sans-serif;
+  font-family: var(--sans);
+  color: var(--r-ink);
+}
+
+/* Warmer Hintergrund statt des Jarvis-Cyans, solange der Schrank offen ist */
+body.retro .bg {
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(255, 107, 61, 0.14), transparent 60%),
+    radial-gradient(90% 50% at 0% 30%, rgba(233, 185, 73, 0.08), transparent 60%),
+    #15100c;
+}
+
+body.retro .bg::after { display: none; }
+body.retro .topbar { background: linear-gradient(180deg, rgba(21, 16, 12, 0.94) 55%, rgba(21, 16, 12, 0)); }
+
+.retro-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgb(var(--tint));
+}
+
+#view-vinyl .retro-title {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--r-ink);
+  text-shadow: none;
+}
+
+#view-vinyl .icon-btn {
+  background: rgba(58, 40, 28, 0.7);
+  border-color: var(--r-line);
+}
+
+/* ---------- Knoepfe ---------- */
+
+.retro-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.retro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid rgba(243, 233, 220, 0.16);
+  border-radius: 999px;
+  background: rgba(58, 40, 28, 0.6);
+  color: var(--r-ink);
+  font: 700 15px var(--sans);
+  transition: transform 0.12s, background 0.2s;
+}
+
+.retro-btn .icon { width: 19px; height: 19px; }
+.retro-btn:active { transform: scale(0.97); }
+.retro-btn:disabled { opacity: 0.45; pointer-events: none; }
+
+.retro-btn-accent {
+  border-color: transparent;
+  background: linear-gradient(180deg, #ff7d52, #f05a2a);
+  color: #1c0d05;
+  box-shadow: 0 10px 24px -12px rgba(255, 107, 61, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.retro-btn-ghost {
+  background: transparent;
+  border-style: dashed;
+  color: var(--r-ink-2);
+}
+
+.retro-btn-block { width: 100%; }
+
+/* ---------- Hi-Fi-Deck ---------- */
+
+.hifi {
+  padding: 12px;
+  border-radius: 20px;
+  /* Nussbaum-Wangen */
+  background:
+    repeating-linear-gradient(94deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 7px),
+    linear-gradient(135deg, #6b4127, #3a2112);
+  box-shadow: 0 20px 40px -18px #000, inset 0 1px 0 rgba(255, 220, 180, 0.25);
+}
+
+.hifi-face {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  /* gebuerstetes Aluminium */
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #d8d1c6, #a79e92);
+  box-shadow: inset 0 1px 0 #fff8ee, inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.hifi-display {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: radial-gradient(120% 140% at 50% 0%, #1f1711, #0b0806);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-family: var(--mono);
+  color: #ffb347;
+  text-shadow: 0 0 6px rgba(255, 170, 60, 0.75);
+}
+
+.vfd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 2px;
+  opacity: 0.85;
+}
+
+.vfd-title {
+  margin-top: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.vfd-title span { display: inline-block; }
+
+/* Lauftext wie am echten Tapedeck, wenn der Titel nicht passt */
+.vfd-title.scroll span {
+  padding-right: 40px;
+  animation: vfd-scroll var(--scroll-s, 10s) linear infinite;
+}
+
+@keyframes vfd-scroll {
+  0%, 12% { transform: translateX(0); }
+  88%, 100% { transform: translateX(var(--scroll-by, 0px)); }
+}
+
+.vfd-sub {
+  margin-top: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.75;
+}
+
+.vfd-meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 14px;
+  margin-top: 8px;
+}
+
+.vfd-meter i {
+  flex: 1;
+  height: 20%;
+  border-radius: 1px;
+  background: #ffb347;
+  box-shadow: 0 0 5px rgba(255, 170, 60, 0.8);
+  opacity: 0.9;
+}
+
+.hifi.playing .vfd-meter i { animation: vu 0.9s ease-in-out infinite alternate; }
+.hifi.playing .vfd-meter i:nth-child(3n) { animation-duration: 0.6s; }
+.hifi.playing .vfd-meter i:nth-child(4n+1) { animation-duration: 1.2s; animation-delay: -0.4s; }
+.hifi.playing .vfd-meter i:nth-child(5n+2) { animation-duration: 0.75s; animation-delay: -0.2s; }
+
+@keyframes vu {
+  0% { height: 18%; }
+  100% { height: 100%; }
+}
+
+.hifi-disc {
+  position: relative;
+  flex: none;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #0d0d0d 0 1px, #1b1b1b 1px 2px);
+  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.8), 0 0 0 3px #2a2520;
+}
+
+.hifi-disc span {
+  position: absolute;
+  inset: 32%;
+  border-radius: 50%;
+  background: var(--label, #b8452e) center / cover no-repeat;
+}
+
+.hifi-disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 30deg, transparent, rgba(255, 255, 255, 0.12) 20deg, transparent 45deg, transparent 180deg, rgba(255, 255, 255, 0.08) 200deg, transparent 225deg);
+}
+
+.hifi.playing .hifi-disc span { animation: spin 1.8s linear infinite; }
+
+.hifi-range {
+  width: 100%;
+  height: 26px;
+  margin: 10px 0 4px;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  --pct: 0%;
+}
+
+.hifi-range:focus { outline: none; }
+
+.hifi-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ffb347 0 var(--pct), rgba(0, 0, 0, 0.55) var(--pct) 100%);
+  box-shadow: inset 0 1px 2px #000;
+}
+
+.hifi-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: conic-gradient(#8f877e, #f4ede4, #8f877e, #d8d0c5, #8f877e);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.hifi-keys {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr 1fr;
+  gap: 6px;
+}
+
+.hifi-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 8px;
+  border: 0;
+  border-radius: 6px 6px 9px 9px;
+  background: linear-gradient(180deg, #e6dfd4, #b3aa9d);
+  color: #2a211a;
+  box-shadow: 0 4px 0 #6f665b, 0 6px 10px rgba(0, 0, 0, 0.55), inset 0 1px 0 #fff;
+  font: 600 10px var(--mono);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.hifi-key .icon { width: 20px; height: 20px; }
+
+.hifi-key:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6f665b, 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 #fff;
+}
+
+.hifi-key-main { color: #b83e14; }
+
+/* ---------- Schraenke ---------- */
+
+.cabinets {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.cabinet {
+  padding: 10px 10px 0;
+  border-radius: 18px 18px 10px 10px;
+  background:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(88deg, rgba(255, 210, 160, 0.05) 0 1px, transparent 1px 23px),
+    linear-gradient(160deg, #6b4127, #4a2b18 55%, #3a2112);
+  box-shadow: 0 24px 40px -22px #000, inset 0 1px 0 rgba(255, 220, 180, 0.28);
+}
+
+.cabinet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 2px 10px;
+}
+
+/* Messingschild mit eingraviertem Genre */
+.brass-plate {
+  min-width: 0;
+  padding: 6px 14px 7px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f3d98a, #caa24a 55%, #a88235);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  color: #3b2a0d;
+}
+
+.plate-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: italic 800 17px var(--serif);
+  text-shadow: 0 1px 0 rgba(255, 245, 210, 0.6);
+}
+
+.plate-count {
+  display: block;
+  font: 500 10px var(--mono);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.cabinet-actions { display: flex; gap: 6px; flex: none; }
+
+.knob-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4d3a2c, #22170f 75%);
+  color: var(--r-gold);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 220, 180, 0.2);
+  transition: transform 0.1s;
+}
+
+.knob-btn .icon { width: 19px; height: 19px; }
+.knob-btn:active { transform: scale(0.9); }
+
+.cabinet-body {
+  position: relative;
+  margin: 0 -2px;
+  padding: 16px 0 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, #120c08, #1f150e);
+  box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.8), inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.crate {
+  display: flex;
+  gap: 30px;
+  padding: 0 44px 12px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.crate::-webkit-scrollbar { display: none; }
+
+.crate-empty {
+  padding: 22px 16px 26px;
+  color: var(--r-ink-3);
+  font: italic 500 15px var(--serif);
+  text-align: center;
+}
+
+/* Regalbrett */
+.shelf {
+  height: 14px;
+  margin: 0 -8px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8a5a37, #5a3820 60%, #3a2112);
+  box-shadow: 0 6px 10px -4px #000, inset 0 1px 0 rgba(255, 220, 180, 0.35);
+}
+
+.sleeve {
+  flex: 0 0 116px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--r-ink);
+  text-align: left;
+  scroll-snap-align: start;
+}
+
+.sleeve-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+/* Platte schaut rechts aus der Huelle */
+.sleeve-disc {
+  position: absolute;
+  top: 5%;
+  right: -26%;
+  width: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #0c0c0c 0 1px, #1c1c1c 1px 2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  transition: transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.sleeve-disc::after {
+  content: "";
+  position: absolute;
+  inset: 33%;
+  border-radius: 50%;
+  background: var(--label, #b8452e);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.sleeve:active .sleeve-disc,
+.sleeve.playing .sleeve-disc { transform: translateX(12%) rotate(40deg); }
+
+.sleeve-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border-radius: 3px;
+  background: var(--label, #b8452e) center / cover no-repeat;
+  box-shadow: 0 10px 18px -8px #000, inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  font: 800 14px/1.15 var(--serif);
+  text-align: center;
+  color: #fff4e6;
+  transition: transform 0.15s;
+}
+
+.sleeve-art.has-cover span { display: none; }
+.sleeve:active .sleeve-art { transform: translateY(-4px); }
+
+.sleeve.playing .sleeve-art::after {
+  content: "Läuft";
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgb(var(--tint));
+  color: #1c0d05;
+  font: 600 10px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.sleeve-title {
+  font: 700 14px/1.2 var(--serif);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sleeve-artist {
+  margin-top: -5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--r-ink-3);
+}
+
+/* ---------- Sheet (Platte ansehen / hinzufuegen) ---------- */
+
+.retro-sheet {
+  background: linear-gradient(180deg, #241a13, #15100c);
+  border-color: rgba(243, 233, 220, 0.1);
+  padding-top: 26px;
+}
+
+.retro-sheet .sheet-close { background: rgba(58, 40, 28, 0.8); }
+
+.retro-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.rs-hero {
+  position: relative;
+  width: 58%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  margin: 6px 0 0 4px;
+}
+
+.rs-hero .sleeve-disc {
+  top: 3%;
+  right: 0;
+  width: 94%;
+  animation: disc-out 0.7s 0.15s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes disc-out { to { transform: translateX(46%) rotate(90deg); } }
+
+.rs-hero .sleeve-art { font-size: 20px; }
+
+.rs-title {
+  font: 800 26px/1.1 var(--serif);
+}
+
+.rs-meta {
+  margin-top: -8px;
+  font-size: 15px;
+  color: var(--r-ink-2);
+}
+
+.rs-meta span { font: 500 12px var(--mono); letter-spacing: 1px; color: var(--r-ink-3); }
+
+.rs-actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+}
+
+.rs-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--r-line);
+}
+
+.rs-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--r-line);
+  background: none;
+  color: var(--r-ink);
+  text-align: left;
+  font: 500 16px var(--sans);
+}
+
+.rs-track:active { background: rgba(255, 107, 61, 0.08); }
+
+.rs-nr {
+  flex: none;
+  width: 22px;
+  font: 500 12px var(--mono);
+  color: var(--r-ink-3);
+}
+
+.rs-track-main { flex: 1; min-width: 0; }
+.rs-track-sub { font-size: 12px; color: var(--r-ink-3); }
+.rs-track .icon { width: 18px; height: 18px; color: rgb(var(--tint)); }
+.rs-track.current { color: rgb(var(--tint)); font-weight: 700; }
+.rs-track.missing { opacity: 0.45; }
+
+.rs-section {
+  margin-top: 4px;
+  font: 500 11px var(--mono);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--r-ink-3);
+}
+
+.rs-manage {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.rs-select {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(243, 233, 220, 0.16);
+  border-radius: 999px;
+  background: rgba(58, 40, 28, 0.6);
+  color: var(--r-ink);
+  font: 600 16px var(--sans);
+  color-scheme: dark;
+}
+
+.rs-danger {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 93, 115, 0.35);
+  border-radius: 50%;
+  background: rgba(255, 93, 115, 0.08);
+  color: #ff8f9f;
+}
+
+.rs-danger .icon { width: 19px; height: 19px; }
+
+/* Hinzufuegen */
+
+.rs-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--r-line);
+}
+
+.rs-seg button {
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--r-ink-2);
+  font: 700 15px var(--sans);
+}
+
+.rs-seg button.active { background: rgb(var(--tint)); color: #1c0d05; }
+
+.retro-sheet .field {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(243, 233, 220, 0.14);
+}
+
+.retro-sheet .field input { font-family: var(--sans); font-weight: 500; }
+
+.rs-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--r-line);
+  background: none;
+  color: var(--r-ink);
+  text-align: left;
+}
+
+.rs-thumb {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  border-radius: 3px;
+  background: #3a2a1f center / cover no-repeat;
+  box-shadow: 0 6px 12px -6px #000;
+}
+
+.rs-result-title { font: 700 16px/1.2 var(--serif); }
+.rs-result-sub { margin-top: 2px; font-size: 13px; color: var(--r-ink-3); }
+
+.rs-check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1.5px solid rgba(243, 233, 220, 0.3);
+  color: transparent;
+}
+
+.rs-check .icon { width: 16px; height: 16px; stroke-width: 2.6; }
+.rs-track.selected .rs-check { background: rgb(var(--tint)); border-color: rgb(var(--tint)); color: #1c0d05; }
+
+.rs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.rs-chip {
+  padding: 8px 14px;
+  border: 1px solid rgba(243, 233, 220, 0.16);
+  border-radius: 999px;
+  background: rgba(58, 40, 28, 0.5);
+  color: var(--r-ink-2);
+  font: 700 14px var(--sans);
+}
+
+.rs-chip.active {
+  border-color: transparent;
+  background: linear-gradient(180deg, #f3d98a, #caa24a);
+  color: #3b2a0d;
+}
+
+.rs-chip.new { border-style: dashed; }
+
+.rs-footer {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -20px;
+  padding: 12px 20px calc(var(--safe-bottom) + 6px);
+  background: linear-gradient(180deg, rgba(21, 16, 12, 0), #15100c 30%);
+}
+
+.rs-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font: italic 500 15px var(--serif);
+  color: var(--r-ink-3);
+}
+
+.rs-busy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 30px 0;
+  text-align: center;
+  color: var(--r-ink-2);
+}
+
+.rs-busy .hifi-disc span { animation: spin 1.8s linear infinite; }
+
+@media (min-width: 700px) {
+  .sleeve { flex-basis: 140px; }
+  .hifi-disc { width: 120px; height: 120px; }
+}

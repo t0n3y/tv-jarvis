@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="style.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=DM+Sans:opsz,wght@9..40,400..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="vinyl.css" />
 </head>
 <body>
 
@@ -84,6 +86,73 @@
     <div id="jf-error" class="media-error hidden">
       <div class="media-error-icon">!</div>
       <div class="media-error-text" id="jf-error-text"></div>
+    </div>
+  </div>
+
+  <!-- Plattenspieler: der YouTube-Player liegt unsichtbar HINTER der Buehne
+       (nicht display:none - dann wuerde er nicht zuverlaessig abspielen) -->
+  <div id="vinyl-screen" class="hidden">
+    <div class="vy-hidden-player"><div id="vinyl-yt"></div></div>
+    <div class="vy-stage" id="vy-stage">
+      <div class="vy-glow"></div>
+
+      <div class="vy-deck">
+        <div class="vy-plinth">
+          <div class="vy-brand">Jarvis<span>Plattenspieler</span></div>
+          <div class="vy-platter">
+            <div class="vy-mat"></div>
+            <div class="vy-disc" id="vy-disc">
+              <div class="vy-grooves"></div>
+              <div class="vy-label" id="vy-label"><span id="vy-label-text"></span></div>
+            </div>
+            <div class="vy-sheen"></div>
+            <div class="vy-spindle"></div>
+          </div>
+          <div class="vy-arm-base"></div>
+          <svg class="vy-arm" id="vy-arm" viewBox="0 0 120 520" aria-hidden="true">
+            <defs>
+              <linearGradient id="vy-chrome" x1="0" x2="1">
+                <stop offset="0" stop-color="#6d655c"/>
+                <stop offset="0.45" stop-color="#f4ede4"/>
+                <stop offset="1" stop-color="#8a8177"/>
+              </linearGradient>
+            </defs>
+            <rect x="46" y="0" width="28" height="62" rx="9" fill="#2a231d"/>
+            <circle cx="60" cy="80" r="34" fill="#1c1713" stroke="url(#vy-chrome)" stroke-width="5"/>
+            <circle cx="60" cy="80" r="12" fill="url(#vy-chrome)"/>
+            <path d="M60 80 L60 380 Q60 420 82 440" fill="none" stroke="url(#vy-chrome)" stroke-width="11" stroke-linecap="round"/>
+            <g transform="rotate(-24 88 452)">
+              <rect x="66" y="430" width="44" height="66" rx="7" fill="#1b1612" stroke="url(#vy-chrome)" stroke-width="3"/>
+              <rect x="80" y="492" width="16" height="14" rx="3" fill="#e9b949"/>
+            </g>
+          </svg>
+          <div class="vy-controls">
+            <div class="vy-knob"><span>33⅓</span></div>
+            <div class="vy-led" id="vy-led"></div>
+            <div class="vy-rpm">U/MIN</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vy-info">
+        <div class="vy-kicker" id="vy-kicker">Seite A · 33⅓ U/min</div>
+        <div class="vy-head">
+          <div class="vy-sleeve" id="vy-sleeve"></div>
+          <div class="vy-head-text">
+            <div class="vy-title" id="vy-title"></div>
+            <div class="vy-artist" id="vy-artist"></div>
+            <div class="vy-album" id="vy-album"></div>
+          </div>
+        </div>
+        <div class="vy-progress">
+          <div class="vy-bar"><span id="vy-bar-fill"></span></div>
+          <div class="vy-times"><span id="vy-cur">0:00</span><span id="vy-dur">0:00</span></div>
+        </div>
+        <ol class="vy-tracks" id="vy-tracks"></ol>
+        <div class="vy-next hidden" id="vy-next"></div>
+      </div>
+
+      <div class="vy-pause hidden" id="vy-pause">Pause</div>
     </div>
   </div>
 

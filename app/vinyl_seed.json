@@ -1,0 +1,249 @@
+{
+  "genres": [
+    {
+      "id": "soul-jazz",
+      "name": "Soul & Jazz"
+    },
+    {
+      "id": "electronic-house",
+      "name": "Electronic & House"
+    },
+    {
+      "id": "disco-funk",
+      "name": "Disco & Funk"
+    },
+    {
+      "id": "pop-rock",
+      "name": "Pop & Rock"
+    },
+    {
+      "id": "reggae",
+      "name": "Reggae"
+    }
+  ],
+  "records": [
+    {
+      "id": "sade-best",
+      "album": "The Best of Sade",
+      "artist": "Sade",
+      "year": 1994,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/5f/ad/2a/5fad2aca-d998-701d-7b27-c074339d5fd0/886972262628.jpg/600x600bb.jpg",
+      "color": "#b8452e",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Smooth Operator",
+          "youtube": "rS7Va0sBYAM"
+        },
+        {
+          "title": "Kiss of Life",
+          "youtube": "uEcKk2U_U7A"
+        },
+        {
+          "title": "Your Love Is King",
+          "youtube": "c_lgse6-JKo"
+        },
+        {
+          "title": "Hang On to Your Love",
+          "youtube": "4h1_x0dtLXE"
+        },
+        {
+          "title": "Paradise",
+          "youtube": "HywzuV7yYmg"
+        },
+        {
+          "title": "Cherish the Day",
+          "youtube": "Y7JuCab6yqs"
+        }
+      ]
+    },
+    {
+      "id": "daftpunk-discovery",
+      "album": "Discovery",
+      "artist": "Daft Punk",
+      "year": 2001,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg",
+      "color": "#3b5bdb",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "One More Time",
+          "youtube": "A2VpR8HahKc"
+        },
+        {
+          "title": "Harder, Better, Faster, Stronger",
+          "youtube": "yydNF8tuVmU"
+        },
+        {
+          "title": "Voyager",
+          "youtube": "INbgG9M0WYE"
+        },
+        {
+          "title": "Veridis Quo",
+          "youtube": "TCd6PfxOy0Y"
+        }
+      ]
+    },
+    {
+      "id": "grover-winelight",
+      "album": "Winelight",
+      "artist": "Grover Washington, Jr.",
+      "year": 1980,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/81/2b/74/812b74f7-060b-7386-bb02-967cd2cdd78c/mzi.yfyaqhnz.jpg/600x600bb.jpg",
+      "color": "#7a2e3a",
+      "genre": "soul-jazz",
+      "songs": [
+        {
+          "title": "Just the Two of Us",
+          "youtube": "6IO74QV6wHY",
+          "artist": "Grover Washington, Jr. feat. Bill Withers"
+        }
+      ]
+    },
+    {
+      "id": "daftpunk-ram",
+      "album": "Random Access Memories",
+      "artist": "Daft Punk",
+      "year": 2013,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Giorgio by Moroder",
+          "youtube": "zhl-Cs1-sG4"
+        },
+        {
+          "title": "Lose Yourself to Dance",
+          "youtube": "NF-kLy44Hls",
+          "artist": "Daft Punk feat. Pharrell Williams"
+        },
+        {
+          "title": "Get Lucky",
+          "youtube": "5NV6Rdv1a3I",
+          "artist": "Daft Punk feat. Pharrell Williams & Nile Rodgers"
+        },
+        {
+          "title": "Doin' It Right",
+          "youtube": "LL-gyhZVvx0",
+          "artist": "Daft Punk feat. Panda Bear"
+        }
+      ]
+    },
+    {
+      "id": "toto-iv",
+      "album": "Toto IV",
+      "artist": "Toto",
+      "year": 1982,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/69/ce/d2/69ced240-07a7-2a04-bbab-2afbacf30809/074643772822.jpg/600x600bb.jpg",
+      "color": "#8c6a3f",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Africa",
+          "youtube": "TP_eAvRXtpM"
+        }
+      ]
+    },
+    {
+      "id": "stardust-msbwy",
+      "album": "Music Sounds Better with You",
+      "artist": "Stardust",
+      "year": 1998,
+      "cover": "https://upload.wikimedia.org/wikipedia/en/9/9f/Stardust%27s_Music_Sounds_Better_with_You%22.png",
+      "color": "#d9480f",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Music Sounds Better with You",
+          "youtube": "FQlAEiCb8m0"
+        }
+      ]
+    },
+    {
+      "id": "beegees-timeless",
+      "album": "Timeless – The All-Time Greatest Hits",
+      "artist": "Bee Gees",
+      "year": 2017,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/63/7a/33/637a3301-f7a9-dce5-e312-b9da8f4022a1/17UMGIM87578.rgb.jpg/600x600bb.jpg",
+      "color": "#e0a526",
+      "genre": "disco-funk",
+      "songs": [
+        {
+          "title": "Stayin' Alive",
+          "youtube": "GbsFCYEJGZ0"
+        },
+        {
+          "title": "Night Fever",
+          "youtube": "Lc8uj8eId7E"
+        },
+        {
+          "title": "More Than a Woman",
+          "youtube": "uQ9_MwZIaoc"
+        }
+      ]
+    },
+    {
+      "id": "musicalyouth-today",
+      "album": "The Youth of Today",
+      "artist": "Musical Youth",
+      "year": 1982,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/4b/72/2d/4b722d3e-6ed9-0a66-2396-a71165377a85/22UM1IM01395.rgb.jpg/600x600bb.jpg",
+      "color": "#2f9e44",
+      "genre": "reggae",
+      "songs": [
+        {
+          "title": "Pass the Dutchie",
+          "youtube": "SDudKSh62Eo"
+        }
+      ]
+    },
+    {
+      "id": "philcollins-hits",
+      "album": "...Hits",
+      "artist": "Phil Collins",
+      "year": 1998,
+      "cover": "https://upload.wikimedia.org/wikipedia/en/b/be/Philhits.jpg",
+      "color": "#495057",
+      "genre": "pop-rock",
+      "songs": [
+        {
+          "title": "Easy Lover",
+          "youtube": "tWLdAdjYx7k",
+          "artist": "Philip Bailey & Phil Collins"
+        },
+        {
+          "title": "Another Day in Paradise",
+          "youtube": "sXAqwZt0aEI"
+        },
+        {
+          "title": "You Can't Hurry Love",
+          "youtube": "oXSn_N2jmBs"
+        },
+        {
+          "title": "In the Air Tonight",
+          "youtube": "cuHvKksNriE"
+        }
+      ]
+    },
+    {
+      "id": "ebtg",
+      "album": "Everything But the Girl",
+      "artist": "Everything But the Girl",
+      "year": null,
+      "cover": null,
+      "color": "#1c7ed6",
+      "genre": "electronic-house",
+      "songs": [
+        {
+          "title": "Missing (Todd Terry Remix)",
+          "youtube": "IAkY5m00rpY"
+        },
+        {
+          "title": "Nothing Left to Lose",
+          "youtube": "M6QKZJeK-5w"
+        }
+      ]
+    }
+  ]
+}

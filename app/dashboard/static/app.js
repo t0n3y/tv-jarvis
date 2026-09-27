@@ -109,7 +109,7 @@ async function refreshState() {
   }
 }
 
-// ---------- Bildschirme: Dashboard / YouTube / Jellyfin ----------
+// ---------- Bildschirme: Dashboard / YouTube / Jellyfin / Plattenspieler ----------
 
 let currentScreen = "dashboard";
 let resolveBoot;
@@ -122,10 +122,12 @@ const bootDone = new Promise((resolve) => {
 function showScreen(name) {
   if (currentScreen === "youtube" && name !== "youtube") stopYoutubePlayback();
   if (currentScreen === "jellyfin" && name !== "jellyfin") stopJellyfinPlayback();
+  if (currentScreen === "vinyl" && name !== "vinyl") stopVinylPlayback();
   currentScreen = name;
   $("dashboard").classList.toggle("hidden", name !== "dashboard");
   $("player-screen").classList.toggle("hidden", name !== "youtube");
   $("jellyfin-screen").classList.toggle("hidden", name !== "jellyfin");
+  $("vinyl-screen").classList.toggle("hidden", name !== "vinyl");
 }
 
 // ---------- YouTube (IFrame API) ----------
@@ -159,6 +161,7 @@ function setYoutubePause(show) {
 }
 
 function onYouTubeIframeAPIReady() {
+  createVinylPlayer();
   ytPlayer = new YT.Player("youtube-player", {
     height: "100%",
     width: "100%",
@@ -361,6 +364,205 @@ function handleJellyfinMessage(msg) {
   }
 }
 
+// ---------- Plattenspieler (eigener, versteckter YouTube-Player) ----------
+// Die Warteschlange fuehrt der Server; der Kiosk spielt jeweils einen Song
+// (vinyl_play mit token) und meldet Fortschritt/Ende/Fehler mit diesem token.
+
+const VINYL_ARM_REST_DEG = 4;
+const VINYL_ARM_START_DEG = 34;   // Nadel auf der Einlaufrille
+const VINYL_ARM_END_DEG = 52;     // Nadel kurz vor dem Etikett
+const VINYL_MAX_TRACKS = 7;
+const VINYL_SWAP_MS = 700;
+
+let vinylPlayer = null;
+let vinylReady = false;
+const vinylPendingQueue = [];
+let vinylCurrent = null;
+let vinylEndedToken = null;
+
+function createVinylPlayer() {
+  vinylPlayer = new YT.Player("vinyl-yt", {
+    height: "180",
+    width: "320",
+    playerVars: { autoplay: 1, controls: 0, rel: 0, cc_load_policy: 0, iv_load_policy: 3, disablekb: 1, fs: 0 },
+    events: {
+      onReady: () => {
+        vinylReady = true;
+        vinylPendingQueue.splice(0).forEach((fn) => fn());
+      },
+      onStateChange: (event) => {
+        if (!vinylCurrent) return;
+        const S = YT.PlayerState;
+        if (event.data === S.PLAYING) setVinylMotion("playing");
+        else if (event.data === S.PAUSED) setVinylMotion("paused");
+        else if (event.data === S.BUFFERING) setVinylMotion("loading");
+        else if (event.data === S.ENDED && vinylEndedToken !== vinylCurrent.token) {
+          vinylEndedToken = vinylCurrent.token;
+          setVinylMotion("loading");
+          sendWs({ type: "vinyl_ended", token: vinylCurrent.token });
+        }
+      },
+      // 2/5/100/101/150: ungueltig, HTML5-Fehler, geloescht, nicht einbettbar
+      onError: (event) => {
+        if (vinylCurrent) sendWs({ type: "vinyl_error", token: vinylCurrent.token, code: event.data });
+      },
+    },
+  });
+}
+
+function withVinylPlayer(fn) {
+  if (vinylReady) fn();
+  else vinylPendingQueue.push(fn);
+}
+
+function setArmAngle(deg, tracking) {
+  const arm = $("vy-arm");
+  arm.classList.toggle("tracking", tracking);
+  arm.style.setProperty("--arm-angle", `${deg}deg`);
+}
+
+// "loading": Arm in Ruhe, LED blinkt | "playing": Platte dreht, Nadel liegt auf |
+// "paused": Platte steht, Arm abgehoben
+function setVinylMotion(mode) {
+  const disc = $("vy-disc");
+  disc.classList.toggle("spinning", mode !== "loading");
+  disc.classList.toggle("paused", mode === "paused");
+  $("vy-led").classList.toggle("on", mode !== "loading");
+  $("vy-led").classList.toggle("blink", mode === "loading");
+  $("vy-pause").classList.toggle("hidden", mode !== "paused");
+  if (mode === "playing") updateVinylProgress();
+  else setArmAngle(VINYL_ARM_REST_DEG, false);
+}
+
+function vinylFraction() {
+  if (!vinylReady || !vinylPlayer || typeof vinylPlayer.getDuration !== "function") return 0;
+  const duration = vinylPlayer.getDuration();
+  return duration > 0 ? Math.min(1, vinylPlayer.getCurrentTime() / duration) : 0;
+}
+
+function updateVinylProgress() {
+  if (!vinylCurrent || !vinylReady || typeof vinylPlayer.getPlayerState !== "function") return;
+  const duration = vinylPlayer.getDuration() || 0;
+  const current = vinylPlayer.getCurrentTime() || 0;
+  const fraction = vinylFraction();
+  $("vy-bar-fill").style.width = `${(fraction * 100).toFixed(2)}%`;
+  $("vy-cur").textContent = formatTime(current);
+  $("vy-dur").textContent = formatTime(duration);
+  if (vinylPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+    setArmAngle(VINYL_ARM_START_DEG + (VINYL_ARM_END_DEG - VINYL_ARM_START_DEG) * fraction, true);
+  }
+}
+
+function setVinylArtwork(record) {
+  const stage = $("vy-stage").parentElement;
+  stage.style.setProperty("--vy-label", record.color || "#b8452e");
+  const cover = record.cover ? `url("${record.cover.replace(/"/g, "%22")}")` : "";
+  $("vy-label").style.backgroundImage = cover;
+  $("vy-label").classList.toggle("has-cover", !!record.cover);
+  $("vy-label-text").textContent = record.album;
+  $("vy-sleeve").style.backgroundImage = cover;
+}
+
+function renderVinylInfo(msg) {
+  const record = msg.record;
+  const bits = ["Seite A", "33⅓ U/min"];
+  if (msg.context && msg.context !== record.album) bits.push(msg.context);
+  $("vy-kicker").textContent = bits.join(" · ");
+  $("vy-title").textContent = msg.title;
+  $("vy-title").classList.toggle("long", msg.title.length > 22);
+  $("vy-artist").textContent = msg.artist;
+  $("vy-album").textContent = record.year ? `${record.album} · ${record.year}` : record.album;
+  $("vy-bar-fill").style.width = "0%";
+  $("vy-cur").textContent = "0:00";
+  $("vy-dur").textContent = "0:00";
+
+  // Tracklist der Platte, Ausschnitt um den aktuellen Song
+  const songs = record.songs || [];
+  const first = Math.max(0, Math.min(msg.song_index - 2, songs.length - VINYL_MAX_TRACKS));
+  const items = songs.slice(first, first + VINYL_MAX_TRACKS).map((title, i) => {
+    const li = document.createElement("li");
+    const index = first + i;
+    li.dataset.nr = String(index + 1).padStart(2, "0");
+    li.textContent = title;
+    li.classList.toggle("current", index === msg.song_index);
+    return li;
+  });
+  const rest = songs.length - (first + VINYL_MAX_TRACKS);
+  if (rest > 0) {
+    const li = document.createElement("li");
+    li.className = "more";
+    li.textContent = `… und ${rest} weitere`;
+    items.push(li);
+  }
+  $("vy-tracks").replaceChildren(...items);
+
+  const next = $("vy-next");
+  next.classList.toggle("hidden", !msg.next);
+  if (msg.next) {
+    next.replaceChildren("Als Nächstes: ", Object.assign(document.createElement("b"), { textContent: msg.next.title }), ` – ${msg.next.artist}`);
+  }
+}
+
+function startVinyl(msg) {
+  const recordChanged = !vinylCurrent || vinylCurrent.record.id !== msg.record.id || currentScreen !== "vinyl";
+  vinylCurrent = msg;
+  showScreen("vinyl");
+  renderVinylInfo(msg);
+  setVinylMotion("loading");
+
+  const disc = $("vy-disc");
+  if (recordChanged && disc.dataset.record) {
+    // Alte Platte runter, neue drauf - erst danach die neue Etikett-Grafik
+    disc.classList.add("swap-out");
+    setTimeout(() => {
+      setVinylArtwork(msg.record);
+      disc.classList.remove("swap-out");
+    }, VINYL_SWAP_MS);
+  } else {
+    setVinylArtwork(msg.record);
+  }
+  disc.dataset.record = msg.record.id;
+
+  withVinylPlayer(() => {
+    if (vinylCurrent !== msg) return;
+    vinylPlayer.loadVideoById({ videoId: msg.video_id, startSeconds: msg.start || 0 });
+  });
+}
+
+function stopVinylPlayback() {
+  vinylCurrent = null;
+  withVinylPlayer(() => vinylPlayer.stopVideo());
+  setVinylMotion("loading");
+  $("vy-led").classList.remove("blink");
+  delete $("vy-disc").dataset.record;
+}
+
+function handleVinylMessage(msg) {
+  if (msg.type === "vinyl_play") {
+    bootDone.then(() => startVinyl(msg));
+  } else if (msg.type === "vinyl_stop") {
+    if (currentScreen === "vinyl") showScreen("dashboard");
+  } else if (currentScreen === "vinyl" && vinylCurrent) {
+    if (msg.type === "vinyl_pause") withVinylPlayer(() => vinylPlayer.pauseVideo());
+    else if (msg.type === "vinyl_resume") withVinylPlayer(() => vinylPlayer.playVideo());
+    else if (msg.type === "vinyl_seek_to") withVinylPlayer(() => vinylPlayer.seekTo(Math.max(0, msg.seconds), true));
+  }
+}
+
+function reportVinylProgress() {
+  if (!vinylCurrent || !vinylReady || typeof vinylPlayer.getPlayerState !== "function") return;
+  updateVinylProgress();
+  const state = vinylPlayer.getPlayerState();
+  if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.PAUSED) return;
+  sendWs({
+    type: "vinyl_progress",
+    token: vinylCurrent.token,
+    current_time: vinylPlayer.getCurrentTime(),
+    duration: vinylPlayer.getDuration(),
+    playing: state === YT.PlayerState.PLAYING,
+  });
+}
+
 // ---------- WebSocket + Fortschrittsmeldungen ----------
 
 let wsConn = null;
@@ -404,6 +606,7 @@ function reportJellyfinProgress() {
 function reportProgress() {
   if (currentScreen === "youtube") reportYoutubeProgress();
   else if (currentScreen === "jellyfin") reportJellyfinProgress();
+  else if (currentScreen === "vinyl") reportVinylProgress();
 }
 
 function connectWebSocket() {
@@ -418,6 +621,8 @@ function connectWebSocket() {
         handleYoutubeMessage(msg);
       } else if (msg.type && msg.type.startsWith("jellyfin_")) {
         handleJellyfinMessage(msg);
+      } else if (msg.type && msg.type.startsWith("vinyl_")) {
+        handleVinylMessage(msg);
       }
     } catch (err) {
       console.error("WS-Nachricht ungueltig", err);

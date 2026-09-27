@@ -1,0 +1,483 @@
+/* ============================================================
+   Plattenspieler-Bildschirm im Kiosk (1080p-Fernseher).
+   Optik angelehnt an wgv-sv.de/platten: warmes Dunkelbraun, Orange,
+   Fraunces (Serif) + DM Sans/DM Mono. Masse in vh, damit alles zur
+   Bildschirmhoehe skaliert.
+   ============================================================ */
+
+#vinyl-screen {
+  --vy-bg: #15100c;
+  --vy-ink: #f3e9dc;
+  --vy-ink-2: #c9b8a4;
+  --vy-ink-3: #8a7866;
+  --vy-accent: #ff6b3d;
+  --vy-gold: #e9b949;
+  --vy-label: #b8452e;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  background: var(--vy-bg);
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: var(--vy-ink);
+}
+
+/* Der echte Player: klein und komplett von der Buehne verdeckt */
+.vy-hidden-player {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 320px;
+  height: 180px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.vy-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 96vh minmax(0, 68vh);
+  justify-content: center;
+  align-items: center;
+  gap: 8vh;
+  padding: 0 6vh;
+  background:
+    radial-gradient(120% 70% at 100% 0%, rgba(255, 107, 61, 0.12), transparent 60%),
+    radial-gradient(90% 60% at 0% 40%, rgba(233, 185, 73, 0.07), transparent 60%),
+    var(--vy-bg);
+}
+
+/* Farbschein der aktuellen Platte (Etikettfarbe) hinter dem Plattenspieler */
+.vy-glow {
+  position: absolute;
+  left: -10vh;
+  top: 10vh;
+  width: 110vh;
+  height: 90vh;
+  background: radial-gradient(circle, var(--vy-label), transparent 65%);
+  opacity: 0.22;
+  filter: blur(4vh);
+  transition: background 1.2s;
+  pointer-events: none;
+}
+
+.vy-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+/* ---------- Plattenspieler ---------- */
+
+.vy-deck { position: relative; z-index: 1; }
+
+.vy-plinth {
+  position: relative;
+  width: 92vh;
+  height: 72vh;
+  border-radius: 2.4vh;
+  /* Nussbaum-Furnier: Maserung + Lichtkante */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 8%),
+    repeating-linear-gradient(94deg, rgba(0, 0, 0, 0.1) 0 0.35vh, transparent 0.35vh 1.1vh),
+    repeating-linear-gradient(88deg, rgba(255, 210, 160, 0.05) 0 0.2vh, transparent 0.2vh 2.6vh),
+    linear-gradient(135deg, #6b4127 0%, #4a2b18 45%, #3a2112 100%);
+  box-shadow:
+    0 4vh 8vh -2vh rgba(0, 0, 0, 0.85),
+    0 0.6vh 0 #2a170c,
+    inset 0 0 0 0.35vh rgba(0, 0, 0, 0.25),
+    inset 0 0.25vh 0 rgba(255, 220, 180, 0.25);
+}
+
+/* Metall-Deckplatte */
+.vy-plinth::before {
+  content: "";
+  position: absolute;
+  inset: 2vh;
+  border-radius: 1.4vh;
+  background: linear-gradient(160deg, #2b2520, #1c1814 60%, #16120f);
+  box-shadow: inset 0 0.3vh 0.6vh rgba(0, 0, 0, 0.6), 0 0.2vh 0 rgba(255, 230, 200, 0.12);
+}
+
+.vy-brand {
+  position: absolute;
+  left: 5vh;
+  bottom: 4.2vh;
+  z-index: 2;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 2.8vh;
+  color: var(--vy-gold);
+  letter-spacing: 0.05em;
+}
+
+.vy-brand span {
+  margin-left: 1.2vh;
+  font-family: "DM Mono", monospace;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.4vh;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--vy-ink-3);
+}
+
+.vy-platter {
+  position: absolute;
+  left: 5vh;
+  top: 4.5vh;
+  width: 58vh;
+  height: 58vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3a3530 0 60%, #8d857c 61%, #d9d1c6 64%, #6e675f 67%, #25211d 70%);
+  box-shadow: 0 1.8vh 3vh -0.8vh rgba(0, 0, 0, 0.9);
+}
+
+.vy-mat {
+  position: absolute;
+  inset: 1.8vh;
+  border-radius: 50%;
+  background: #181513;
+}
+
+.vy-disc {
+  position: absolute;
+  inset: 1.4vh;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle, #0c0c0c 0 0.14vh, #1a1a1a 0.14vh 0.3vh),
+    #111;
+  box-shadow: 0 0 0 0.25vh #070707, 0 0.8vh 1.8vh rgba(0, 0, 0, 0.8);
+  transition: transform 0.7s cubic-bezier(0.6, 0, 0.3, 1), opacity 0.7s;
+}
+
+/* Glatte Ringe zwischen den "Songs" + Einlauf-/Auslaufrille */
+.vy-grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    transparent 0 36%, rgba(255, 255, 255, 0.05) 36.4%, transparent 37%,
+    transparent 52%, rgba(255, 255, 255, 0.05) 52.4%, transparent 53%,
+    transparent 70%, rgba(255, 255, 255, 0.05) 70.4%, transparent 71%,
+    transparent 95%, rgba(255, 255, 255, 0.08) 96%, transparent 97%);
+}
+
+.vy-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  height: 34%;
+  display: grid;
+  place-items: center;
+  padding: 12%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--vy-label) center / cover no-repeat;
+  box-shadow: inset 0 0 0 0.3vh rgba(0, 0, 0, 0.25);
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  font-size: 1.9vh;
+  line-height: 1.15;
+  text-align: center;
+  color: #fff4e6;
+}
+
+.vy-label.has-cover span { display: none; }
+
+.vy-disc.spinning { animation: vy-spin 1.8s linear infinite; }
+.vy-disc.spinning.paused { animation-play-state: paused; }
+
+@keyframes vy-spin { to { transform: rotate(360deg); } }
+
+/* Plattenwechsel: alte Platte gleitet heraus, neue herein */
+.vy-disc.swap-out {
+  transform: translateX(-70vh) rotate(-120deg);
+  opacity: 0;
+  animation: none;
+}
+
+/* Lichtreflex steht still, waehrend sich die Platte darunter dreht */
+.vy-sheen {
+  position: absolute;
+  inset: 1.4vh;
+  border-radius: 50%;
+  background: conic-gradient(from 20deg,
+    transparent 0deg, rgba(255, 255, 255, 0.1) 18deg, transparent 40deg,
+    transparent 180deg, rgba(255, 255, 255, 0.08) 198deg, transparent 222deg, transparent 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 18%, #000 19%);
+  mask: radial-gradient(circle, transparent 0 18%, #000 19%);
+  pointer-events: none;
+}
+
+.vy-spindle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.5vh;
+  height: 1.5vh;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 35% 30%, #fff, #9b938a 60%, #4d4741);
+  box-shadow: 0 0.2vh 0.4vh rgba(0, 0, 0, 0.8);
+}
+
+.vy-arm-base {
+  position: absolute;
+  left: 75vh;
+  top: 7vh;
+  width: 9vh;
+  height: 9vh;
+  border-radius: 50%;
+  transform: translate(-50%, 0);
+  background: radial-gradient(circle at 40% 35%, #4a423a, #1d1915 70%);
+  box-shadow: 0 0.8vh 1.6vh rgba(0, 0, 0, 0.7), inset 0 0.2vh 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Drehpunkt des Tonarms = Mitte des grossen Kreises im SVG (60|80 von 120x520) */
+.vy-arm {
+  position: absolute;
+  left: 75vh;
+  top: 11.5vh;
+  height: 56vh;
+  width: calc(56vh * 120 / 520);
+  margin-left: calc(56vh * -60 / 520);
+  margin-top: calc(56vh * -80 / 520);
+  transform-origin: 50% calc(80 / 520 * 100%);
+  transform: rotate(var(--arm-angle, 4deg));
+  transition: transform 1.4s cubic-bezier(0.45, 0, 0.2, 1);
+  filter: drop-shadow(1.6vh 2.2vh 1.2vh rgba(0, 0, 0, 0.65));
+  z-index: 3;
+}
+
+/* Waehrend der Wiedergabe folgt der Arm gleichmaessig dem Songfortschritt */
+.vy-arm.tracking { transition: transform 1s linear; }
+
+.vy-controls {
+  position: absolute;
+  right: 5vh;
+  bottom: 4vh;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2vh;
+}
+
+.vy-knob {
+  width: 7vh;
+  height: 7vh;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(#8f877e, #efe8de, #8f877e, #d8d0c5, #8f877e);
+  box-shadow: 0 0.6vh 1.2vh rgba(0, 0, 0, 0.7);
+}
+
+.vy-knob span {
+  width: 5.2vh;
+  height: 5.2vh;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1d1915;
+  font-family: "DM Mono", monospace;
+  font-size: 1.6vh;
+  color: var(--vy-gold);
+}
+
+.vy-led {
+  width: 1.3vh;
+  height: 1.3vh;
+  border-radius: 50%;
+  background: #3b1c12;
+  box-shadow: inset 0 0 0.3vh #000;
+}
+
+.vy-led.on {
+  background: var(--vy-accent);
+  box-shadow: 0 0 1.4vh var(--vy-accent), 0 0 0.4vh #fff inset;
+}
+
+.vy-led.blink { animation: vy-blink 0.9s ease-in-out infinite; }
+
+@keyframes vy-blink { 50% { opacity: 0.25; } }
+
+.vy-rpm {
+  font-family: "DM Mono", monospace;
+  font-size: 1.3vh;
+  letter-spacing: 0.3em;
+  color: var(--vy-ink-3);
+}
+
+/* ---------- Infos rechts ---------- */
+
+.vy-info {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3.2vh;
+}
+
+.vy-kicker {
+  font-family: "DM Mono", monospace;
+  font-size: 1.8vh;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--vy-accent);
+}
+
+.vy-head {
+  display: flex;
+  align-items: center;
+  gap: 3.4vh;
+}
+
+.vy-sleeve {
+  flex: none;
+  width: 25vh;
+  height: 25vh;
+  border-radius: 0.8vh;
+  background: var(--vy-label) center / cover no-repeat;
+  box-shadow: 0 2.4vh 4vh -1vh rgba(0, 0, 0, 0.9), inset 0 0 0 0.1vh rgba(255, 255, 255, 0.08);
+  transform: rotate(-2deg);
+}
+
+.vy-head-text { min-width: 0; }
+
+.vy-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 800;
+  font-size: 6.8vh;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vy-title.long { font-size: 5vh; }
+
+.vy-artist {
+  margin-top: 1.4vh;
+  font-size: 3vh;
+  font-weight: 600;
+  color: var(--vy-ink-2);
+}
+
+.vy-album {
+  margin-top: 0.6vh;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 2.3vh;
+  color: var(--vy-ink-3);
+}
+
+.vy-progress { max-width: 72vh; }
+
+.vy-bar {
+  height: 0.6vh;
+  overflow: hidden;
+  border-radius: 1vh;
+  background: rgba(243, 233, 220, 0.12);
+}
+
+.vy-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--vy-gold), var(--vy-accent));
+  box-shadow: 0 0 1.2vh rgba(255, 107, 61, 0.7);
+  transition: width 1s linear;
+}
+
+.vy-times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1vh;
+  font-family: "DM Mono", monospace;
+  font-size: 1.8vh;
+  color: var(--vy-ink-3);
+}
+
+.vy-tracks {
+  margin: 0;
+  padding: 2.4vh 0 0;
+  list-style: none;
+  border-top: 0.1vh solid rgba(243, 233, 220, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.3vh;
+}
+
+.vy-tracks li {
+  display: flex;
+  align-items: baseline;
+  gap: 2vh;
+  font-size: 2.3vh;
+  font-weight: 500;
+  color: var(--vy-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vy-tracks li::before {
+  content: attr(data-nr);
+  font-family: "DM Mono", monospace;
+  font-size: 1.6vh;
+  color: var(--vy-ink-3);
+}
+
+.vy-tracks li.current {
+  color: var(--vy-ink);
+  font-weight: 700;
+}
+
+.vy-tracks li.current::before { color: var(--vy-accent); }
+
+.vy-tracks li.current::after {
+  content: "";
+  width: 1vh;
+  height: 1vh;
+  margin-left: 0.4vh;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--vy-accent);
+  box-shadow: 0 0 1vh var(--vy-accent);
+  animation: vy-blink 1.2s ease-in-out infinite;
+}
+
+.vy-tracks li.more { font-style: italic; font-size: 1.9vh; }
+.vy-tracks li.more::before { content: ""; }
+
+.vy-next {
+  font-size: 2vh;
+  color: var(--vy-ink-3);
+}
+
+.vy-next b { color: var(--vy-ink-2); font-weight: 600; }
+
+.vy-pause {
+  position: absolute;
+  right: 7vh;
+  top: 6vh;
+  z-index: 2;
+  padding: 1vh 2.4vh;
+  border: 0.2vh solid var(--vy-gold);
+  border-radius: 0.8vh;
+  font-family: "DM Mono", monospace;
+  font-size: 2vh;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--vy-gold);
+  animation: vy-blink 1.6s ease-in-out infinite;
+}
