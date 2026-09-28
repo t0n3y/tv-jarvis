@@ -42,6 +42,7 @@ from app import (
     radio,
     radio_stations,
     schedule_store,
+    school_settings,
     tv_power,
     vinyl_library,
 )
@@ -327,8 +328,32 @@ async def todos_webhook(
     if not expected or x_webhook_secret != expected:
         raise HTTPException(status_code=401, detail="ungueltiges oder fehlendes Secret")
 
-    body = await request.json()
-    raw_text = str(body.get("text", ""))
+    # Kurzbefehle schicken je nach Einrichtung JSON ({"text": ...}, auch mit
+    # anderem Feldnamen), ein Formular oder reinen Text - alles annehmen.
+    raw = await request.body()
+    content_type = request.headers.get("content-type", "")
+    body: dict = {}
+    try:
+        parsed = json.loads(raw) if raw else {}
+    except ValueError:
+        parsed = None
+    if isinstance(parsed, dict):
+        body = parsed
+    elif isinstance(parsed, str):
+        body = {"text": parsed}
+    elif "form" in content_type:
+        body = dict((await request.form()).items())
+    else:
+        body = {"text": raw.decode("utf-8", errors="replace")}
+    raw_text = body.get("text")
+    if not isinstance(raw_text, str) or not raw_text.strip():
+        raw_text = next((v for k, v in body.items() if k != "title" and isinstance(v, str) and v.strip()), "")
+    if not raw_text.strip():
+        # Nur die Form loggen, nicht den Inhalt
+        logger.warning(
+            "ToDo-Webhook ohne Text: Content-Type=%s, Felder=%s",
+            content_type, {k: type(v).__name__ for k, v in body.items()},
+        )
     # Aufzaehlungszeichen/Checklisten-Kaestchen aus der Notizen-App entfernen
     lines = [re.sub(r"^\s*(?:[-*•◦▪‣·]|☐|☑|✓|\[[ xX]?\])\s*", "", line).strip() for line in raw_text.splitlines()]
     items = [line for line in lines if line]
@@ -969,6 +994,23 @@ async def _dashboard_refresh_loop() -> None:
 @app.on_event("startup")
 async def _start_dashboard_refresh() -> None:
     _spawn(_dashboard_refresh_loop())
+
+
+@app.get("/api/remote/school", dependencies=[Depends(require_remote_secret)])
+async def get_school() -> dict:
+    return await asyncio.to_thread(school_settings.load, get_config())
+
+
+@app.post("/api/remote/school", dependencies=[Depends(require_remote_secret)])
+async def set_school(request: Request) -> dict:
+    body = await request.json()
+    try:
+        await asyncio.to_thread(school_settings.save_courses, body.get("kurse"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # Vertretungsplan auf dem Fernseher gleich mit den neuen Kursen zeigen
+    _spawn(asyncio.to_thread(_refresh_dashboard_state))
+    return await asyncio.to_thread(school_settings.load, get_config())
 
 
 # ---------- Uhr & Timer ----------

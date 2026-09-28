@@ -1203,6 +1203,31 @@ button {
 .station-delete:active { background: rgba(255, 93, 115, 0.25); color: var(--danger); }
 .station-delete .icon { width: 19px; height: 19px; }
 
+/* ---------- Einstellungen: Schule ---------- */
+
+.course-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.course-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  border-radius: 999px;
+  background: rgba(var(--accent-rgb), 0.12);
+  color: var(--text);
+  font: 700 15px var(--font-display);
+  letter-spacing: 0.5px;
+}
+
+.course-chip .icon { width: 15px; height: 15px; color: var(--text-3); }
+.course-chip:active { background: rgba(255, 93, 115, 0.2); border-color: rgba(255, 93, 115, 0.5); }
+
+.course-empty { font-size: 15px; font-weight: 600; color: var(--text-3); }
+
+.course-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.course-add .btn { min-height: 54px; padding: 0 16px; }
+
 /* ---------- Dock (immer sichtbar) ---------- */
 
 .dock {

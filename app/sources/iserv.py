@@ -23,6 +23,7 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
+from app import school_settings
 from app.config import Config
 
 
@@ -225,6 +226,8 @@ def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEnt
         clean = name.strip("()").lower().replace(".", "").replace("(n)", "")
         keys.append(next((v for k, v in _UNTIS_COLUMNS.items() if clean.startswith(k)), clean))
 
+    # Kurse aus Einstellungen -> Schule (data/school.json), sonst config.yaml
+    kurse = school_settings.courses(cfg)
     entries: list[SubstitutionEntry] = []
     for tr in table.find_all("tr"):
         tds = tr.find_all("td")
@@ -235,7 +238,7 @@ def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEnt
         old = {k: old for k, (_, old) in zip(keys, cells)}
         if not _matches_class(row.get("klasse", "") + " " + old.get("klasse", ""), cfg.iserv.klasse):
             continue
-        if not _matches_course(row, cfg.iserv.kurse):
+        if not _matches_course(row, kurse):
             continue
         kind = row.get("kind", "")
         entries.append(_untis_entry(row, old, kind, day_label))

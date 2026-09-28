@@ -2289,6 +2289,70 @@ buildSwatches();
 
 // ---------- Einstellungen ----------
 
+// ---------- Einstellungen: Schule (Kurse fuer den Vertretungsplan) ----------
+
+let courses = [];
+
+async function loadSchool() {
+  try {
+    const data = await api.get("/api/remote/school");
+    courses = data.kurse || [];
+    $("school-kicker").textContent = data.klasse ? `Meine Kurse · ${data.klasse}` : "Meine Kurse";
+    renderCourses();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+function renderCourses() {
+  const box = $("course-chips");
+  if (!courses.length) {
+    box.replaceChildren(h("div", { class: "course-empty" }, "Noch keine Kurse – es werden alle angezeigt."));
+    return;
+  }
+  box.replaceChildren(
+    ...courses.map((course) =>
+      h(
+        "button",
+        { class: "course-chip", type: "button", "aria-label": `${course} entfernen`, onclick: () => saveCourses(courses.filter((c) => c !== course)) },
+        course,
+        icon("close")
+      )
+    )
+  );
+}
+
+async function saveCourses(next) {
+  const data = await api.post("/api/remote/school", { kurse: next }).catch((err) => {
+    toast(err.message, true);
+    return null;
+  });
+  if (!data) return;
+  courses = data.kurse || [];
+  renderCourses();
+  toast("Kurse gespeichert – der Fernseher aktualisiert gleich");
+}
+
+function addCourse() {
+  const input = $("course-input");
+  // Mehrere auf einmal: "BI G1, D G2"
+  const added = input.value
+    .split(/[,;\n]+/)
+    .map((c) => c.trim().replace(/\s+/g, " ").toUpperCase())
+    .filter(Boolean);
+  if (!added.length) return;
+  input.value = "";
+  saveCourses([...courses, ...added.filter((c) => !courses.includes(c))]);
+}
+
+onTap($("course-add"), () => addCourse());
+$("course-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    addCourse();
+  }
+});
+
 async function loadSettings() {
   try {
     const schedule = await api.get("/api/remote/schedule");
@@ -2301,6 +2365,7 @@ async function loadSettings() {
     toast(err.message, true);
   }
   loadSettingsStations();
+  loadSchool();
 }
 
 async function loadSettingsStations() {
