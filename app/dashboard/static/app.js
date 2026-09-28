@@ -16,68 +16,202 @@ function formatTime(seconds) {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
 
+const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const MAX_LIST_ITEMS = 7;
+let dashboardState = null;
+
+function esc(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+function greeting(hour) {
+  if (hour < 5) return "Gute Nacht";
+  if (hour < 11) return "Guten Morgen";
+  if (hour < 17) return "Guten Tag";
+  if (hour < 22) return "Guten Abend";
+  return "Gute Nacht";
+}
+
 function updateClock() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   $("clock").textContent = `${hh}:${mm}`;
-  $("date-label").textContent = `${WEEKDAY_NAMES[now.getDay()]}, ${now.toLocaleDateString("de-DE")}`;
+  $("date-label").textContent = `${WEEKDAY_NAMES[now.getDay()]}, ${now.getDate()}. ${MONTH_NAMES[now.getMonth()]}`;
+  $("dash-hello").textContent = greeting(now.getHours());
+  // Laufende/vergangene Termine minuetlich neu einfaerben
+  if (dashboardState && now.getSeconds() === 0) renderEvents(dashboardState);
 }
 
-function renderWeather(weather) {
+// ---------- Wetter-Symbole (SVG statt Emoji: der Kiosk hat keine Emoji-Schrift) ----------
+
+const WX_SUN = "#ffc857";
+const WX_CLOUD = "#d6e6f3";
+const WX_RAIN = "#4fd8ff";
+
+const wxParts = {
+  sun: (x = 32, y = 32, r = 11) => {
+    const rays = Array.from({ length: 8 }, (_, i) => {
+      const a = (i * Math.PI) / 4;
+      const x1 = x + Math.cos(a) * (r + 5), y1 = y + Math.sin(a) * (r + 5);
+      const x2 = x + Math.cos(a) * (r + 10), y2 = y + Math.sin(a) * (r + 10);
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+    }).join("");
+    return `<g stroke="${WX_SUN}" stroke-width="3.5" stroke-linecap="round">${rays}</g><circle cx="${x}" cy="${y}" r="${r}" fill="${WX_SUN}"/>`;
+  },
+  moon: (x = 32, y = 30, r = 14) =>
+    `<path d="M${x + r * 0.35} ${y - r} A${r} ${r} 0 1 0 ${x + r} ${y + r * 0.45} A${r * 0.8} ${r * 0.8} 0 0 1 ${x + r * 0.35} ${y - r} Z" fill="#e3ecf7"/>`,
+  cloud: (dy = 0, fill = WX_CLOUD) =>
+    `<path transform="translate(0 ${dy})" d="M18 50h29a10 10 0 0 0 1.4-19.9A14 14 0 0 0 21.6 27.4 11.4 11.4 0 0 0 18 50z" fill="${fill}"/>`,
+  drops: (count, len = 7) =>
+    `<g stroke="${WX_RAIN}" stroke-width="3.2" stroke-linecap="round">${[24, 33, 42]
+      .slice(0, count)
+      .map((x) => `<line x1="${x}" y1="49" x2="${x - 3}" y2="${49 + len}"/>`)
+      .join("")}</g>`,
+  flakes: () =>
+    `<g fill="#ffffff">${[
+      [24, 53],
+      [33, 57],
+      [42, 53],
+    ]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6"/>`)
+      .join("")}</g>`,
+};
+
+function weatherSvg(key, isDay = true) {
+  const small = isDay ? wxParts.sun(22, 22, 8) : wxParts.moon(22, 20, 10);
+  const shapes = {
+    sun: isDay ? wxParts.sun() : wxParts.moon(),
+    "sun-cloud": small + wxParts.cloud(4),
+    cloud: wxParts.cloud(0, "#c3d6e6") + wxParts.cloud(-6),
+    fog: `<g stroke="#b8c9d8" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="16" y1="36" x2="48" y2="36"/><line x1="12" y1="46" x2="52" y2="46"/></g>`,
+    drizzle: wxParts.cloud(-8) + wxParts.drops(3, 4),
+    rain: wxParts.cloud(-8) + wxParts.drops(3, 9),
+    showers: small + wxParts.cloud(-2) + wxParts.drops(2, 6).replace(/y1="49"/g, 'y1="53"').replace(/y2="(\d+)"/g, (m, v) => `y2="${Number(v) + 4}"`),
+    sleet: wxParts.cloud(-8) + wxParts.drops(1, 8) + `<circle cx="36" cy="54" r="2.6" fill="#fff"/><circle cx="44" cy="51" r="2.6" fill="#fff"/>`,
+    snow: wxParts.cloud(-8) + wxParts.flakes(),
+    thunder: wxParts.cloud(-8, "#a9bccd") + `<path d="M34 44 26 56h7l-3 9 11-14h-7l3-7z" fill="#ffd23b"/>`,
+  };
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${shapes[key] || shapes.cloud}</svg>`;
+}
+
+// ---------- Panels ----------
+
+const EMPTY_ICONS = {
+  calendar: `<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>`,
+  todos: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/></svg>`,
+  plan: `<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.5v4.2c1.4 1.2 3 1.8 5 1.8s3.6-.6 5-1.8v-4.2"/></svg>`,
+  weather: `<svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.3 4.4 4.4 0 0 0 7 18z"/></svg>`,
+};
+
+function emptyState(el, icon, text, hint) {
+  el.innerHTML = `<li class="panel-empty">${EMPTY_ICONS[icon]}<div>${esc(text)}</div>${hint ? `<small>${esc(hint)}</small>` : ""}</li>`;
+}
+
+function renderList(el, items, mapFn) {
+  const shown = items.slice(0, MAX_LIST_ITEMS);
+  const rest = items.length - shown.length;
+  el.innerHTML = shown.map(mapFn).join("") + (rest > 0 ? `<li class="more">+ ${rest} weitere</li>` : "");
+}
+
+function renderWeather(state) {
   const el = $("weather-content");
-  if (!weather) {
-    el.innerHTML = `<span class="weather-desc">Keine Wetterdaten verfügbar.</span>`;
+  const w = state.weather;
+  $("weather-meta").textContent = w && w.city ? w.city : "";
+  if (!w) {
+    el.innerHTML = `<div class="panel-empty">${EMPTY_ICONS.weather}<div>Wetter wird geladen …</div><small>Der Pi versucht es jede Minute erneut.</small></div>`;
     return;
   }
+  const t = (v) => `${Math.round(v)}°`;
+  const hours = (w.hourly || [])
+    .map(
+      (h) => `<div class="wx-hour"><span>${esc(h.time)}</span>${weatherSvg(h.icon, h.is_day)}<b>${t(h.temp)}</b>
+        <span class="wx-rain${h.rain >= 10 ? "" : " zero"}">${h.rain} %</span></div>`
+    )
+    .join("");
+  const days = w.daily || [];
+  const lo = Math.min(...days.map((d) => d.min), w.temp_min);
+  const hi = Math.max(...days.map((d) => d.max), w.temp_max);
+  const span = Math.max(1, hi - lo);
+  const dayRows = days
+    .map((d) => {
+      const left = ((d.min - lo) / span) * 100;
+      const width = Math.max(4, ((d.max - d.min) / span) * 100);
+      return `<div class="wx-day"><span>${esc(d.day)}</span>${weatherSvg(d.icon)}<span class="lo">${t(d.min)}</span>
+        <span class="wx-bar"><i style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%"></i></span>
+        <span class="hi">${t(d.max)}</span><span class="wx-rain${d.rain >= 10 ? "" : " zero"}">${d.rain} %</span></div>`;
+    })
+    .join("");
   el.innerHTML = `
-    <div class="weather-current">
-      <div class="weather-icon">${weather.icon}</div>
+    <div class="wx-now">
+      <div class="wx-icon-big">${weatherSvg(w.icon, w.is_day)}</div>
       <div>
-        <div class="weather-temp">${Math.round(weather.temp_current)}&deg;</div>
-        <div class="weather-desc">${weather.description}</div>
+        <div class="wx-temp">${t(w.temp_current)}</div>
+        <div class="wx-desc">${esc(w.description)}</div>
+        <div class="wx-sub">Gefühlt ${t(w.temp_feels)} · Wind ${Math.round(w.wind_kmh)} km/h</div>
       </div>
     </div>
-    <div class="weather-range">
-      Heute ${Math.round(weather.temp_min)}&deg; / ${Math.round(weather.temp_max)}&deg;
-      &middot; Regenwahrscheinlichkeit ${weather.precipitation_probability}%
-    </div>`;
+    <div class="wx-stats">
+      <div class="wx-stat"><span>Heute</span><b>${t(w.temp_min)} / ${t(w.temp_max)}</b></div>
+      <div class="wx-stat"><span>Regen</span><b>${w.precipitation_probability} %</b></div>
+      <div class="wx-stat"><span>Sonne</span><b>${esc(w.sunrise)} – ${esc(w.sunset)}</b></div>
+    </div>
+    <div class="wx-hours">${hours}</div>
+    <div class="wx-days">${dayRows}</div>`;
 }
 
-function renderList(elementId, items, emptyText, mapFn) {
-  const el = $(elementId);
-  if (!items || items.length === 0) {
-    el.innerHTML = `<li class="empty">${emptyText}</li>`;
+function renderEvents(state) {
+  const el = $("calendar-content");
+  const events = state.events || [];
+  const missing = (state.not_configured || []).filter((s) => s.includes("Kalender"));
+  $("calendar-meta").textContent = events.length ? `${events.length} ${events.length === 1 ? "Termin" : "Termine"}` : "";
+  if (!events.length) {
+    if (missing.length === 2) emptyState(el, "calendar", "Kalender noch nicht verbunden", "Google-iCal-Adresse und iCloud-Zugang fehlen noch.");
+    else emptyState(el, "calendar", "Keine Termine heute", missing.length ? `${missing[0]} ist noch nicht verbunden.` : "");
     return;
   }
-  el.innerHTML = items.map(mapFn).join("");
-}
-
-function renderEvents(events) {
-  renderList("calendar-content", events, "Keine Termine heute.", (e) => {
-    const label = e.all_day ? "ganztägig" : e.time_label;
-    return `<li><span class="time">${label}</span><span>${e.title}</span></li>`;
+  const now = Date.now();
+  renderList(el, events, (e) => {
+    const start = e.start ? Date.parse(e.start) : null;
+    const end = e.end ? Date.parse(e.end) : null;
+    const cls = start && end ? (now >= end ? "past" : now >= start ? "now" : "") : "";
+    const time = e.all_day ? `<span class="time all-day">Ganztägig</span>` : `<span class="time">${esc(e.time_label)}</span>`;
+    return `<li class="${cls}">${time}<span class="item-text">${esc(e.title)}</span></li>`;
   });
 }
 
 function renderPlan(state) {
   const panel = $("plan-panel");
-  if (!state.is_school_day) {
-    panel.classList.add("hidden");
+  panel.classList.toggle("hidden", !state.is_school_day);
+  if (!state.is_school_day) return;
+  const el = $("plan-content");
+  const plan = state.substitution_plan || [];
+  $("plan-meta").textContent = plan.length ? `${plan.length} ${plan.length === 1 ? "Änderung" : "Änderungen"}` : "";
+  if ((state.not_configured || []).includes("IServ-Vertretungsplan")) {
+    emptyState(el, "plan", "IServ noch nicht verbunden", "Benutzername und Passwort fehlen in der .env auf dem Pi.");
     return;
   }
-  panel.classList.remove("hidden");
-  $("plan-title").textContent = "Stundenplan / Vertretung";
-  renderList("plan-content", state.substitution_plan, "Keine Änderungen im Vertretungsplan.", (p) => {
+  if (!plan.length) {
+    emptyState(el, "plan", "Keine Änderungen im Vertretungsplan");
+    return;
+  }
+  renderList(el, plan, (p) => {
     const parts = [p.subject, p.room].filter(Boolean).join(" · ");
-    const separator = parts && p.note ? " — " : "";
-    const noteHtml = p.note ? `<span class="note">${p.note}</span>` : "";
-    return `<li><span class="time">${p.lesson || ""}</span><span>${parts}${separator}${noteHtml}</span></li>`;
+    const note = p.note ? `<span class="note">${esc(p.note)}</span>` : "";
+    return `<li><span class="time">${esc(p.lesson || "–")}</span><span class="item-text">${esc(parts)}${note}</span></li>`;
   });
 }
 
-function renderTodos(todos) {
-  renderList("todos-content", todos, "Keine ToDos für heute.", (t) => `<li><span>${t}</span></li>`);
+function renderTodos(state) {
+  const el = $("todos-content");
+  const todos = state.todos || [];
+  $("todos-meta").textContent = todos.length ? `${todos.length} offen` : "";
+  if (!todos.length) {
+    if ((state.not_configured || []).includes("ToDos")) emptyState(el, "todos", "ToDo-Liste noch nicht verbunden", "Der iPhone-Kurzbefehl hat noch keine Notiz geschickt.");
+    else emptyState(el, "todos", "Alles erledigt");
+    return;
+  }
+  renderList(el, todos, (t) => `<li><span class="todo-dot"></span><span class="item-text">${esc(t)}</span></li>`);
 }
 
 function renderErrors(errors) {
@@ -88,7 +222,16 @@ function renderErrors(errors) {
     return;
   }
   el.classList.remove("hidden");
-  el.textContent = "Hinweise: " + errors.join(" | ");
+  // Nur Quelle + Kurzform, nicht der komplette Python-Fehlertext
+  el.textContent = "⚠ " + errors.map((e) => e.split(":")[0] + " nicht erreichbar").join(" · ");
+}
+
+function renderSub(state) {
+  const parts = [];
+  if (state.weather) parts.push(`${Math.round(state.weather.temp_current)}° und ${state.weather.description.toLowerCase()}`);
+  const events = (state.events || []).filter((e) => !e.all_day && e.start && Date.parse(e.start) > Date.now());
+  if (events.length) parts.push(`nächster Termin ${events[0].time_label}`);
+  $("dash-sub").textContent = parts.join(" · ") || " ";
 }
 
 async function refreshState() {
@@ -96,12 +239,14 @@ async function refreshState() {
     const resp = await fetch("/api/state");
     if (!resp.ok) return;
     const state = await resp.json();
+    dashboardState = state;
 
-    renderWeather(state.weather);
-    renderEvents(state.events);
+    renderWeather(state);
+    renderEvents(state);
     renderPlan(state);
-    renderTodos(state.todos);
+    renderTodos(state);
     renderErrors(state.errors);
+    renderSub(state);
 
     $("onair").classList.toggle("hidden", !state.radio_playing);
   } catch (err) {

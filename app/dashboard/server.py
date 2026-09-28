@@ -19,6 +19,7 @@ Laeuft dauerhaft (systemd/dashboard.service). Aufgaben:
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 import logging
 import random
@@ -44,6 +45,7 @@ from app import (
     tv_power,
     vinyl_library,
 )
+from app.briefing import build_briefing
 from app.config import ROOT_DIR, get_config
 from app.dashboard import kiosk
 from app.lighting import engine as lighting
@@ -925,6 +927,42 @@ async def set_light(request: Request) -> dict:
         return lighting.get_engine().update(changes)
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+# ---------- Dashboard-Daten (Wetter, Kalender, ToDos, Vertretungsplan) ----------
+# Frueher schrieb nur die Morgen-Routine data/state.json - ohne Wecker (oder
+# bei einem Netzaussetzer genau zur Weckzeit) blieben die Panels tagelang alt
+# oder leer. Jetzt aktualisiert der Dienst sie selbst.
+
+DASHBOARD_REFRESH_SECONDS = 10 * 60
+DASHBOARD_RETRY_SECONDS = 60
+
+
+def _refresh_dashboard_state() -> bool:
+    briefing = build_briefing(get_config())
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = STATE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(dataclasses.asdict(briefing), ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(STATE_FILE)
+    # Wetter fehlt = meist kein Netz. Andere Einzelfehler (z.B. IServ) nicht
+    # minuetlich wiederholen, sonst meldet sich der Pi dauernd neu an.
+    return briefing.weather is not None
+
+
+async def _dashboard_refresh_loop() -> None:
+    while True:
+        try:
+            ok = await asyncio.to_thread(_refresh_dashboard_state)
+        except Exception:  # noqa: BLE001 - der Loop darf nie sterben
+            logger.exception("Dashboard-Daten konnten nicht aktualisiert werden")
+            ok = False
+        # Nach einem Fehler (z.B. WLAN noch nicht da) bald erneut versuchen
+        await asyncio.sleep(DASHBOARD_REFRESH_SECONDS if ok else DASHBOARD_RETRY_SECONDS)
+
+
+@app.on_event("startup")
+async def _start_dashboard_refresh() -> None:
+    _spawn(_dashboard_refresh_loop())
 
 
 # ---------- Uhr & Timer ----------

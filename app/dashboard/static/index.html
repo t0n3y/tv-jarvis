@@ -29,6 +29,10 @@
 
   <div id="dashboard" class="hidden">
     <header>
+      <div class="header-left">
+        <div class="dash-hello" id="dash-hello">Hallo</div>
+        <div class="dash-sub" id="dash-sub">&nbsp;</div>
+      </div>
       <div class="header-center">
         <div class="clock" id="clock">00:00</div>
         <div class="date" id="date-label">&nbsp;</div>
@@ -41,24 +45,42 @@
 
     <main class="grid">
       <section class="panel weather-panel">
-        <h2>Wetter</h2>
-        <div id="weather-content" class="panel-body">&ndash;</div>
+        <div class="panel-head">
+          <svg class="panel-icon" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.3 4.4 4.4 0 0 0 7 18z"/></svg>
+          <h2>Wetter</h2>
+          <span class="panel-meta" id="weather-meta"></span>
+        </div>
+        <div id="weather-content" class="panel-body"></div>
       </section>
 
       <section class="panel calendar-panel">
-        <h2>Kalender</h2>
-        <ul id="calendar-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
+        <div class="panel-head">
+          <svg class="panel-icon" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          <h2>Heute</h2>
+          <span class="panel-meta" id="calendar-meta"></span>
+        </div>
+        <ul id="calendar-content" class="panel-body list"></ul>
       </section>
 
-      <section class="panel plan-panel" id="plan-panel">
-        <h2 id="plan-title">Stundenplan / Vertretung</h2>
-        <ul id="plan-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
-      </section>
+      <div class="side-stack">
+        <section class="panel plan-panel" id="plan-panel">
+          <div class="panel-head">
+            <svg class="panel-icon" viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.5v4.2c1.4 1.2 3 1.8 5 1.8s3.6-.6 5-1.8v-4.2M21 9.5V15"/></svg>
+            <h2 id="plan-title">Vertretung</h2>
+            <span class="panel-meta" id="plan-meta"></span>
+          </div>
+          <ul id="plan-content" class="panel-body list"></ul>
+        </section>
 
-      <section class="panel todos-panel">
-        <h2>ToDos</h2>
-        <ul id="todos-content" class="panel-body list"><li class="empty">&ndash;</li></ul>
-      </section>
+        <section class="panel todos-panel">
+          <div class="panel-head">
+            <svg class="panel-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.2 2.6 2.6 5-5.2"/></svg>
+            <h2>ToDos</h2>
+            <span class="panel-meta" id="todos-meta"></span>
+          </div>
+          <ul id="todos-content" class="panel-body list"></ul>
+        </section>
+      </div>
     </main>
 
     <footer id="errors" class="hidden"></footer>

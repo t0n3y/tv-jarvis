@@ -37,6 +37,29 @@ class BriefingData:
     todos: list[str]
     errors: list[str] = field(default_factory=list)
     speech_text: str = ""
+    # Quellen ohne Zugangsdaten/Adresse: kein Fehler, sondern "noch nicht
+    # eingerichtet" (Dashboard zeigt dann einen Hinweis im Panel)
+    not_configured: list[str] = field(default_factory=list)
+
+
+def _is_placeholder(value: str | None) -> bool:
+    return not value or "DEINE" in value.upper() or "BEISPIEL" in value.upper()
+
+
+def _not_configured(cfg: Config) -> set[str]:
+    missing = set()
+    google = cfg.calendars.google
+    if not google.enabled or all(_is_placeholder(url) for url in google.ics_urls):
+        missing.add("Google-Kalender")
+    if not cfg.calendars.icloud.enabled or not (cfg.secrets.icloud_apple_id and cfg.secrets.icloud_app_specific_password):
+        missing.add("iCloud-Kalender")
+    if not cfg.iserv.enabled or _is_placeholder(cfg.iserv.base_url) or not (cfg.secrets.iserv_username and cfg.secrets.iserv_password):
+        missing.add("IServ-Vertretungsplan")
+    if cfg.todos.provider == "notion" and not cfg.secrets.notion_token:
+        missing.add("ToDos")
+    if cfg.todos.provider == "icloud_shortcut" and not cfg.todos.cache_file.exists():
+        missing.add("ToDos")
+    return missing
 
 
 def _run_sources_parallel(
@@ -70,6 +93,9 @@ def _format_event(ev: CalendarEvent) -> dict[str, Any]:
         "time_label": ev.time_label,
         "all_day": ev.all_day,
         "source": ev.source,
+        # Fuers Dashboard: laufende Termine hervorheben, vergangene abblenden
+        "start": None if ev.all_day else ev.start.isoformat(),
+        "end": None if ev.all_day else ev.end.isoformat(),
     }
 
 
@@ -123,6 +149,8 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
     }
     if is_school_day:
         jobs["IServ-Vertretungsplan"] = lambda: iserv.get_vertretungsplan(cfg)
+    not_configured = _not_configured(cfg)
+    jobs = {name: fn for name, fn in jobs.items() if name not in not_configured}
 
     results = _run_sources_parallel(jobs, errors)
 
@@ -163,4 +191,5 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
         todos=todo_items,
         errors=errors,
         speech_text=speech,
+        not_configured=sorted(not_configured),
     )
