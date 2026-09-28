@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 import caldav
 
 from app.config import Config
-from app.sources.calendar_common import CalendarEvent, dedupe_and_sort
+from app.sources.calendar_common import CalendarEvent, dedupe_and_sort, event_for_day
 
 ICLOUD_CALDAV_URL = "https://caldav.icloud.com"
 
@@ -45,15 +45,7 @@ def get_todays_events(cfg: Config, day: date | None = None) -> list[CalendarEven
             comp = result.icalendar_component
             dtstart = comp["dtstart"].dt
             dtend = comp["dtend"].dt if "dtend" in comp else dtstart
-            all_day = not isinstance(dtstart, datetime)
-            events.append(
-                CalendarEvent(
-                    title=str(comp.get("summary", "(ohne Titel)")),
-                    start=dtstart,
-                    end=dtend,
-                    all_day=all_day,
-                    source="icloud",
-                )
-            )
+            title = str(comp.get("summary", "(ohne Titel)")).strip()
+            events.append(event_for_day(title, dtstart, dtend, day, "icloud"))
 
     return dedupe_and_sort(events)

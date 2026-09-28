@@ -44,6 +44,16 @@ iserv:
   base_url: "https://DEINE-SCHULE.iserv.de"
   # Pfad zur Vertretungsplan-Ansicht - je nach Schule unterschiedlich, wird beim
   # Feinschliff (siehe README) an eure IServ-Instanz angepasst.
+  # Untis-Vertretungsplan ueber den IServ-Infobildschirm (Schnellzugriff
+  # "V Heute"/"V Morgen" -> Link-Ziel /iserv/infodisplay/show/<nr>). Gesetzt,
+  # wird statt vertretungsplan_path/selectors dieser Weg genutzt.
+  plan_pages:
+    - label: Heute
+      path: "/iserv/infodisplay/show/28"
+    - label: Morgen
+      path: "/iserv/infodisplay/show/29"
+  klasse: ""      # Pflicht bei plan_pages, z.B. "07b", "EF", "Q1"
+  kurse: []       # Oberstufe optional: z.B. ["BIG1", "DG2"] - leer = alle Kurse
   vertretungsplan_path: "/iserv/plan/show"
   login_path: "/iserv/app/login"
   selectors:

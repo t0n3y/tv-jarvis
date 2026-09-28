@@ -328,8 +328,14 @@ async def todos_webhook(
         raise HTTPException(status_code=401, detail="ungueltiges oder fehlendes Secret")
 
     body = await request.json()
-    raw_text = body.get("text", "")
-    items = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    raw_text = str(body.get("text", ""))
+    # Aufzaehlungszeichen/Checklisten-Kaestchen aus der Notizen-App entfernen
+    lines = [re.sub(r"^\s*(?:[-*•◦▪‣·]|☐|☑|✓|\[[ xX]?\])\s*", "", line).strip() for line in raw_text.splitlines()]
+    items = [line for line in lines if line]
+    # Kurzbefehl kann den Notiztitel mitschicken - der ist kein ToDo
+    title = str(body.get("title") or "").strip()
+    if title and items and items[0] == title:
+        items = items[1:]
 
     todos_icloud_shortcut.write_todos_cache(cfg.todos.cache_file, items)
     logger.info("ToDos aktualisiert (%d Eintraege)", len(items))

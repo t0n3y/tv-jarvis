@@ -15,7 +15,10 @@ ggf. eine leere Liste zurueck, statt das ganze Briefing zu blockieren.
 
 from __future__ import annotations
 
+import dataclasses
+import re
 from dataclasses import dataclass
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -29,10 +32,32 @@ class SubstitutionEntry:
     subject: str
     room: str
     note: str
+    day: str = ""       # z.B. "Heute" / "Morgen" (Untis-Plaene)
+    kind: str = ""      # Untis-"Art": Vertretung, Entfall, Raum-Vertretung, ...
 
 
 class IServError(RuntimeError):
     pass
+
+
+_META_REFRESH_URL = re.compile(r"url=(.+)$", re.IGNORECASE)
+MAX_META_REDIRECTS = 5
+
+
+def _follow_meta_refresh(session: requests.Session, resp: requests.Response) -> requests.Response:
+    """IServ leitet nach der Anmeldung und beim ersten Aufruf jeder App ueber
+    eine Zwischenseite mit <meta http-equiv="refresh"> weiter (OpenID-Code
+    abholen). requests folgt nur HTTP-Weiterleitungen - diese hier von Hand."""
+    for _ in range(MAX_META_REDIRECTS):
+        meta = BeautifulSoup(resp.text, "html.parser").find(
+            "meta", attrs={"http-equiv": lambda v: v and v.lower() == "refresh"}
+        )
+        match = _META_REFRESH_URL.search(meta.get("content", "")) if meta else None
+        if not match:
+            return resp
+        resp = session.get(urljoin(resp.url, match.group(1).strip("'\" ")), timeout=15)
+        resp.raise_for_status()
+    return resp
 
 
 def _login(session: requests.Session, cfg: Config) -> None:
@@ -53,10 +78,16 @@ def _login(session: requests.Session, cfg: Config) -> None:
     if csrf_input and csrf_input.get("value"):
         payload["_csrf_token"] = csrf_input["value"]
 
-    post_resp = session.post(login_url, data=payload, timeout=15)
+    # Neuere IServ-Versionen leiten /iserv/app/login auf die zentrale
+    # Anmeldung (/iserv/auth/login?_target_path=...) um - das Formular hat
+    # kein action-Attribut, gehoert also an genau diese Adresse. Danach
+    # laufen die Weiterleitungen (OpenID) von selbst zurueck in die App.
+    post_resp = session.post(get_resp.url, data=payload, timeout=15)
     post_resp.raise_for_status()
+    post_resp = _follow_meta_refresh(session, post_resp)
 
-    if "login" in post_resp.url and "logout" not in post_resp.url:
+    still_on_login = BeautifulSoup(post_resp.text, "html.parser").find("input", {"name": "_password"})
+    if still_on_login is not None:
         raise IServError(
             "IServ-Login vermutlich fehlgeschlagen (wieder auf der Login-Seite "
             "gelandet) - Zugangsdaten oder login_path/CSRF-Handling in "
@@ -89,6 +120,116 @@ def _parse_plan(html: str, selectors: dict[str, str]) -> list[SubstitutionEntry]
     return entries
 
 
+# ---------- Untis-Vertretungsplan ueber den IServ-Infobildschirm ----------
+# Die Schule veroeffentlicht den Untis-Export (subst_001.htm, ganze Schule)
+# als Infobildschirm "V Heute"/"V Morgen". Spalten laut Kopfzeile:
+# Klasse(n) | Stunde | Schuelergr. | (Lehrer) | (Fach) | (Raum) | Art | Text.
+# Geaenderte Werte stehen als "<s>ALT</s>?NEU" (der Pfeil kommt als "?" an).
+
+_UNTIS_COLUMNS = {
+    "klasse": "klasse", "stunde": "lesson", "schülergr": "group", "lehrer": "teacher",
+    "fach": "subject", "raum": "room", "art": "kind", "text": "text",
+}
+_GRADE_RE = re.compile(r"^(\d+)([a-z]*)$", re.IGNORECASE)
+
+
+def _cell(td) -> tuple[str, str]:
+    """(neuer Wert, alter Wert) einer Untis-Zelle."""
+    old = " ".join(s.get_text(" ", strip=True) for s in td.find_all("s"))
+    for s_tag in td.find_all("s"):
+        s_tag.decompose()
+    new = td.get_text(" ", strip=True).lstrip("?").strip()
+    if new in ("---", "-"):
+        new = ""
+    return new, old
+
+
+def _matches_class(cell: str, klasse: str) -> bool:
+    if not klasse:
+        return True
+    want = _GRADE_RE.match(klasse)
+    for token in re.split(r"[\s?,]+", cell):
+        if token.lower() == klasse.lower():
+            return True
+        # "05abcd" gilt auch fuer "05b"
+        got = _GRADE_RE.match(token)
+        if want and got and want.group(2) and int(got.group(1)) == int(want.group(1)) and want.group(2).lower() in got.group(2).lower():
+            return True
+    return False
+
+
+def _matches_course(row: dict, kurse: list[str]) -> bool:
+    if not kurse:
+        return True
+    group = (row.get("group") or "").replace(" ", "").lower()
+    subject = (row.get("subject") or "").replace(" ", "").lower()
+    if not group and not subject:
+        return True  # Veranstaltung fuer die ganze Stufe (z.B. Stufenfahrt)
+    for kurs in kurse:
+        k = kurs.replace(" ", "").lower()
+        if k and (group.startswith(k) or subject == k or subject.startswith(k)):
+            return True
+    return False
+
+
+def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEntry]:
+    soup = BeautifulSoup(html, "html.parser")
+    table = soup.find("table", class_="mon_list")
+    if table is None:
+        raise IServError("Untis-Vertretungsplan hat kein erwartetes Tabellenformat (mon_list)")
+    header = [th.get_text(" ", strip=True) for th in table.find_all("th")]
+    keys = []
+    for name in header:
+        clean = name.strip("()").lower().replace(".", "").replace("(n)", "")
+        keys.append(next((v for k, v in _UNTIS_COLUMNS.items() if clean.startswith(k)), clean))
+
+    entries: list[SubstitutionEntry] = []
+    for tr in table.find_all("tr"):
+        tds = tr.find_all("td")
+        if len(tds) != len(keys):
+            continue  # Kopfzeile oder Zwischenueberschrift (nur Klassenname)
+        cells = [_cell(td) for td in tds]
+        row = {k: new for k, (new, _) in zip(keys, cells)}
+        old = {k: old for k, (_, old) in zip(keys, cells)}
+        if not _matches_class(row.get("klasse", "") + " " + old.get("klasse", ""), cfg.iserv.klasse):
+            continue
+        if not _matches_course(row, cfg.iserv.kurse):
+            continue
+        details = []
+        if old.get("teacher") and row.get("teacher"):
+            details.append(f"{row['teacher']} statt {old['teacher']}")
+        if old.get("room"):
+            details.append(f"Raum {row['room']} statt {old['room']}" if row.get("room") else f"statt Raum {old['room']}")
+        if row.get("text"):
+            details.append(row["text"])
+        subject = row.get("subject") or old.get("subject") or row.get("group", "")
+        entries.append(SubstitutionEntry(
+            lesson=row.get("lesson", "").replace(" ", ""),
+            subject=re.sub(r"\s+", " ", subject),
+            room=row.get("room", "") if not old.get("room") else "",
+            note=" · ".join(details),
+            day=day_label,
+            kind=row.get("kind", ""),
+        ))
+    # Zeilen fuer Klassenverbuende ("05abcd") stehen unter jeder Klasse erneut
+    unique = {tuple(dataclasses.astuple(e)): e for e in entries}
+    return list(unique.values())
+
+
+def _untis_page(session: requests.Session, cfg: Config, path: str) -> str:
+    """Infobildschirm-Seite -> eingebettete Untis-Datei (iframe) laden."""
+    base = cfg.iserv.base_url.rstrip("/")
+    page = _follow_meta_refresh(session, session.get(base + path, timeout=15))
+    frame = BeautifulSoup(page.text, "html.parser").find("iframe", src=True)
+    if frame is None:
+        raise IServError(f"Auf {path} ist kein Vertretungsplan eingebettet")
+    resp = session.get(urljoin(page.url, frame["src"]), timeout=15)
+    resp.raise_for_status()
+    # Untis exportiert je nach Version ISO-8859-1 oder UTF-8
+    resp.encoding = resp.apparent_encoding or resp.encoding
+    return resp.text
+
+
 def get_vertretungsplan(cfg: Config) -> list[SubstitutionEntry]:
     if not cfg.iserv.enabled:
         return []
@@ -96,8 +237,16 @@ def get_vertretungsplan(cfg: Config) -> list[SubstitutionEntry]:
     session = requests.Session()
     _login(session, cfg)
 
+    if cfg.iserv.plan_pages:
+        entries: list[SubstitutionEntry] = []
+        for page in cfg.iserv.plan_pages:
+            html = _untis_page(session, cfg, page["path"])
+            entries.extend(_parse_untis(html, cfg, page.get("label", "")))
+        return entries
+
     plan_url = cfg.iserv.base_url.rstrip("/") + cfg.iserv.vertretungsplan_path
     resp = session.get(plan_url, timeout=15)
     resp.raise_for_status()
+    resp = _follow_meta_refresh(session, resp)
 
     return _parse_plan(resp.text, cfg.iserv.selectors)

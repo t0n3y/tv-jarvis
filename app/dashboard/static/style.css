@@ -273,7 +273,14 @@ header {
 }
 
 .side-stack .panel { flex: 1; }
-.side-stack .plan-panel { flex: 1.1; }
+.side-stack .plan-panel { flex: 1.7; }
+
+/* Vertretungsplan: viele kurze Eintraege -> kompakter */
+.plan-panel .list { gap: 0.8vh; }
+.plan-panel .list li { min-height: 5.2vh; padding: 0.7vh 1.4vh; font-size: 2.6vh; }
+.plan-panel .list li .item-text { -webkit-line-clamp: 1; display: block; white-space: nowrap; text-overflow: ellipsis; }
+.plan-panel .list .note { font-size: 2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plan-panel .list .time { min-width: 8vh; font-size: 2vh; }
 
 .panel {
   position: relative;
@@ -416,6 +423,21 @@ header {
   font-size: 2.3vh;
   color: var(--accent-warn);
 }
+
+.list li.day-sep {
+  min-height: 0;
+  padding: 0.6vh 0.4vh 0;
+  background: none;
+  border: 0;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.8vh;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.list li.cancelled { border-color: rgba(255, 140, 66, 0.4); background: rgba(255, 140, 66, 0.08); }
+.list li.cancelled .time { background: rgba(255, 140, 66, 0.2); color: var(--accent-warn); }
 
 .list li.more {
   min-height: 0;

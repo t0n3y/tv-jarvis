@@ -18,6 +18,15 @@ function formatTime(seconds) {
 
 const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const MAX_LIST_ITEMS = 7;
+const PLAN_TODAY_UNTIL_HOUR = 17;
+// Untis-"Art" in kurz, damit eine Zeile reicht
+const PLAN_KIND_SHORT = {
+  "eigenverantwortliches arbeiten": "EVA",
+  "statt-vertretung": "Vertretung",
+  "raum-vertretung": "Raumänderung",
+  "raum-vtr.": "Raumänderung",
+  "trotz absenz": "findet statt",
+};
 let dashboardState = null;
 
 function esc(text) {
@@ -185,20 +194,36 @@ function renderPlan(state) {
   panel.classList.toggle("hidden", !state.is_school_day);
   if (!state.is_school_day) return;
   const el = $("plan-content");
-  const plan = state.substitution_plan || [];
+  // Nach Schulschluss interessiert nur noch der naechste Tag
+  const afterSchool = new Date().getHours() >= PLAN_TODAY_UNTIL_HOUR;
+  const plan = (state.substitution_plan || []).filter((p) => !(afterSchool && p.day === "Heute"));
   $("plan-meta").textContent = plan.length ? `${plan.length} ${plan.length === 1 ? "Änderung" : "Änderungen"}` : "";
   if ((state.not_configured || []).includes("IServ-Vertretungsplan")) {
-    emptyState(el, "plan", "IServ noch nicht verbunden", "Benutzername und Passwort fehlen in der .env auf dem Pi.");
+    emptyState(el, "plan", "Vertretungsplan noch nicht fertig eingerichtet", "Zugangsdaten oder Klasse fehlen noch.");
     return;
   }
   if (!plan.length) {
-    emptyState(el, "plan", "Keine Änderungen im Vertretungsplan");
+    emptyState(el, "plan", "Keine Vertretungen für dich");
     return;
   }
-  renderList(el, plan, (p) => {
-    const parts = [p.subject, p.room].filter(Boolean).join(" · ");
-    const note = p.note ? `<span class="note">${esc(p.note)}</span>` : "";
-    return `<li><span class="time">${esc(p.lesson || "–")}</span><span class="item-text">${esc(parts)}${note}</span></li>`;
+  // Untis-Plaene kommen fuer "Heute" und "Morgen" - mit Trennzeile
+  let lastDay = null;
+  const rows = [];
+  for (const p of plan) {
+    if (p.day && p.day !== lastDay) {
+      if (lastDay !== null || p.day !== "Heute") rows.push({ separator: p.day });
+      lastDay = p.day;
+    }
+    rows.push(p);
+  }
+  renderList(el, rows, (p) => {
+    if (p.separator) return `<li class="day-sep">${esc(p.separator)}</li>`;
+    const cancelled = /entfall/i.test(p.kind || "");
+    const kind = PLAN_KIND_SHORT[(p.kind || "").toLowerCase()] || p.kind;
+    const title = [p.subject, kind].filter(Boolean).join(" · ");
+    const sub = [p.room ? `Raum ${p.room}` : "", p.note].filter(Boolean).join(" · ");
+    const note = sub ? `<span class="note">${esc(sub)}</span>` : "";
+    return `<li class="${cancelled ? "cancelled" : ""}"><span class="time">${esc(p.lesson || "–")}</span><span class="item-text">${esc(title)}${note}</span></li>`;
   });
 }
 

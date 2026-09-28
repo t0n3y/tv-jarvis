@@ -38,3 +38,18 @@ def dedupe_and_sort(events: list[CalendarEvent]) -> list[CalendarEvent]:
         seen.add(key)
         unique.append(ev)
     return sorted(unique, key=lambda e: e.sort_key())
+
+
+def event_for_day(title: str, start: datetime | date, end: datetime | date, day: date, source: str) -> CalendarEvent:
+    """Baut den Termin so, wie er an `day` angezeigt werden soll:
+    - Zeiten in UTC ("...Z", z.B. aus Google) in die Ortszeit des Pi umrechnen,
+      sonst steht ein 8-Uhr-Termin als "06:00" auf dem Dashboard.
+    - Mehrtaegige Termine (z.B. Urlaub) an den Folgetagen als ganztaegig
+      zeigen statt jeden Tag mit der Uhrzeit vom ersten Tag.
+    """
+    if isinstance(start, datetime) and start.tzinfo is not None:
+        start = start.astimezone()
+    if isinstance(end, datetime) and end.tzinfo is not None:
+        end = end.astimezone()
+    all_day = not isinstance(start, datetime) or start.date() < day
+    return CalendarEvent(title=title, start=start, end=end, all_day=all_day, source=source)

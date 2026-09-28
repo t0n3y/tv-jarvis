@@ -81,6 +81,13 @@ class IServConfig:
     vertretungsplan_path: str
     login_path: str
     selectors: dict[str, str]
+    # Untis-Vertretungsplan ueber den IServ-Infobildschirm ("V Heute"/"V
+    # Morgen"): [{"label": "Heute", "path": "/iserv/infodisplay/show/28"}, ...]
+    plan_pages: list[dict[str, str]] = field(default_factory=list)
+    # Nur Zeilen dieser Klasse/Stufe (z.B. "07b", "EF", "Q1"); leer = alle
+    klasse: str = ""
+    # Oberstufe: nur diese Kurse (Kuerzel wie "BIG1" oder Fach "BI"); leer = alle
+    kurse: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -211,6 +218,9 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
             vertretungsplan_path=isv.get("vertretungsplan_path", ""),
             login_path=isv.get("login_path", ""),
             selectors=isv.get("selectors", {}),
+            plan_pages=isv.get("plan_pages", []) or [],
+            klasse=str(isv.get("klasse", "") or ""),
+            kurse=[str(k) for k in isv.get("kurse", []) or []],
         ),
         todos=TodosConfig(
             provider=todos.get("provider", "icloud_shortcut"),

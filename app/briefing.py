@@ -55,6 +55,9 @@ def _not_configured(cfg: Config) -> set[str]:
         missing.add("iCloud-Kalender")
     if not cfg.iserv.enabled or _is_placeholder(cfg.iserv.base_url) or not (cfg.secrets.iserv_username and cfg.secrets.iserv_password):
         missing.add("IServ-Vertretungsplan")
+    # Untis-Plan der ganzen Schule ohne Klassenfilter waeren 100+ Zeilen
+    if cfg.iserv.plan_pages and not cfg.iserv.klasse:
+        missing.add("IServ-Vertretungsplan")
     if cfg.todos.provider == "notion" and not cfg.secrets.notion_token:
         missing.add("ToDos")
     if cfg.todos.provider == "icloud_shortcut" and not cfg.todos.cache_file.exists():

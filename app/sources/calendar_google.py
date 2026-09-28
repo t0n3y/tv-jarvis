@@ -13,7 +13,7 @@ import requests
 from icalendar import Calendar
 
 from app.config import Config
-from app.sources.calendar_common import CalendarEvent, dedupe_and_sort
+from app.sources.calendar_common import CalendarEvent, dedupe_and_sort, event_for_day
 
 
 def _fetch_events_for_day(ics_url: str, day: date) -> list[CalendarEvent]:
@@ -29,16 +29,8 @@ def _fetch_events_for_day(ics_url: str, day: date) -> list[CalendarEvent]:
     for comp in occurrences:
         dtstart = comp.get("dtstart").dt
         dtend = comp.get("dtend").dt if comp.get("dtend") else dtstart
-        all_day = not isinstance(dtstart, datetime)
-        events.append(
-            CalendarEvent(
-                title=str(comp.get("summary", "(ohne Titel)")),
-                start=dtstart,
-                end=dtend,
-                all_day=all_day,
-                source="google",
-            )
-        )
+        title = str(comp.get("summary", "(ohne Titel)")).strip()
+        events.append(event_for_day(title, dtstart, dtend, day, "google"))
     return events
 
 
