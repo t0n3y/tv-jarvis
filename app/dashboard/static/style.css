@@ -454,6 +454,13 @@ header {
   color: var(--text-dim);
 }
 
+/* Abgehakte ToDos: sichtbar, aber zurueckgenommen */
+.todo-dot { display: grid; place-items: center; }
+.todo-dot svg { width: 1.8vh; height: 1.8vh; fill: none; stroke: #02141f; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.list li.done { background: rgba(79, 216, 255, 0.02); border-color: rgba(79, 216, 255, 0.05); }
+.list li.done .todo-dot { background: rgba(79, 216, 255, 0.55); border-color: transparent; box-shadow: none; }
+.list li.done .item-text { color: var(--text-dim); text-decoration: line-through; text-decoration-color: rgba(111, 139, 163, 0.7); }
+
 /* Leer / nicht eingerichtet */
 .list li.panel-empty { min-height: 100%; padding: 2vh; background: none; border: 0; }
 

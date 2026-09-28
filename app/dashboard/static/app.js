@@ -19,6 +19,8 @@ function formatTime(seconds) {
 const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const MAX_LIST_ITEMS = 7;
 const PLAN_TODAY_UNTIL_HOUR = 17;
+// Ab dann zeigt die Kalender-Kachel den naechsten Tag
+const CALENDAR_TOMORROW_FROM_HOUR = 20;
 // Untis-"Art" in kurz, damit eine Zeile reicht
 const PLAN_KIND_SHORT = {
   "eigenverantwortliches arbeiten": "Entfall",
@@ -49,7 +51,10 @@ function updateClock() {
   $("date-label").textContent = `${WEEKDAY_NAMES[now.getDay()]}, ${now.getDate()}. ${MONTH_NAMES[now.getMonth()]}`;
   $("dash-hello").textContent = greeting(now.getHours());
   // Laufende/vergangene Termine minuetlich neu einfaerben
-  if (dashboardState && now.getSeconds() === 0) renderEvents(dashboardState);
+  if (dashboardState && now.getSeconds() === 0) {
+    renderEvents(dashboardState);
+    renderSub(dashboardState);
+  }
 }
 
 // ---------- Wetter-Symbole (SVG statt Emoji: der Kiosk hat keine Emoji-Schrift) ----------
@@ -105,6 +110,8 @@ function weatherSvg(key, isDay = true) {
 }
 
 // ---------- Panels ----------
+
+const TODO_CHECK = `<svg viewBox="0 0 24 24"><path d="m6.5 12.5 3.5 3.5 7.5-8"/></svg>`;
 
 const EMPTY_ICONS = {
   calendar: `<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>`,
@@ -169,21 +176,27 @@ function renderWeather(state) {
     <div class="wx-days">${dayRows}</div>`;
 }
 
+function showTomorrow() {
+  return new Date().getHours() >= CALENDAR_TOMORROW_FROM_HOUR;
+}
+
 function renderEvents(state) {
   const el = $("calendar-content");
-  const events = state.events || [];
+  const tomorrow = showTomorrow();
+  const events = (tomorrow ? state.events_tomorrow : state.events) || [];
   const missing = (state.not_configured || []).filter((s) => s.includes("Kalender"));
+  document.querySelector(".calendar-panel h2").textContent = tomorrow ? "Morgen" : "Heute";
   $("calendar-meta").textContent = events.length ? `${events.length} ${events.length === 1 ? "Termin" : "Termine"}` : "";
   if (!events.length) {
     if (missing.length === 2) emptyState(el, "calendar", "Kalender noch nicht verbunden", "Google-iCal-Adresse und iCloud-Zugang fehlen noch.");
-    else emptyState(el, "calendar", "Keine Termine heute", missing.length ? `${missing[0]} ist noch nicht verbunden.` : "");
+    else emptyState(el, "calendar", tomorrow ? "Morgen keine Termine" : "Keine Termine heute", missing.length ? `${missing[0]} ist noch nicht verbunden.` : "");
     return;
   }
   const now = Date.now();
   renderList(el, events, (e) => {
     const start = e.start ? Date.parse(e.start) : null;
     const end = e.end ? Date.parse(e.end) : null;
-    const cls = start && end ? (now >= end ? "past" : now >= start ? "now" : "") : "";
+    const cls = !tomorrow && start && end ? (now >= end ? "past" : now >= start ? "now" : "") : "";
     const time = e.all_day ? `<span class="time all-day">Ganztägig</span>` : `<span class="time">${esc(e.time_label)}</span>`;
     return `<li class="${cls}">${time}<span class="item-text">${esc(e.title)}</span></li>`;
   });
@@ -229,14 +242,21 @@ function renderPlan(state) {
 
 function renderTodos(state) {
   const el = $("todos-content");
-  const todos = state.todos || [];
-  $("todos-meta").textContent = todos.length ? `${todos.length} offen` : "";
-  if (!todos.length) {
+  // Aeltere state.json ohne todo_entries: nur offene Punkte
+  const entries = state.todo_entries || (state.todos || []).map((text) => ({ text, done: false }));
+  const open = entries.filter((e) => !e.done).length;
+  const done = entries.length - open;
+  $("todos-meta").textContent = entries.length ? [open ? `${open} offen` : "", done ? `${done} erledigt` : ""].filter(Boolean).join(" · ") : "";
+  if (!entries.length) {
     if ((state.not_configured || []).includes("ToDos")) emptyState(el, "todos", "ToDo-Liste noch nicht verbunden", "Der iPhone-Kurzbefehl hat noch keine Notiz geschickt.");
-    else emptyState(el, "todos", "Alles erledigt");
+    else emptyState(el, "todos", "Keine ToDos");
     return;
   }
-  renderList(el, todos, (t) => `<li><span class="todo-dot"></span><span class="item-text">${esc(t)}</span></li>`);
+  renderList(
+    el,
+    entries,
+    (e) => `<li class="${e.done ? "done" : ""}"><span class="todo-dot">${e.done ? TODO_CHECK : ""}</span><span class="item-text">${esc(e.text)}</span></li>`
+  );
 }
 
 function renderErrors(errors) {
@@ -254,8 +274,13 @@ function renderErrors(errors) {
 function renderSub(state) {
   const parts = [];
   if (state.weather) parts.push(`${Math.round(state.weather.temp_current)}° und ${state.weather.description.toLowerCase()}`);
-  const events = (state.events || []).filter((e) => !e.all_day && e.start && Date.parse(e.start) > Date.now());
-  if (events.length) parts.push(`nächster Termin ${events[0].time_label}`);
+  if (showTomorrow()) {
+    const first = (state.events_tomorrow || []).find((e) => !e.all_day);
+    if (first) parts.push(`morgen ab ${first.time_label}`);
+  } else {
+    const events = (state.events || []).filter((e) => !e.all_day && e.start && Date.parse(e.start) > Date.now());
+    if (events.length) parts.push(`nächster Termin ${events[0].time_label}`);
+  }
   $("dash-sub").textContent = parts.join(" · ") || " ";
 }
 

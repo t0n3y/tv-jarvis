@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Callable
 
 from app.config import Config
@@ -18,6 +18,8 @@ from app.sources.calendar_common import CalendarEvent, dedupe_and_sort
 logger = logging.getLogger(__name__)
 
 SOURCE_TIMEOUT_SECONDS = 20
+# Ab dann auch die Termine von morgen holen (Dashboard wechselt um 20 Uhr)
+TOMORROW_FROM_HOUR = 19
 
 WEEKDAY_NAMES_DE = [
     "Montag", "Dienstag", "Mittwoch", "Donnerstag",
@@ -40,6 +42,10 @@ class BriefingData:
     # Quellen ohne Zugangsdaten/Adresse: kein Fehler, sondern "noch nicht
     # eingerichtet" (Dashboard zeigt dann einen Hinweis im Panel)
     not_configured: list[str] = field(default_factory=list)
+    # Alle ToDos inkl. abgehakter ({"text", "done"}) fuers Dashboard
+    todo_entries: list[dict[str, Any]] = field(default_factory=list)
+    # Termine des Folgetags - das Dashboard zeigt sie ab 20 Uhr statt "Heute"
+    events_tomorrow: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _is_placeholder(value: str | None) -> bool:
@@ -148,12 +154,16 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
         "Wetter": lambda: weather.get_weather(cfg),
         "Google-Kalender": lambda: calendar_google.get_todays_events(cfg, today),
         "iCloud-Kalender": lambda: calendar_icloud.get_todays_events(cfg, today),
-        "ToDos": lambda: todos.get_todos(cfg),
+        "ToDos": lambda: todos.get_entries(cfg),
     }
     if is_school_day:
         jobs["IServ-Vertretungsplan"] = lambda: iserv.get_vertretungsplan(cfg)
+    tomorrow = today + timedelta(days=1)
+    if datetime.now().hour >= TOMORROW_FROM_HOUR:
+        jobs["Google-Kalender (morgen)"] = lambda: calendar_google.get_todays_events(cfg, tomorrow)
+        jobs["iCloud-Kalender (morgen)"] = lambda: calendar_icloud.get_todays_events(cfg, tomorrow)
     not_configured = _not_configured(cfg)
-    jobs = {name: fn for name, fn in jobs.items() if name not in not_configured}
+    jobs = {name: fn for name, fn in jobs.items() if name.split(" (")[0] not in not_configured}
 
     results = _run_sources_parallel(jobs, errors)
 
@@ -162,7 +172,12 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
     icloud_events = results.get("iCloud-Kalender") or []
     all_events = dedupe_and_sort([*google_events, *icloud_events])
     substitution_plan: list[Any] = results.get("IServ-Vertretungsplan") or []
-    todo_items = results.get("ToDos") or []
+    todo_entries = results.get("ToDos") or []
+    todo_items = [e["text"] for e in todo_entries if not e["done"]]
+    events_tomorrow = dedupe_and_sort([
+        *(results.get("Google-Kalender (morgen)") or []),
+        *(results.get("iCloud-Kalender (morgen)") or []),
+    ])
 
     weather_dict = asdict(weather_data) if weather_data else None
     events_list = [_format_event(e) for e in all_events]
@@ -195,4 +210,6 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
         errors=errors,
         speech_text=speech,
         not_configured=sorted(not_configured),
+        todo_entries=todo_entries,
+        events_tomorrow=[_format_event(e) for e in events_tomorrow],
     )

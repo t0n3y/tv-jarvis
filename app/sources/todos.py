@@ -10,3 +10,10 @@ def get_todos(cfg: Config) -> list[str]:
     if cfg.todos.provider == "notion":
         return todos_notion.get_todos(cfg)
     return todos_icloud_shortcut.get_todos(cfg)
+
+
+def get_entries(cfg: Config) -> list[dict]:
+    """Alle Punkte inkl. abgehakter ({"text", "done"}) fuers Dashboard."""
+    if cfg.todos.provider == "notion":
+        return [{"text": t, "done": False} for t in todos_notion.get_todos(cfg)]
+    return todos_icloud_shortcut.get_entries(cfg)
