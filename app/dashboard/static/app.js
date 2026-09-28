@@ -21,7 +21,7 @@ const MAX_LIST_ITEMS = 7;
 const PLAN_TODAY_UNTIL_HOUR = 17;
 // Untis-"Art" in kurz, damit eine Zeile reicht
 const PLAN_KIND_SHORT = {
-  "eigenverantwortliches arbeiten": "EVA",
+  "eigenverantwortliches arbeiten": "Entfall",
   "statt-vertretung": "Vertretung",
   "raum-vertretung": "Raumänderung",
   "raum-vtr.": "Raumänderung",

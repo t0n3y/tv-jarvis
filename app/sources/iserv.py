@@ -172,6 +172,48 @@ def _matches_course(row: dict, kurse: list[str]) -> bool:
     return False
 
 
+_CANCEL_KINDS = ("entfall", "eigenverantwortlich")
+
+
+def _is_cancelled(row: dict, old: dict, kind: str) -> bool:
+    """Entfall ist im Plan dieser Schule so gekennzeichnet:
+    - Art "Entfall" oder "eigenverantwortliches Arbeiten" (EVA)
+    - Lehrer durchgestrichen ohne neuen Lehrer (oft auch Fach/Raum)
+    - Klasse/Stufe durchgestrichen (Klassenfahrt, Exkursion ...)"""
+    lk = kind.lower()
+    if any(word in lk for word in _CANCEL_KINDS) or lk == "eva":
+        return True
+    if old.get("teacher") and not row.get("teacher"):
+        return True
+    return bool(old.get("klasse")) and not row.get("klasse")
+
+
+def _untis_entry(row: dict, old: dict, kind: str, day_label: str) -> SubstitutionEntry:
+    subject = re.sub(r"\s+", " ", row.get("subject") or old.get("subject") or row.get("group", ""))
+    lesson = row.get("lesson", "").replace(" ", "")
+    lk = kind.lower()
+    if _is_cancelled(row, old, kind):
+        # Anlass mitnehmen, wenn es nicht nur "Entfall"/"EVA" heisst (z.B. "Stufenfahrt Q2 Prag")
+        reason = kind if kind and not any(w in lk for w in _CANCEL_KINDS) and lk != "eva" else ""
+        note = " · ".join(filter(None, [reason, row.get("text", "")]))
+        return SubstitutionEntry(lesson=lesson, subject=subject, room="", note=note, day=day_label, kind="Entfall")
+    details = []
+    if old.get("teacher") and row.get("teacher"):
+        details.append(f"{row['teacher']} statt {old['teacher']}")
+    if old.get("room"):
+        details.append(f"Raum {row['room']} statt {old['room']}" if row.get("room") else f"statt Raum {old['room']}")
+    if row.get("text"):
+        details.append(row["text"])
+    return SubstitutionEntry(
+        lesson=lesson,
+        subject=subject,
+        room=row.get("room", "") if not old.get("room") else "",
+        note=" · ".join(details),
+        day=day_label,
+        kind=kind,
+    )
+
+
 def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEntry]:
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", class_="mon_list")
@@ -195,22 +237,8 @@ def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEnt
             continue
         if not _matches_course(row, cfg.iserv.kurse):
             continue
-        details = []
-        if old.get("teacher") and row.get("teacher"):
-            details.append(f"{row['teacher']} statt {old['teacher']}")
-        if old.get("room"):
-            details.append(f"Raum {row['room']} statt {old['room']}" if row.get("room") else f"statt Raum {old['room']}")
-        if row.get("text"):
-            details.append(row["text"])
-        subject = row.get("subject") or old.get("subject") or row.get("group", "")
-        entries.append(SubstitutionEntry(
-            lesson=row.get("lesson", "").replace(" ", ""),
-            subject=re.sub(r"\s+", " ", subject),
-            room=row.get("room", "") if not old.get("room") else "",
-            note=" · ".join(details),
-            day=day_label,
-            kind=row.get("kind", ""),
-        ))
+        kind = row.get("kind", "")
+        entries.append(_untis_entry(row, old, kind, day_label))
     # Zeilen fuer Klassenverbuende ("05abcd") stehen unter jeder Klasse erneut
     unique = {tuple(dataclasses.astuple(e)): e for e in entries}
     return list(unique.values())
