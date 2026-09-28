@@ -156,8 +156,9 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
         "iCloud-Kalender": lambda: calendar_icloud.get_todays_events(cfg, today),
         "ToDos": lambda: todos.get_entries(cfg),
     }
-    if is_school_day:
-        jobs["IServ-Vertretungsplan"] = lambda: iserv.get_vertretungsplan(cfg)
+    # Auch am Wochenende holen: sonntags ab 16 Uhr zeigt das Dashboard den
+    # Plan fuer Montag
+    jobs["IServ-Vertretungsplan"] = lambda: iserv.get_vertretungsplan(cfg)
     tomorrow = today + timedelta(days=1)
     if datetime.now().hour >= TOMORROW_FROM_HOUR:
         jobs["Google-Kalender (morgen)"] = lambda: calendar_google.get_todays_events(cfg, tomorrow)

@@ -18,6 +18,7 @@ from __future__ import annotations
 import dataclasses
 import re
 from dataclasses import dataclass
+from datetime import date, timedelta
 from urllib.parse import urljoin
 
 import requests
@@ -33,8 +34,9 @@ class SubstitutionEntry:
     subject: str
     room: str
     note: str
-    day: str = ""       # z.B. "Heute" / "Morgen" (Untis-Plaene)
+    day: str = ""       # z.B. "Heute" / "Morgen" / "Montag" (Untis-Plaene)
     kind: str = ""      # Untis-"Art": Vertretung, Entfall, Raum-Vertretung, ...
+    date: str = ""      # Tag des Plans (ISO), aus dem Untis-Titel
 
 
 class IServError(RuntimeError):
@@ -247,6 +249,31 @@ def _parse_untis(html: str, cfg: Config, day_label: str) -> list[SubstitutionEnt
     return list(unique.values())
 
 
+_UNTIS_DATE = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4})")
+_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+
+
+def _untis_date(html: str) -> date | None:
+    """Datum aus dem Untis-Titel, z.B. "28.9.2026 Montag, Woche A"."""
+    title = BeautifulSoup(html, "html.parser").select_one(".mon_title")
+    match = _UNTIS_DATE.search(title.get_text(" ", strip=True)) if title else None
+    if not match:
+        return None
+    day, month, year = (int(g) for g in match.groups())
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def _day_label(plan_day: date, today: date) -> str:
+    if plan_day == today:
+        return "Heute"
+    if plan_day == today + timedelta(days=1):
+        return "Morgen"
+    return _WEEKDAYS[plan_day.weekday()]
+
+
 def _untis_page(session: requests.Session, cfg: Config, path: str) -> str:
     """Infobildschirm-Seite -> eingebettete Untis-Datei (iframe) laden."""
     base = cfg.iserv.base_url.rstrip("/")
@@ -269,11 +296,21 @@ def get_vertretungsplan(cfg: Config) -> list[SubstitutionEntry]:
     _login(session, cfg)
 
     if cfg.iserv.plan_pages:
+        # "V Heute"/"V Morgen" tauscht die Schule erst morgens aus - nachts
+        # zeigt "V Heute" also noch den Vortag. Deshalb jeden Plan nach
+        # seinem eigenen Datum einordnen und Vergangenes weglassen.
+        today = date.today()
         entries: list[SubstitutionEntry] = []
         for page in cfg.iserv.plan_pages:
             html = _untis_page(session, cfg, page["path"])
-            entries.extend(_parse_untis(html, cfg, page.get("label", "")))
-        return entries
+            plan_day = _untis_date(html)
+            if plan_day is not None and plan_day < today:
+                continue
+            label = _day_label(plan_day, today) if plan_day else page.get("label", "")
+            for entry in _parse_untis(html, cfg, label):
+                entry.date = plan_day.isoformat() if plan_day else ""
+                entries.append(entry)
+        return sorted(entries, key=lambda e: e.date)
 
     plan_url = cfg.iserv.base_url.rstrip("/") + cfg.iserv.vertretungsplan_path
     resp = session.get(plan_url, timeout=15)

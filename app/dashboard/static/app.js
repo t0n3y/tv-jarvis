@@ -18,7 +18,8 @@ function formatTime(seconds) {
 
 const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const MAX_LIST_ITEMS = 7;
-const PLAN_TODAY_UNTIL_HOUR = 17;
+// Bis dahin der Plan fuer heute, danach der fuer den naechsten Schultag
+const PLAN_TODAY_UNTIL_HOUR = 16;
 // Ab dann zeigt die Kalender-Kachel den naechsten Tag
 const CALENDAR_TOMORROW_FROM_HOUR = 20;
 // Untis-"Art" in kurz, damit eine Zeile reicht
@@ -53,6 +54,7 @@ function updateClock() {
   // Laufende/vergangene Termine minuetlich neu einfaerben
   if (dashboardState && now.getSeconds() === 0) {
     renderEvents(dashboardState);
+    renderPlan(dashboardState);
     renderSub(dashboardState);
   }
 }
@@ -202,35 +204,49 @@ function renderEvents(state) {
   });
 }
 
+function localIsoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Welcher Tag gezeigt wird: bis 16 Uhr heute (wenn Schultag), danach der
+// naechste Tag, fuer den die Schule schon einen Plan hat - sonst der naechste
+// Werktag. null = Kachel ausblenden (Wochenende tagsueber).
+function planTarget(state) {
+  const now = new Date();
+  const today = localIsoDate(now);
+  const weekday = now.getDay(); // 0 = Sonntag
+  if (now.getHours() < PLAN_TODAY_UNTIL_HOUR) {
+    return weekday >= 1 && weekday <= 5 ? { date: today, label: "Heute" } : null;
+  }
+  const future = (state.substitution_plan || []).filter((p) => p.date && p.date > today).map((p) => p.date).sort();
+  if (future.length) {
+    const first = (state.substitution_plan || []).find((p) => p.date === future[0]);
+    return { date: future[0], label: first.day };
+  }
+  // Noch kein Plan veroeffentlicht: naechster Werktag, Freitag/Samstag -> Montag
+  if (weekday === 5 || weekday === 6) return { date: null, label: "Montag" };
+  return { date: null, label: "Morgen" };
+}
+
 function renderPlan(state) {
   const panel = $("plan-panel");
-  panel.classList.toggle("hidden", !state.is_school_day);
-  if (!state.is_school_day) return;
+  const target = planTarget(state);
+  panel.classList.toggle("hidden", !target);
+  if (!target) return;
   const el = $("plan-content");
-  // Nach Schulschluss interessiert nur noch der naechste Tag
-  const afterSchool = new Date().getHours() >= PLAN_TODAY_UNTIL_HOUR;
-  const plan = (state.substitution_plan || []).filter((p) => !(afterSchool && p.day === "Heute"));
-  $("plan-meta").textContent = plan.length ? `${plan.length} ${plan.length === 1 ? "Änderung" : "Änderungen"}` : "";
+  $("plan-title").textContent = "Vertretung";
+  const plan = (state.substitution_plan || []).filter((p) => (p.date ? p.date === target.date : p.day === target.label));
+  $("plan-meta").textContent = [target.label, plan.length ? `${plan.length} ${plan.length === 1 ? "Änderung" : "Änderungen"}` : ""].filter(Boolean).join(" · ");
   if ((state.not_configured || []).includes("IServ-Vertretungsplan")) {
     emptyState(el, "plan", "Vertretungsplan noch nicht fertig eingerichtet", "Zugangsdaten oder Klasse fehlen noch.");
     return;
   }
   if (!plan.length) {
-    emptyState(el, "plan", "Keine Vertretungen für dich");
+    if (!target.date) emptyState(el, "plan", `Plan für ${target.label === "Morgen" ? "morgen" : target.label} noch nicht veröffentlicht`);
+    else emptyState(el, "plan", "Keine Vertretungen für dich");
     return;
   }
-  // Untis-Plaene kommen fuer "Heute" und "Morgen" - mit Trennzeile
-  let lastDay = null;
-  const rows = [];
-  for (const p of plan) {
-    if (p.day && p.day !== lastDay) {
-      if (lastDay !== null || p.day !== "Heute") rows.push({ separator: p.day });
-      lastDay = p.day;
-    }
-    rows.push(p);
-  }
-  renderList(el, rows, (p) => {
-    if (p.separator) return `<li class="day-sep">${esc(p.separator)}</li>`;
+  renderList(el, plan, (p) => {
     const cancelled = /entfall/i.test(p.kind || "");
     const kind = PLAN_KIND_SHORT[(p.kind || "").toLowerCase()] || p.kind;
     const title = [p.subject, kind].filter(Boolean).join(" · ");
