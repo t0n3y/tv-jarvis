@@ -1832,6 +1832,218 @@ button {
   color: rgb(var(--tint));
 }
 
+/* ---------- Jellyfin: Hochladen ---------- */
+
+.up-open {
+  position: relative;
+  margin-left: auto;
+  color: rgb(167, 118, 255);
+}
+
+.up-open-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.up-open.busy .up-open-dot { display: block; }
+
+.up-sheet { padding-top: 26px; }
+
+.up-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px;
+}
+
+.up-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgb(var(--tint));
+}
+
+.up-free {
+  margin-top: -8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.up-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 16px;
+  border: 1.5px dashed rgba(var(--tint), 0.5);
+  border-radius: var(--radius-lg);
+  background: rgba(var(--tint), 0.07);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.up-drop .icon { width: 34px; height: 34px; color: rgb(var(--tint)); }
+.up-drop small { font-size: 14px; font-weight: 600; color: var(--text-3); }
+.up-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.up-drop:active { background: rgba(var(--tint), 0.16); }
+
+.up-list { display: flex; flex-direction: column; gap: 10px; }
+
+.up-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke);
+  background: var(--surface);
+}
+
+.up-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.up-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.up-item-size {
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.up-remove {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-2);
+}
+
+.up-remove .icon { width: 16px; height: 16px; }
+
+.up-kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid var(--stroke);
+}
+
+.up-kind button {
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.up-kind button.active { background: rgba(var(--tint), 0.85); color: #fff; }
+
+.up-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 8px;
+}
+
+.up-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  color: var(--text);
+  font: 600 17px var(--font-body);
+}
+
+.up-fields input:focus { outline: none; border-color: rgba(var(--tint), 0.6); }
+
+.up-target {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+
+.up-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.up-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, rgba(var(--tint), 0.8), rgb(var(--tint)));
+  box-shadow: 0 0 10px rgba(var(--tint), 0.8);
+  transition: width 0.3s;
+}
+
+.up-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.up-item.done { border-color: rgba(62, 230, 168, 0.4); }
+.up-item.done .up-status { color: var(--ok); }
+.up-item.error { border-color: rgba(255, 93, 115, 0.45); }
+.up-item.error .up-status { color: #ffb3bf; }
+
+.up-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 140, 66, 0.45);
+  background: rgba(255, 140, 66, 0.1);
+  color: #ffd2b0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.up-retry { align-self: flex-start; }
+
 /* ---------- Uhr & Timer ---------- */
 
 #view-clock { --tint: 120, 230, 190; --tint-ink: #03170f; }

@@ -49,6 +49,7 @@
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6.5 5.5v13" /><path d="M18 5.8v12.4L8.8 12z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.5 5.5v13" /><path d="M6 5.8v12.4L15.2 12z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 14.5v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.8h5M12 2.8V6M18.2 7.3l1.4-1.4"/></symbol>
   <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.8" y="4.5" width="18.4" height="12.5" rx="2.2"/><path d="M8.5 20.2h7M12 17v3.2"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
@@ -138,6 +139,7 @@
     <div class="view-header">
       <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
       <h1>Jellyfin</h1>
+      <button class="icon-btn up-open" id="up-open" aria-label="Hochladen"><svg class="icon"><use href="#i-upload"/></svg><span class="up-open-dot"></span></button>
     </div>
 
     <div class="card np-card hidden" id="jf-now">
@@ -482,6 +484,26 @@
   <span class="sheet-grabber"></span>
   <button class="icon-btn sheet-close" id="vy-sheet-close" aria-label="Schließen"><svg class="icon"><use href="#i-close"/></svg></button>
   <div class="retro-sheet-body" id="vy-sheet-body"></div>
+</div>
+
+<!-- Jellyfin: Filme/Serien auf die Platte hochladen -->
+<div class="sheet-backdrop hidden" id="up-backdrop"></div>
+<div class="sheet up-sheet" id="up-sheet" aria-hidden="true">
+  <span class="sheet-grabber"></span>
+  <button class="icon-btn sheet-close" id="up-close" aria-label="Schließen"><svg class="icon"><use href="#i-close"/></svg></button>
+  <div class="up-body">
+    <div class="up-title">Hochladen</div>
+    <div class="up-free" id="up-free">&nbsp;</div>
+    <label class="up-drop">
+      <input type="file" id="up-input" multiple accept="video/*,.mkv,.avi,.m4v,.mov,.ts,.m2ts,.webm,.srt,.ass,.vtt" />
+      <svg class="icon"><use href="#i-upload"/></svg>
+      <span>Dateien auswählen</span>
+      <small>Filme oder Serienfolgen – auch mehrere auf einmal</small>
+    </label>
+    <div class="up-list" id="up-list"></div>
+    <button class="btn btn-primary btn-block hidden" id="up-start"><svg class="icon"><use href="#i-upload"/></svg><span id="up-start-label">Hochladen</span></button>
+    <p class="hint">Die Fernbedienung während des Uploads offen lassen. Bricht er ab, einfach dieselbe Datei noch einmal auswählen – er macht dort weiter, wo er stehen geblieben ist. Serienfolgen am besten mit „S01E02“ im Dateinamen.</p>
+  </div>
 </div>
 
 <script src="remote.js"></script>

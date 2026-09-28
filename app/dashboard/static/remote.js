@@ -818,6 +818,320 @@ onTap($("sheet-restart"), () => playFromSheet(true));
 onTap($("sheet-close"), () => closeSheet());
 $("sheet-backdrop").addEventListener("click", closeSheet);
 
+// ---------- Jellyfin: Hochladen ----------
+// Dateien gehen in 8-MB-Stuecken an den Pi (app/media_upload.py) und landen
+// direkt auf der Jellyfin-Platte. Bricht die Verbindung ab, wird das Stueck
+// wiederholt; waehlt man dieselbe Datei spaeter erneut, geht es beim
+// bereits empfangenen Stand weiter.
+
+const UPLOAD_CHUNK_BYTES = 8 * 1024 * 1024;
+const UPLOAD_MAX_RETRIES = 6;
+const UPLOAD_CHUNK_TIMEOUT_MS = 120000;
+const UPLOAD_JUNK = /\b(2160p|1080p|720p|480p|4k|uhd|bluray|blu-ray|brrip|bdrip|web-?dl|webrip|hdtv|dvdrip|x26[45]|h\.?26[45]|hevc|aac|ac3|dts|german|deutsch|dl|multi|remux)\b/i;
+
+const upload = { targets: [], items: [], running: false, open: false, wakeLock: null };
+
+function formatBytes(bytes) {
+  const decimal = (value) => value.toFixed(1).replace(".", ",");
+  if (bytes >= 1024 ** 4) return `${decimal(bytes / 1024 ** 4)} TB`;
+  if (bytes >= 1024 ** 3) return `${decimal(bytes / 1024 ** 3)} GB`;
+  if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+function formatEta(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "";
+  if (seconds < 60) return "noch < 1 Min";
+  if (seconds < 3600) return `noch ${Math.round(seconds / 60)} Min`;
+  return `noch ${Math.floor(seconds / 3600)} Std ${Math.round((seconds % 3600) / 60)} Min`;
+}
+
+// "The.Matrix.1999.1080p.BluRay.x264.mkv" -> Film "The Matrix", 1999
+// "Dark.S02E05.German.720p.mkv"         -> Serie "Dark", Staffel 2
+function guessFromName(filename) {
+  let base = filename.replace(/\.[^.]+$/, "").replace(/[._]+/g, " ").replace(/\s+/g, " ").trim();
+  const episode = base.match(/\bS(\d{1,2})\s?E\d{1,3}\b/i) || base.match(/\b(\d{1,2})x\d{2}\b/);
+  if (episode) {
+    const series = base.slice(0, episode.index).replace(/[-–(\[]+\s*$/, "").trim();
+    return { kind: "tvshows", series: series || base, season: Number(episode[1]), title: base, year: "" };
+  }
+  const junk = base.search(UPLOAD_JUNK);
+  if (junk > 0) base = base.slice(0, junk).trim();
+  const year = base.match(/[(\[]?\b(19\d\d|20\d\d)\b[)\]]?/);
+  let title = year && year.index > 0 ? base.slice(0, year.index) : base;
+  title = title.replace(/[-–(\[]+\s*$/, "").trim() || base;
+  return { kind: "movies", title, year: year ? year[1] : "", series: title, season: 1 };
+}
+
+function uploadTarget(kind) {
+  return upload.targets.find((t) => t.kind === kind);
+}
+
+async function loadUploadTargets() {
+  try {
+    const data = await api.get("/api/remote/jellyfin/upload/targets");
+    upload.targets = data.targets || [];
+    $("up-free").textContent = data.free_bytes ? `${formatBytes(data.free_bytes)} frei auf der Platte` : "";
+  } catch (err) {
+    $("up-free").textContent = err.message;
+  }
+}
+
+function openUpload() {
+  upload.open = true;
+  $("up-backdrop").classList.remove("hidden");
+  $("up-sheet").classList.add("open");
+  $("up-sheet").setAttribute("aria-hidden", "false");
+  loadUploadTargets();
+  renderUploads();
+}
+
+function closeUpload() {
+  if (!upload.open) return;
+  upload.open = false;
+  $("up-sheet").classList.remove("open");
+  $("up-sheet").setAttribute("aria-hidden", "true");
+  $("up-backdrop").classList.add("hidden");
+}
+
+onTap($("up-open"), () => openUpload());
+onTap($("up-close"), () => closeUpload());
+$("up-backdrop").addEventListener("click", closeUpload);
+
+$("up-input").addEventListener("change", () => {
+  const files = [...$("up-input").files];
+  $("up-input").value = "";
+  for (const file of files) {
+    upload.items.push({ file, status: "ready", received: 0, ...guessFromName(file.name) });
+  }
+  renderUploads();
+});
+
+function uploadField(item, key, placeholder, props = {}) {
+  const input = h("input", { placeholder, autocomplete: "off", ...props });
+  input.value = item[key] ?? "";
+  input.addEventListener("input", () => {
+    item[key] = input.value;
+  });
+  return input;
+}
+
+function uploadItemView(item, index) {
+  const busy = item.status === "uploading";
+  const head = h(
+    "div",
+    { class: "up-item-head" },
+    h("div", { class: "up-item-name" }, item.file.name),
+    h("div", { class: "up-item-size" }, formatBytes(item.file.size)),
+    busy || item.status === "done"
+      ? null
+      : h(
+          "button",
+          {
+            class: "up-remove",
+            type: "button",
+            "aria-label": "Entfernen",
+            onclick: () => {
+              if (item.id && item.status !== "done") api.del(`/api/remote/jellyfin/upload/${item.id}`).catch(() => {});
+              upload.items.splice(index, 1);
+              renderUploads();
+            },
+          },
+          icon("close")
+        )
+  );
+  const children = [head];
+
+  if (item.status === "ready" || item.status === "error") {
+    children.push(
+      h(
+        "div",
+        { class: "up-kind" },
+        ...[
+          ["movies", "Film"],
+          ["tvshows", "Serie"],
+        ].map(([kind, label]) =>
+          h(
+            "button",
+            {
+              type: "button",
+              class: item.kind === kind ? "active" : "",
+              onclick: () => {
+                item.kind = kind;
+                renderUploads();
+              },
+            },
+            label
+          )
+        )
+      )
+    );
+    children.push(
+      item.kind === "movies"
+        ? h("div", { class: "up-fields" }, uploadField(item, "title", "Filmtitel"), uploadField(item, "year", "Jahr", { inputmode: "numeric", maxlength: "4" }))
+        : h("div", { class: "up-fields" }, uploadField(item, "series", "Serie"), uploadField(item, "season", "Staffel", { inputmode: "numeric", maxlength: "2" }))
+    );
+  }
+
+  if (item.status !== "ready") {
+    const fraction = item.file.size ? item.received / item.file.size : 0;
+    const bar = h("div", { class: "up-bar" }, h("span", { style: `width:${(fraction * 100).toFixed(1)}%` }));
+    let left = `${Math.floor(fraction * 100)} %`;
+    let right = "";
+    if (item.status === "uploading") right = [item.speed ? `${formatBytes(item.speed)}/s` : "", formatEta(item.eta)].filter(Boolean).join(" · ");
+    if (item.status === "queued") left = "Wartet …";
+    if (item.status === "finishing") left = "Wird in Jellyfin eingetragen …";
+    if (item.status === "done") left = `✓ In Jellyfin: ${item.result.name}`;
+    if (item.status === "error") left = item.message;
+    if (item.status !== "done") children.push(bar);
+    children.push(h("div", { class: "up-status" }, h("span", null, left), h("span", null, right)));
+    if (item.status === "done" && item.result.warning) children.push(h("div", { class: "up-warning" }, item.result.warning));
+  }
+  return h("div", { class: `up-item ${item.status}` }, ...children);
+}
+
+function renderUploads() {
+  $("up-open").classList.toggle("busy", upload.running);
+  if (!upload.open) return;
+  $("up-list").replaceChildren(...upload.items.map(uploadItemView));
+  const waiting = upload.items.filter((i) => i.status === "ready" || i.status === "error").length;
+  $("up-start").classList.toggle("hidden", !waiting || upload.running);
+  $("up-start-label").textContent = waiting > 1 ? `${waiting} Dateien hochladen` : "Hochladen";
+}
+
+async function putChunk(id, offset, blob) {
+  const headers = { "Content-Type": "application/octet-stream" };
+  const secret = getSecret();
+  if (secret) headers["X-Remote-Secret"] = secret;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPLOAD_CHUNK_TIMEOUT_MS);
+  try {
+    const resp = await fetch(`/api/remote/jellyfin/upload/${id}?offset=${offset}`, {
+      method: "PUT",
+      headers,
+      body: blob,
+      signal: controller.signal,
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const err = new Error(data.detail || `Fehler ${resp.status}`);
+      err.fatal = resp.status === 400;
+      throw err;
+    }
+    return data.received;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function uploadOne(item) {
+  const target = uploadTarget(item.kind);
+  if (!target) throw new Error("Jellyfin-Bibliothek nicht gefunden");
+  const started = await api.post("/api/remote/jellyfin/upload", {
+    target: target.id,
+    filename: item.file.name,
+    size: item.file.size,
+    modified: item.file.lastModified,
+    title: item.title,
+    year: item.year,
+    series: item.series,
+    season: item.season,
+  });
+  item.id = started.id;
+  item.received = started.received;
+  item.status = "uploading";
+  renderUploads();
+
+  let retries = 0;
+  let windowStart = performance.now();
+  let windowBytes = 0;
+  while (item.received < item.file.size) {
+    const end = Math.min(item.file.size, item.received + UPLOAD_CHUNK_BYTES);
+    const before = item.received;
+    try {
+      item.received = await putChunk(item.id, item.received, item.file.slice(item.received, end));
+      retries = 0;
+    } catch (err) {
+      if (err.fatal || ++retries > UPLOAD_MAX_RETRIES) throw err;
+      await sleep(1500 * retries);
+      continue;
+    }
+    windowBytes += Math.max(0, item.received - before);
+    const elapsed = (performance.now() - windowStart) / 1000;
+    if (elapsed >= 2) {
+      item.speed = windowBytes / elapsed;
+      item.eta = (item.file.size - item.received) / item.speed;
+      windowStart = performance.now();
+      windowBytes = 0;
+    }
+    renderUploads();
+  }
+
+  item.status = "finishing";
+  renderUploads();
+  item.result = await api.post(`/api/remote/jellyfin/upload/${item.id}/finish`);
+  item.status = "done";
+}
+
+async function keepAwake(on) {
+  try {
+    if (on && !upload.wakeLock && navigator.wakeLock) upload.wakeLock = await navigator.wakeLock.request("screen");
+    if (!on && upload.wakeLock) {
+      await upload.wakeLock.release();
+      upload.wakeLock = null;
+    }
+  } catch (err) {
+    // Bildschirmsperre nicht verfuegbar - dann eben ohne
+  }
+}
+
+async function runUploads() {
+  if (upload.running) return;
+  if (!upload.targets.length) await loadUploadTargets();
+  document.activeElement.blur();
+  upload.items.forEach((i) => {
+    if (i.status === "ready" || i.status === "error") i.status = "queued";
+  });
+  upload.running = true;
+  keepAwake(true);
+  renderUploads();
+  let done = 0;
+  for (const item of upload.items) {
+    if (item.status !== "queued") continue;
+    try {
+      await uploadOne(item);
+      done += 1;
+    } catch (err) {
+      item.status = "error";
+      item.message = err.message || "Upload fehlgeschlagen";
+    }
+    renderUploads();
+  }
+  upload.running = false;
+  keepAwake(false);
+  renderUploads();
+  loadUploadTargets();
+  if (done) {
+    toast(done === 1 ? "Upload fertig – Jellyfin liest die Datei ein" : `${done} Uploads fertig – Jellyfin liest sie ein`);
+    // Neue Filme erscheinen nach dem Einlesen (dauert ein paar Sekunden)
+    setTimeout(() => {
+      if (currentView === "jellyfin") jellyfinLoadHome();
+    }, 8000);
+  }
+}
+
+onTap($("up-start"), () => runUploads());
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && upload.running) keepAwake(true);
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (upload.running) event.preventDefault();
+});
+
 // ---------- Radio ----------
 
 let stations = [];

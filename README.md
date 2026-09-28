@@ -184,6 +184,14 @@ Aufbau wie ein Tablet-Homescreen:
   Kiosk; die Position wird alle 15 s und beim Pausieren/Stoppen in Jellyfin
   gespeichert (Weiterschauen funktioniert also auch in den anderen
   Jellyfin-Apps). Ab ~92 % gilt ein Film als gesehen.
+  **Hochladen** (Knopf oben rechts in der Jellyfin-App): Filme oder
+  Serienfolgen vom Handy/iPad/PC direkt auf die Jellyfin-Platte, ohne sie
+  abzuziehen. Titel/Jahr bzw. Serie/Staffel werden aus dem Dateinamen
+  vorgeschlagen; abgelegt wird als `Filme/Titel (Jahr).ext` bzw.
+  `Serien/Serie/Staffel NN/<Datei>`. Übertragen wird in 8-MB-Stücken –
+  bricht es ab, dieselbe Datei erneut wählen, dann geht es an der Stelle
+  weiter. Danach liest Jellyfin die Bibliothek neu ein; Formate, die der
+  Fernseher nicht direkt kann (z. B. HEVC), werden angemerkt.
 - **YouTube-App**: Link einfügen und abspielen (Stopp-Knopf als "×" im
   Eingabefeld), Now-Playing-Karte mit Thumbnail, Titel und scrubbarem
   Fortschrittsbalken, 10s zurück/vor sowie ein Pause/Weiter-Knopf.

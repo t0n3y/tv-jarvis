@@ -37,6 +37,7 @@ from app import (
     audio_control,
     jellyfin_client,
     kiosk_media,
+    media_upload,
     radio,
     radio_stations,
     schedule_store,
@@ -598,6 +599,53 @@ async def jellyfin_stream(item_id: str, request: Request) -> StreamingResponse:
         headers=passthrough,
         background=BackgroundTask(upstream.aclose),
     )
+
+
+# ---------- Jellyfin: Upload auf die Platte ----------
+# Chunks von der Fernbedienung (siehe app/media_upload.py) - Filme sind
+# mehrere GB gross, ein einzelner Request waere weder robust noch
+# fortsetzbar.
+
+async def _upload(fn, *args):
+    try:
+        return await asyncio.to_thread(fn, *args)
+    except media_upload.UploadError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except jellyfin_client.JellyfinError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except OSError as exc:
+        logger.warning("Upload: Dateifehler %s", exc)
+        raise HTTPException(status_code=500, detail="Schreiben auf die Platte fehlgeschlagen – ist sie eingehängt?") from exc
+
+
+@app.get("/api/remote/jellyfin/upload/targets", dependencies=[Depends(require_remote_secret)])
+async def upload_targets() -> dict:
+    cfg = get_config()
+    found = await _upload(media_upload.targets, cfg)
+    free = await _upload(media_upload.free_bytes, cfg)
+    return {"targets": [{k: t[k] for k in ("id", "name", "kind")} for t in found], "free_bytes": free}
+
+
+@app.post("/api/remote/jellyfin/upload", dependencies=[Depends(require_remote_secret)])
+async def upload_start(request: Request) -> dict:
+    return await _upload(media_upload.start, get_config(), await request.json())
+
+
+@app.put("/api/remote/jellyfin/upload/{upload_id}", dependencies=[Depends(require_remote_secret)])
+async def upload_chunk(upload_id: str, request: Request, offset: int = Query(ge=0)) -> dict:
+    chunk = await request.body()
+    return {"received": await _upload(media_upload.append, upload_id, offset, chunk)}
+
+
+@app.post("/api/remote/jellyfin/upload/{upload_id}/finish", dependencies=[Depends(require_remote_secret)])
+async def upload_finish(upload_id: str) -> dict:
+    return await _upload(media_upload.finish, get_config(), upload_id)
+
+
+@app.delete("/api/remote/jellyfin/upload/{upload_id}", dependencies=[Depends(require_remote_secret)])
+async def upload_cancel(upload_id: str) -> dict:
+    await _upload(media_upload.cancel, upload_id)
+    return {"ok": True}
 
 
 # ---------- Radio ----------
