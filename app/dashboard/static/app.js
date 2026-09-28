@@ -966,6 +966,9 @@ function connectWebSocket() {
       const msg = JSON.parse(event.data);
       if (msg.type === "shutdown") {
         playShutdownAnimation();
+      } else if (msg.type === "state_updated") {
+        // Neue Daten (z.B. ToDos vom iPhone) sofort zeigen
+        refreshState();
       } else if (msg.type && msg.type.startsWith("youtube_")) {
         handleYoutubeMessage(msg);
       } else if (msg.type && msg.type.startsWith("jellyfin_")) {

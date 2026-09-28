@@ -358,6 +358,11 @@ async def todos_webhook(
     items = todos_icloud_shortcut.parse_note(raw_text, str(body.get("title") or ""))
 
     todos_icloud_shortcut.write_todos_cache(cfg.todos.cache_file, items)
+    # Letzte Rohdaten behalten - zur Fehlersuche, falls Punkte fehlen
+    TODOS_LAST_PAYLOAD.write_bytes(raw)
+    # Sofort auf den Fernseher, nicht erst beim naechsten Refresh
+    await asyncio.to_thread(_patch_state_todos)
+    await manager.broadcast({"type": "state_updated"})
     logger.info("ToDos aktualisiert (%d Eintraege)", len(items))
     return {"ok": True, "count": len(items)}
 
@@ -960,7 +965,8 @@ async def set_light(request: Request) -> dict:
 # bei einem Netzaussetzer genau zur Weckzeit) blieben die Panels tagelang alt
 # oder leer. Jetzt aktualisiert der Dienst sie selbst.
 
-DASHBOARD_REFRESH_SECONDS = 10 * 60
+DASHBOARD_REFRESH_SECONDS = 5 * 60
+TODOS_LAST_PAYLOAD = ROOT_DIR / "data" / "todos_last_payload.txt"
 DASHBOARD_RETRY_SECONDS = 60
 
 
@@ -975,13 +981,37 @@ def _refresh_dashboard_state() -> bool:
     return briefing.weather is not None
 
 
+def _patch_state_todos() -> None:
+    """Nur die ToDos in state.json austauschen (schnell, ohne Kalender/IServ
+    neu abzufragen) - fuer den Webhook des iPhone-Kurzbefehls."""
+    cfg = get_config()
+    try:
+        state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    entries = todos_icloud_shortcut.get_entries(cfg)
+    state["todo_entries"] = entries
+    state["todos"] = [e["text"] for e in entries if not e["done"]]
+    state["not_configured"] = [s for s in state.get("not_configured", []) if s != "ToDos"]
+    tmp = STATE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(STATE_FILE)
+
+
+async def _refresh_and_push() -> bool:
+    """Alles neu abfragen und den Kiosk sofort neu zeichnen lassen."""
+    try:
+        ok = await asyncio.to_thread(_refresh_dashboard_state)
+    except Exception:  # noqa: BLE001 - der Loop darf nie sterben
+        logger.exception("Dashboard-Daten konnten nicht aktualisiert werden")
+        ok = False
+    await manager.broadcast({"type": "state_updated"})
+    return ok
+
+
 async def _dashboard_refresh_loop() -> None:
     while True:
-        try:
-            ok = await asyncio.to_thread(_refresh_dashboard_state)
-        except Exception:  # noqa: BLE001 - der Loop darf nie sterben
-            logger.exception("Dashboard-Daten konnten nicht aktualisiert werden")
-            ok = False
+        ok = await _refresh_and_push()
         # Nach einem Fehler (z.B. WLAN noch nicht da) bald erneut versuchen
         await asyncio.sleep(DASHBOARD_REFRESH_SECONDS if ok else DASHBOARD_RETRY_SECONDS)
 
@@ -1004,7 +1034,7 @@ async def set_school(request: Request) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     # Vertretungsplan auf dem Fernseher gleich mit den neuen Kursen zeigen
-    _spawn(asyncio.to_thread(_refresh_dashboard_state))
+    _spawn(_refresh_and_push())
     return await asyncio.to_thread(school_settings.load, get_config())
 
 

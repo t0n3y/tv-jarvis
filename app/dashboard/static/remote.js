@@ -2335,6 +2335,10 @@ async function saveCourses(next) {
 
 function addCourse() {
   const input = $("course-input");
+  if (!input.value.trim()) {
+    toast("Bitte zuerst einen Kurs eingeben (z. B. BI G1)", true);
+    return;
+  }
   // Mehrere auf einmal: "BI G1, D G2"
   const added = input.value
     .split(/[,;\n]+/)
@@ -2345,12 +2349,10 @@ function addCourse() {
   saveCourses([...courses, ...added.filter((c) => !courses.includes(c))]);
 }
 
-onTap($("course-add"), () => addCourse());
-$("course-input").addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    addCourse();
-  }
+// Formular: "Hinzufuegen" und "Fertig"/Enter auf der Tastatur loesen beide aus
+$("course-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  addCourse();
 });
 
 async function loadSettings() {
@@ -2505,6 +2507,17 @@ async function loadInfo() {
     toast(err.message, true);
   }
 }
+
+// Beim Tippen die schwebende Steuerleiste ausblenden - auf dem iPhone liegt
+// sie bei offener Tastatur sonst ueber Knoepfen wie "Hinzufuegen".
+document.addEventListener("focusin", (event) => {
+  if (event.target.matches("input, textarea")) document.body.classList.add("typing");
+});
+document.addEventListener("focusout", () => {
+  setTimeout(() => {
+    if (!document.activeElement || !document.activeElement.matches("input, textarea")) document.body.classList.remove("typing");
+  }, 100);
+});
 
 history.replaceState({ view: "home" }, "");
 updateClock();

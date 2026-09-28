@@ -1203,6 +1203,10 @@ button {
 .station-delete:active { background: rgba(255, 93, 115, 0.25); color: var(--danger); }
 .station-delete .icon { width: 19px; height: 19px; }
 
+/* Waehrend eine Tastatur offen ist, ist das Dock im Weg */
+body.typing .dock,
+body.typing .volume-hud { display: none; }
+
 /* ---------- Einstellungen: Schule ---------- */
 
 .course-chips { display: flex; flex-wrap: wrap; gap: 8px; }
