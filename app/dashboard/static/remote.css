@@ -1209,7 +1209,39 @@ body.typing .volume-hud { display: none; }
 
 /* ---------- Einstellungen: Schule ---------- */
 
-.course-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.course-chips { display: flex; flex-direction: column; gap: 8px; }
+
+.course-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+
+.course-edit {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 14px;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--text);
+  text-align: left;
+}
+
+.course-code { font: 700 16px var(--font-display); letter-spacing: 0.5px; white-space: nowrap; }
+.course-name { font-size: 15px; font-weight: 600; color: var(--text-2, var(--text)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.course-name.missing { color: var(--text-3); font-style: italic; }
+
+.course-remove {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-3);
+}
+
+.course-remove .icon { width: 16px; height: 16px; }
+.course-remove:active { background: rgba(255, 93, 115, 0.2); border-color: rgba(255, 93, 115, 0.5); }
 
 .course-chip {
   display: inline-flex;
@@ -1229,7 +1261,7 @@ body.typing .volume-hud { display: none; }
 
 .course-empty { font-size: 15px; font-weight: 600; color: var(--text-3); }
 
-.course-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.course-add { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .course-add .btn { min-height: 54px; padding: 0 16px; }
 
 /* ---------- Dock (immer sichtbar) ---------- */

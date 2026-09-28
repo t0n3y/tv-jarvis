@@ -419,16 +419,19 @@
       </div>
     </div>
     <button class="btn btn-primary btn-block" id="btn-schedule-save"><svg class="icon"><use href="#i-check"/></svg>Zeitplan speichern</button>
+    <button class="btn btn-ghost btn-block" id="btn-wake-test"><svg class="icon"><use href="#i-alarm"/></svg>Wecker jetzt testen</button>
+    <p class="hint">Startet sofort einen ganz normalen Weckvorgang: Fernseher an, Briefing vorlesen, danach Radio.</p>
 
     <div class="section-label">Schule</div>
     <div class="card stack">
       <div class="kicker" id="school-kicker">Meine Kurse</div>
       <div class="course-chips" id="course-chips"></div>
       <form class="course-add" id="course-form" autocomplete="off">
-        <label class="field"><input id="course-input" type="text" placeholder="z. B. BI G1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" /></label>
+        <label class="field"><input id="course-input" type="text" placeholder="Kurs, z. B. PA G1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="next" /></label>
+        <label class="field"><input id="course-name" type="text" placeholder="Fach, z. B. Pädagogik" autocomplete="off" autocapitalize="words" enterkeyhint="done" /></label>
         <button class="btn btn-ghost" id="course-add" type="submit"><svg class="icon"><use href="#i-plus"/></svg>Hinzufügen</button>
       </form>
-      <p class="hint">Kurse so eintragen, wie sie im Vertretungsplan in der Spalte „Fach“ stehen (z. B. „BI G1“, „D G2“, „PPLP1“). Ohne Kurse zeigt das Dashboard alle Änderungen deiner Stufe.</p>
+      <p class="hint">Kurs so eintragen, wie er im Vertretungsplan in der Spalte „Fach“ steht (z. B. „PA G1“), dazu das Fach dahinter – das nennt die Wecker-Stimme dann beim Namen. Zum Ändern auf einen Kurs tippen. Ohne Kurse zeigt das Dashboard alle Änderungen deiner Stufe.</p>
     </div>
 
     <div class="section-label">Radiosender</div>

@@ -249,7 +249,7 @@ function renderPlan(state) {
   renderList(el, plan, (p) => {
     const cancelled = /entfall/i.test(p.kind || "");
     const kind = PLAN_KIND_SHORT[(p.kind || "").toLowerCase()] || p.kind;
-    const title = [p.subject, kind].filter(Boolean).join(" · ");
+    const title = [p.subject_name || p.subject, kind].filter(Boolean).join(" · ");
     const sub = [p.room ? `Raum ${p.room}` : "", p.note].filter(Boolean).join(" · ");
     const note = sub ? `<span class="note">${esc(sub)}</span>` : "";
     return `<li class="${cancelled ? "cancelled" : ""}"><span class="time">${esc(p.lesson || "–")}</span><span class="item-text">${esc(title)}${note}</span></li>`;

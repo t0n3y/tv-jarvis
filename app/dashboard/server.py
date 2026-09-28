@@ -1030,7 +1030,7 @@ async def get_school() -> dict:
 async def set_school(request: Request) -> dict:
     body = await request.json()
     try:
-        await asyncio.to_thread(school_settings.save_courses, body.get("kurse"))
+        await asyncio.to_thread(school_settings.save_courses, body.get("kurse"), body.get("faecher"))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     # Vertretungsplan auf dem Fernseher gleich mit den neuen Kursen zeigen
@@ -1229,6 +1229,35 @@ async def set_schedule(request: Request) -> dict:
         return await asyncio.to_thread(schedule_store.save_schedule, body)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+wake_test = {"running": False}
+
+
+@app.post("/api/remote/schedule/test", dependencies=[Depends(require_remote_secret)])
+async def test_wake() -> dict:
+    """Wecker sofort ausloesen - genau wie zur Weckzeit (Fernseher an,
+    Briefing vorlesen, danach Radio)."""
+    if wake_test["running"]:
+        raise HTTPException(status_code=409, detail="Der Wecker-Test läuft schon")
+    from app.routines import morning_routine
+
+    loop = asyncio.get_running_loop()
+
+    def push_state() -> None:
+        asyncio.run_coroutine_threadsafe(manager.broadcast({"type": "state_updated"}), loop)
+
+    async def run() -> None:
+        wake_test["running"] = True
+        try:
+            await asyncio.to_thread(morning_routine.main, push_state)
+        except Exception:  # noqa: BLE001
+            logger.exception("Wecker-Test fehlgeschlagen")
+        finally:
+            wake_test["running"] = False
+
+    _spawn(run())
+    return {"ok": True}
 
 
 # ---------- WebSocket zum Kiosk ----------

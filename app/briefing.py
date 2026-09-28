@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Callable
 
+from app import school_settings, speech_de as sp
 from app.config import Config
 from app.sources import calendar_google, calendar_icloud, iserv, todos, weather
 from app.sources.calendar_common import CalendarEvent, dedupe_and_sort
@@ -108,40 +109,80 @@ def _format_event(ev: CalendarEvent) -> dict[str, Any]:
     }
 
 
+# Sprechtext: ein Satz pro Zeile, Leerzeile zwischen Abschnitten - app/tts.py
+# macht daraus kurze bzw. laengere Pausen.
+
+
 def _speech_for_events(events: list[dict[str, Any]]) -> str:
     if not events:
         return "Heute stehen keine Termine in deinem Kalender."
-    parts = [f"{e['title']} um {e['time_label']}" if not e["all_day"] else e["title"] for e in events]
-    return "Deine Termine heute: " + "; ".join(parts) + "."
+    lines = [sp.sentence(f"Du hast heute {sp.count_word(len(events))} {'Termin' if len(events) == 1 else 'Termine'}")]
+    for e in events:
+        title = sp.times_in_text(e["title"])
+        if e["all_day"]:
+            lines.append(sp.sentence(f"Den ganzen Tag: {title}"))
+        else:
+            lines.append(sp.sentence(f"Um {sp.spoken_time(e['time_label'])}: {title}"))
+    return "\n".join(lines)
 
 
 def _speech_for_weather(w: dict[str, Any] | None) -> str:
     if not w:
         return "Für das Wetter liegen gerade keine Daten vor."
-    return (
-        f"Das Wetter: {w['description']}, aktuell {w['temp_current']:.0f} Grad, "
-        f"heute zwischen {w['temp_min']:.0f} und {w['temp_max']:.0f} Grad, "
-        f"Regenwahrscheinlichkeit {w['precipitation_probability']} Prozent."
-    )
+    rain = int(w["precipitation_probability"] or 0)
+    lines = [
+        sp.sentence(f"Das Wetter: {w['description']}, aktuell {w['temp_current']:.0f} Grad"),
+        sp.sentence(f"Heute werden es zwischen {w['temp_min']:.0f} und {w['temp_max']:.0f} Grad"),
+    ]
+    if rain >= 60:
+        lines.append(f"Die Regenwahrscheinlichkeit liegt bei {rain} Prozent, nimm besser einen Schirm mit.")
+    elif rain >= 25:
+        lines.append(f"Die Regenwahrscheinlichkeit liegt bei {rain} Prozent.")
+    else:
+        lines.append("Regen ist nicht zu erwarten.")
+    return "\n".join(lines)
 
 
-def _speech_for_plan(plan: list[dict[str, Any]], is_school_day: bool) -> str:
+def _plan_sentence(p: dict[str, Any]) -> str:
+    subject = p.get("subject_name") or p.get("subject") or "ein Kurs"
+    when = sp.lesson_phrase(p.get("lesson", ""))
+    kind = (p.get("kind") or "").strip()
+    lk = kind.lower()
+    room = p.get("room") or ""
+    lead = when[0].upper() + when[1:] if when else "Heute"
+    if lk == "entfall":
+        text = f"{lead} fällt {subject} aus"
+        if p.get("note"):
+            text += f", {p['note']}"
+    elif "raum" in lk:
+        text = f"{lead} ist {subject} in Raum {room}" if room else f"{lead} ist {subject} in einem anderen Raum"
+    elif "verleg" in lk or "tausch" in lk:
+        text = f"{lead} wird {subject} verlegt"
+    elif "vertretung" in lk or not lk:
+        text = f"{lead} wird {subject} vertreten" + (f", in Raum {room}" if room else "")
+    else:
+        text = f"{lead}, {subject}: {kind}"
+    return sp.sentence(sp.times_in_text(text))
+
+
+def _speech_for_plan(plan: list[dict[str, Any]], is_school_day: bool, today: date) -> str:
     if not is_school_day:
         return ""
-    if not plan:
-        return "Im Vertretungsplan gibt es heute keine Änderungen."
-    parts = [
-        f"{p['lesson']}: {p['subject']}" + (f" in {p['room']}" if p["room"] else "") +
-        (f", {p['note']}" if p["note"] else "")
-        for p in plan
-    ]
-    return "Vertretungsplan: " + "; ".join(parts) + "."
+    # Nur der Plan fuer heute - morgens liegt oft schon der fuer morgen vor
+    todays = [p for p in plan if (p.get("date") == today.isoformat() if p.get("date") else p.get("day") in ("", "Heute"))]
+    if not todays:
+        return "Im Vertretungsplan gibt es für dich heute keine Änderungen."
+    head = "Im Vertretungsplan gibt es heute eine Änderung für dich." if len(todays) == 1 else \
+        f"Im Vertretungsplan gibt es heute {sp.count_word(len(todays))} Änderungen für dich."
+    return "\n".join([head, *(_plan_sentence(p) for p in todays)])
 
 
 def _speech_for_todos(items: list[str]) -> str:
     if not items:
-        return "Für heute sind keine ToDos eingetragen."
-    return "Deine ToDos heute: " + "; ".join(items) + "."
+        return "Auf deiner Liste steht heute nichts."
+    head = "Auf deiner Liste steht eine Aufgabe." if len(items) == 1 else \
+        f"Auf deiner Liste stehen {sp.count_word(len(items))} Aufgaben."
+    return "\n".join([head, *(sp.sentence(sp.times_in_text(i)) for i in items)])
 
 
 def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
@@ -183,16 +224,19 @@ def build_briefing(cfg: Config, today: date | None = None) -> BriefingData:
     weather_dict = asdict(weather_data) if weather_data else None
     events_list = [_format_event(e) for e in all_events]
     plan_list = [asdict(p) for p in substitution_plan]
+    names = school_settings.subject_names(cfg)
+    for p in plan_list:
+        p["subject_name"] = school_settings.subject_name(names, p["subject"])
 
     greeting = "Guten Morgen!" if iso_weekday < 6 else "Schönen guten Morgen!"
-    speech = " ".join(
+    speech = "\n\n".join(
         filter(
             None,
             [
-                f"{greeting} Heute ist {WEEKDAY_NAMES_DE[iso_weekday - 1]}, der {today.strftime('%d.%m.%Y')}.",
+                f"{greeting}\nHeute ist {WEEKDAY_NAMES_DE[iso_weekday - 1]}, der {sp.spoken_date(today.day, today.month)}.",
                 _speech_for_weather(weather_dict),
                 _speech_for_events(events_list),
-                _speech_for_plan(plan_list, is_school_day),
+                _speech_for_plan(plan_list, is_school_day, today),
                 _speech_for_todos(todo_items),
                 "Ich wünsche dir einen schönen Tag!",
             ],

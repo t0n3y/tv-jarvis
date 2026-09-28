@@ -2292,11 +2292,13 @@ buildSwatches();
 // ---------- Einstellungen: Schule (Kurse fuer den Vertretungsplan) ----------
 
 let courses = [];
+let subjectNames = {};
 
 async function loadSchool() {
   try {
     const data = await api.get("/api/remote/school");
     courses = data.kurse || [];
+    subjectNames = data.faecher || {};
     $("school-kicker").textContent = data.klasse ? `Meine Kurse · ${data.klasse}` : "Meine Kurse";
     renderCourses();
   } catch (err) {
@@ -2313,22 +2315,38 @@ function renderCourses() {
   box.replaceChildren(
     ...courses.map((course) =>
       h(
-        "button",
-        { class: "course-chip", type: "button", "aria-label": `${course} entfernen`, onclick: () => saveCourses(courses.filter((c) => c !== course)) },
-        course,
-        icon("close")
+        "div",
+        { class: "course-row" },
+        h(
+          "button",
+          { class: "course-edit", type: "button", "aria-label": `${course} bearbeiten`, onclick: () => editCourse(course) },
+          h("span", { class: "course-code" }, course),
+          h("span", { class: subjectNames[course] ? "course-name" : "course-name missing" }, subjectNames[course] || "Fach fehlt")
+        ),
+        h(
+          "button",
+          { class: "course-remove", type: "button", "aria-label": `${course} entfernen`, onclick: () => saveCourses(courses.filter((c) => c !== course), subjectNames) },
+          icon("close")
+        )
       )
     )
   );
 }
 
-async function saveCourses(next) {
-  const data = await api.post("/api/remote/school", { kurse: next }).catch((err) => {
+function editCourse(course) {
+  $("course-input").value = course;
+  $("course-name").value = subjectNames[course] || "";
+  $("course-name").focus();
+}
+
+async function saveCourses(next, names) {
+  const data = await api.post("/api/remote/school", { kurse: next, faecher: names }).catch((err) => {
     toast(err.message, true);
     return null;
   });
   if (!data) return;
   courses = data.kurse || [];
+  subjectNames = data.faecher || {};
   renderCourses();
   toast("Kurse gespeichert – der Fernseher aktualisiert gleich");
 }
@@ -2345,14 +2363,29 @@ function addCourse() {
     .map((c) => c.trim().replace(/\s+/g, " ").toUpperCase())
     .filter(Boolean);
   if (!added.length) return;
+  const name = $("course-name").value.trim().replace(/\s+/g, " ");
+  const names = { ...subjectNames };
+  // Fach nur bei einem einzelnen Kurs zuordnen; leer lassen behaelt das alte
+  if (name && added.length === 1) names[added[0]] = name;
   input.value = "";
-  saveCourses([...courses, ...added.filter((c) => !courses.includes(c))]);
+  $("course-name").value = "";
+  document.activeElement?.blur();
+  saveCourses([...courses, ...added.filter((c) => !courses.includes(c))], names);
 }
 
 // Formular: "Hinzufuegen" und "Fertig"/Enter auf der Tastatur loesen beide aus
 $("course-form").addEventListener("submit", (event) => {
   event.preventDefault();
   addCourse();
+});
+
+onTap($("btn-wake-test"), async () => {
+  try {
+    await api.post("/api/remote/schedule/test", {});
+    toast("Wecker-Test läuft – gleich geht der Fernseher an");
+  } catch (err) {
+    toast(err.message, true);
+  }
 });
 
 async function loadSettings() {
