@@ -273,7 +273,13 @@ header {
 }
 
 .side-stack .panel { flex: 1; }
-.side-stack .plan-panel { flex: 1.7; }
+.side-stack .plan-panel { flex: 1.3; }
+
+/* Kalender rechts unten: kompakte Zeilen */
+.side-stack .calendar-panel .list { gap: 0.8vh; }
+.side-stack .calendar-panel .list li { min-height: 5.2vh; padding: 0.7vh 1.4vh; font-size: 2.6vh; }
+.side-stack .calendar-panel .list li .item-text { -webkit-line-clamp: 1; }
+.side-stack .calendar-panel .list .time { min-width: 8vh; font-size: 2vh; }
 
 /* Vertretungsplan: viele kurze Eintraege -> kompakter */
 .plan-panel .list { gap: 0.8vh; }
