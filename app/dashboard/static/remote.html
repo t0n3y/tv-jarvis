@@ -49,6 +49,8 @@
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6.5 5.5v13" /><path d="M18 5.8v12.4L8.8 12z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="M17.5 5.5v13" /><path d="M6 5.8v12.4L15.2 12z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.8h5M12 2.8V6M18.2 7.3l1.4-1.4"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.8" y="4.5" width="18.4" height="12.5" rx="2.2"/><path d="M8.5 20.2h7M12 17v3.2"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
@@ -61,6 +63,7 @@
     <span class="reactor" aria-hidden="true"></span>
     <span class="wordmark">JARVIS</span>
   </div>
+  <button class="timer-pill hidden" id="timer-pill" type="button" aria-label="Timer öffnen"><svg class="icon"><use href="#i-timer"/></svg><span id="timer-pill-time">0:00</span></button>
   <div class="status-pill" id="tv-pill">
     <span class="status-dot"></span><span id="tv-pill-label">TV aus</span>
   </div>
@@ -114,6 +117,10 @@
       <button class="app-tile" data-open="vinyl" style="--app-rgb: 255, 107, 61">
         <span class="app-icon"><svg class="icon"><use href="#i-vinyl"/></svg></span>
         <span class="app-name">Platten</span>
+      </button>
+      <button class="app-tile" data-open="clock" style="--app-rgb: 120, 230, 190">
+        <span class="app-icon"><svg class="icon"><use href="#i-timer"/></svg></span>
+        <span class="app-name">Uhr</span>
       </button>
       <button class="app-tile" data-open="light" style="--app-rgb: 255, 176, 59">
         <span class="app-icon"><svg class="icon"><use href="#i-sun"/></svg></span>
@@ -271,6 +278,52 @@
     <button class="retro-btn retro-btn-ghost" id="vy-new-cabinet"><svg class="icon"><use href="#i-plus"/></svg>Neuen Schrank bauen</button>
   </section>
 
+  <!-- ================= Uhr & Timer ================= -->
+  <section class="view hidden" id="view-clock">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Uhr</h1>
+    </div>
+
+    <div class="card clock-hero">
+      <div class="clock-big"><span id="ck-hm">--:--</span><span class="clock-sec" id="ck-sec">--</span></div>
+      <div class="clock-date" id="ck-date">&nbsp;</div>
+      <button class="btn btn-ghost btn-block" id="ck-fullscreen"><svg class="icon"><use href="#i-tv"/></svg><span>Auf dem Fernseher zeigen</span></button>
+    </div>
+
+    <div class="section-label">Timer</div>
+
+    <div class="card timer-setup" id="timer-setup">
+      <div class="timer-presets" id="timer-presets"></div>
+      <div class="timer-custom">
+        <label class="timer-field"><input id="timer-min" type="number" inputmode="numeric" min="0" max="999" value="5" aria-label="Minuten" /><span>Min</span></label>
+        <span class="timer-colon">:</span>
+        <label class="timer-field"><input id="timer-sec" type="number" inputmode="numeric" min="0" max="59" value="0" aria-label="Sekunden" /><span>Sek</span></label>
+      </div>
+      <button class="btn btn-primary btn-block" id="timer-start"><svg class="icon"><use href="#i-play"/></svg>Timer starten</button>
+      <p class="hint">Der Timer läuft im Vollbild auf dem Fernseher. Läuft gerade Musik oder ein Video, erscheint er oben als kleine Anzeige.</p>
+    </div>
+
+    <div class="card timer-run hidden" id="timer-run">
+      <div class="timer-dial">
+        <svg class="timer-ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="timer-ring-track" cx="100" cy="100" r="90" />
+          <circle class="timer-ring-fill" id="timer-ring-fill" cx="100" cy="100" r="90" pathLength="1000" />
+        </svg>
+        <div class="timer-dial-inner">
+          <div class="timer-dial-label" id="timer-label">Timer</div>
+          <div class="timer-countdown" id="timer-countdown">0:00</div>
+          <div class="timer-dial-sub" id="timer-sub">&nbsp;</div>
+        </div>
+      </div>
+      <div class="timer-actions">
+        <button class="btn btn-ghost" id="timer-add">+1 Min</button>
+        <button class="btn btn-primary" id="timer-toggle"><svg class="icon"><use href="#i-pause"/></svg><span>Pause</span></button>
+        <button class="btn btn-ghost" id="timer-cancel"><svg class="icon"><use href="#i-close"/></svg><span>Stopp</span></button>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= Licht ================= -->
   <section class="view hidden" id="view-light">
     <div class="view-header">
@@ -377,6 +430,18 @@
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Timer abgelaufen: ueber allem, egal welche App offen ist -->
+<div class="timer-modal hidden" id="timer-modal" role="alertdialog" aria-labelledby="tm-kicker">
+  <div class="tm-rings" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="tm-icon"><svg class="icon"><use href="#i-timer"/></svg></div>
+  <div class="tm-kicker" id="tm-kicker">Timer abgelaufen</div>
+  <div class="tm-label" id="tm-label">&nbsp;</div>
+  <div class="tm-actions">
+    <button class="tm-btn tm-stop" id="tm-stop"><svg class="icon"><use href="#i-check"/></svg>Beenden</button>
+    <button class="tm-btn tm-restart" id="tm-restart"><svg class="icon"><use href="#i-replay"/></svg><span id="tm-restart-label">Neu starten</span></button>
+  </div>
+</div>
 
 <div class="volume-hud" id="volume-hud" aria-hidden="true">
   <svg class="icon"><use href="#i-speaker"/></svg>

@@ -1832,6 +1832,314 @@ button {
   color: rgb(var(--tint));
 }
 
+/* ---------- Uhr & Timer ---------- */
+
+#view-clock { --tint: 120, 230, 190; --tint-ink: #03170f; }
+
+.timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 7px 12px;
+  border: 1px solid rgba(120, 230, 190, 0.45);
+  border-radius: 999px;
+  background: rgba(120, 230, 190, 0.12);
+  color: #9ff0d0;
+  font: 700 14px var(--font-display);
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.timer-pill .icon { width: 16px; height: 16px; }
+.timer-pill.paused { color: var(--text-2); border-color: var(--stroke); background: var(--surface); }
+.timer-pill.final { color: var(--warn); border-color: rgba(255, 140, 66, 0.55); background: rgba(255, 140, 66, 0.14); }
+
+.clock-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 18px 18px;
+}
+
+.clock-big {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(56px, 18vw, 92px);
+  line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(var(--accent-rgb), 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-sec {
+  min-width: 1.3em;
+  font-size: 0.38em;
+  font-weight: 500;
+  color: rgba(var(--accent-rgb), 0.7);
+}
+
+.clock-date {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-2);
+}
+
+.clock-hero .btn.active {
+  color: #03170f;
+  background: linear-gradient(180deg, rgb(var(--tint)), rgba(var(--tint), 0.72));
+  box-shadow: 0 12px 30px -12px rgba(var(--tint), 0.95);
+}
+
+.timer-setup { display: flex; flex-direction: column; gap: 16px; }
+
+.timer-presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.timer-preset {
+  height: 52px;
+  border: 1px solid rgba(var(--tint), 0.35);
+  border-radius: 16px;
+  background: rgba(var(--tint), 0.08);
+  color: var(--text);
+  font: 700 17px var(--font-display);
+  transition: transform 0.12s, background 0.2s;
+}
+
+.timer-preset small { margin-left: 3px; font: 600 12px var(--font-body); color: var(--text-3); }
+.timer-preset:active { transform: scale(0.95); background: rgba(var(--tint), 0.25); }
+
+.timer-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.timer-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.timer-field input {
+  width: 104px;
+  height: 70px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.38);
+  color: var(--text);
+  font: 700 38px var(--font-display);
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.timer-field input::-webkit-outer-spin-button,
+.timer-field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.timer-field input:focus { outline: none; border-color: rgba(var(--tint), 0.6); box-shadow: 0 0 0 4px rgba(var(--tint), 0.14); }
+
+.timer-colon {
+  margin-bottom: 18px;
+  font: 700 36px var(--font-display);
+  color: var(--text-3);
+}
+
+.timer-run { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22px 16px 18px; }
+
+.timer-dial {
+  position: relative;
+  width: min(270px, 72vw);
+  aspect-ratio: 1;
+}
+
+.timer-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.timer-ring-track { fill: none; stroke: rgba(var(--tint), 0.14); stroke-width: 7; }
+
+.timer-ring-fill {
+  fill: none;
+  stroke: rgb(var(--tint));
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 1000;
+  filter: drop-shadow(0 0 8px rgba(var(--tint), 0.8));
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+.timer-dial-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.timer-dial-label,
+.timer-dial-sub {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.timer-countdown {
+  font: 700 clamp(44px, 14vw, 60px) var(--font-display);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-run.paused .timer-countdown { animation: pulse 1.4s ease-in-out infinite; color: var(--text-2); }
+.timer-run.paused .timer-ring-fill { stroke: var(--text-3); filter: none; }
+.timer-run.final .timer-ring-fill { stroke: var(--warn); filter: drop-shadow(0 0 8px rgba(255, 140, 66, 0.8)); }
+.timer-run.final .timer-countdown { color: var(--warn); }
+
+.timer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.timer-actions .btn { padding: 12px 10px; font-size: 16px; }
+.timer-actions .icon { width: 18px; height: 18px; }
+
+/* ---------- Timer abgelaufen (ganz gross, ueber allem) ---------- */
+
+.timer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: calc(var(--safe-top) + 30px) 24px calc(var(--safe-bottom) + 30px);
+  overflow: hidden;
+  background: radial-gradient(80% 60% at 50% 38%, rgba(255, 140, 66, 0.3), rgba(2, 6, 13, 0.97) 72%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fade-in 0.25s;
+}
+
+.tm-rings { position: absolute; left: 50%; top: 32%; width: 0; height: 0; }
+
+.tm-rings span {
+  position: absolute;
+  left: -130px;
+  top: -130px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 140, 66, 0.7);
+  animation: tm-ring 2.4s ease-out infinite;
+}
+
+.tm-rings span:nth-child(2) { animation-delay: 0.8s; }
+.tm-rings span:nth-child(3) { animation-delay: 1.6s; }
+
+@keyframes tm-ring {
+  from { transform: scale(0.4); opacity: 1; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+
+.tm-icon {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffb27a, #ff6b2c 70%);
+  color: #2a0e00;
+  box-shadow: 0 0 60px rgba(255, 140, 66, 0.8);
+  animation: tm-shake 1.4s ease-in-out infinite;
+}
+
+.tm-icon .icon { width: 56px; height: 56px; stroke-width: 2; }
+
+@keyframes tm-shake {
+  0%, 60%, 100% { transform: rotate(0); }
+  66% { transform: rotate(-12deg); }
+  74% { transform: rotate(12deg); }
+  82% { transform: rotate(-8deg); }
+  90% { transform: rotate(6deg); }
+}
+
+.tm-kicker {
+  position: relative;
+  font: 700 26px var(--font-display);
+  letter-spacing: 3px;
+  text-align: center;
+  text-transform: uppercase;
+  color: #ffd2b0;
+  text-shadow: 0 0 20px rgba(255, 140, 66, 0.8);
+}
+
+.tm-label {
+  position: relative;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.tm-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(420px, 100%);
+  margin-top: 34px;
+}
+
+.tm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 88px;
+  border: 0;
+  border-radius: 28px;
+  font: 700 26px var(--font-body);
+  letter-spacing: 1px;
+  transition: transform 0.12s;
+}
+
+.tm-btn .icon { width: 30px; height: 30px; stroke-width: 2.2; }
+.tm-btn:active { transform: scale(0.97); }
+
+.tm-stop {
+  color: #2a0e00;
+  background: linear-gradient(180deg, #ffb27a, #ff7a3a);
+  box-shadow: 0 18px 40px -14px rgba(255, 122, 58, 1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.tm-restart {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
 /* ---------- Tablet (iPad) ---------- */
 
 @media (min-width: 700px) {
@@ -1842,6 +2150,7 @@ button {
   .app-icon { max-width: 104px; border-radius: 30px; }
   .app-icon .icon { width: 46px; height: 46px; }
   .hero-clock { font-size: 104px; }
+  .timer-presets { grid-template-columns: repeat(8, minmax(0, 1fr)); }
   .fx-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .swatches { grid-template-columns: repeat(10, minmax(0, 1fr)); }
 }

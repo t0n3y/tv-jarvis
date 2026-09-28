@@ -344,6 +344,8 @@ def _apply_command_state(body: dict) -> None:
     # Fernbedienung oder direkt aus tv_power.py beim Ausschalten ausgeloest -
     # so bleibt der now-playing-Stand unabhaengig vom Ausloeser aktuell.
     msg_type = body.get("type")
+    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play"):
+        clock_screen["on"] = False
     if msg_type == "youtube_play":
         _finish_jellyfin_session()
         _reset_vinyl_state()
@@ -877,6 +879,155 @@ async def set_light(request: Request) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+# ---------- Uhr & Timer ----------
+# Der Timer lebt hier (nicht im Kiosk), damit er auch bei ausgeschaltetem
+# Fernseher weiterlaeuft. Beim Ablauf wird alles pausiert, der Kiosk zeigt
+# den Alarm und spielt den Ton, bis die Fernbedienung geoeffnet wird ("ack").
+
+TIMER_MAX_SECONDS = 24 * 3600
+
+# state: idle | running | paused | ringing. id waechst bei jedem Start, damit
+# ein alter Ablauf-Task einen neu gestellten Timer nicht ausloest.
+timer_state: dict = {"id": 0, "state": "idle", "duration": 0, "ends_at": 0.0, "remaining": 0.0, "acknowledged": False}
+clock_screen: dict = {"on": False}
+_timer_task: asyncio.Task | None = None
+
+
+def _timer_remaining() -> float:
+    if timer_state["state"] == "running":
+        return max(0.0, timer_state["ends_at"] - time.time())
+    if timer_state["state"] == "paused":
+        return timer_state["remaining"]
+    return 0.0
+
+
+def _timer_public() -> dict:
+    return {
+        "id": timer_state["id"],
+        "state": timer_state["state"],
+        "duration": timer_state["duration"],
+        # Restzeit statt Endzeitpunkt: Handy- und Pi-Uhr muessen nicht synchron sein
+        "remaining_ms": round(_timer_remaining() * 1000),
+        "acknowledged": timer_state["acknowledged"],
+        "clock_screen": clock_screen["on"],
+    }
+
+
+def _timer_message(show: bool = False) -> dict:
+    return {"type": "timer_state", "show": show, **_timer_public()}
+
+
+def _cancel_timer_task() -> None:
+    global _timer_task
+    if _timer_task is not None:
+        _timer_task.cancel()
+        _timer_task = None
+
+
+def _schedule_timer() -> None:
+    global _timer_task
+    _cancel_timer_task()
+    _timer_task = asyncio.create_task(_timer_wait(timer_state["id"]))
+
+
+async def _timer_wait(timer_id: int) -> None:
+    await asyncio.sleep(max(0.0, timer_state["ends_at"] - time.time()))
+    if timer_state["id"] == timer_id and timer_state["state"] == "running":
+        await _timer_ring()
+
+
+async def _pause_all_media() -> None:
+    if youtube_now_playing["video_id"] and youtube_now_playing["playing"]:
+        await _send_to_kiosk({"type": "youtube_pause"})
+    if jellyfin_now_playing["item_id"] and jellyfin_now_playing["playing"]:
+        await _send_to_kiosk({"type": "jellyfin_pause"})
+    if vinyl_now_playing["queue"] and vinyl_now_playing["playing"]:
+        await _send_to_kiosk({"type": "vinyl_pause"})
+    if radio.is_playing():
+        # mpv-Radio kann nicht pausieren (Livestream) - dann eben stoppen
+        await asyncio.to_thread(radio.stop)
+
+
+async def _timer_ring() -> None:
+    timer_state.update(state="ringing", acknowledged=False, remaining=0.0)
+    logger.info("Timer abgelaufen")
+    await _pause_all_media()
+    # Stummgeschalteter Fernseher wuerde den Alarm verschlucken
+    await asyncio.to_thread(audio_control.unmute)
+    await _ensure_tv_on()
+    await manager.broadcast(_timer_message())
+
+
+async def _timer_start(seconds: float) -> None:
+    timer_state.update(
+        id=timer_state["id"] + 1,
+        state="running",
+        duration=seconds,
+        ends_at=time.time() + seconds,
+        remaining=seconds,
+        acknowledged=False,
+    )
+    _schedule_timer()
+    await _ensure_tv_on()
+    await manager.broadcast(_timer_message(show=True))
+
+
+@app.post("/api/remote/timer", dependencies=[Depends(require_remote_secret)])
+async def remote_timer(request: Request) -> dict:
+    body = await request.json()
+    action = body.get("action")
+    state = timer_state["state"]
+
+    if action == "start":
+        seconds = _as_float(body.get("seconds"))
+        if not 1 <= seconds <= TIMER_MAX_SECONDS:
+            raise HTTPException(status_code=400, detail="Der Timer muss zwischen 1 Sekunde und 24 Stunden liegen")
+        await _timer_start(round(seconds))
+        return {"ok": True, "timer": _timer_public()}
+    if action == "restart":
+        if not timer_state["duration"]:
+            raise HTTPException(status_code=409, detail="Es gibt keinen Timer zum Neustarten")
+        await _timer_start(timer_state["duration"])
+        return {"ok": True, "timer": _timer_public()}
+
+    if action == "pause" and state == "running":
+        timer_state.update(state="paused", remaining=_timer_remaining())
+        _cancel_timer_task()
+    elif action == "resume" and state == "paused":
+        timer_state.update(state="running", ends_at=time.time() + timer_state["remaining"])
+        _schedule_timer()
+    elif action == "add" and state in ("running", "paused"):
+        seconds = max(0.0, min(_as_float(body.get("seconds")), TIMER_MAX_SECONDS))
+        timer_state["duration"] += seconds
+        if state == "running":
+            timer_state["ends_at"] += seconds
+            _schedule_timer()
+        else:
+            timer_state["remaining"] += seconds
+    elif action == "ack" and state == "ringing":
+        timer_state["acknowledged"] = True
+    elif action in ("cancel", "dismiss"):
+        _cancel_timer_task()
+        timer_state.update(state="idle", remaining=0.0, acknowledged=False)
+    elif action not in ("pause", "resume", "add", "ack"):
+        raise HTTPException(status_code=400, detail="unbekannte action")
+    await manager.broadcast(_timer_message())
+    return {"ok": True, "timer": _timer_public()}
+
+
+@app.post("/api/remote/clock", dependencies=[Depends(require_remote_secret)])
+async def remote_clock(request: Request) -> dict:
+    """Vollbild-Uhr auf dem Fernseher an/aus."""
+    body = await request.json()
+    show = bool(body.get("show"))
+    clock_screen["on"] = show
+    if show:
+        # Ist der Fernseher aus, holt der Kiosk die Uhr beim Verbinden nach
+        await _ensure_tv_on()
+    await manager.broadcast({"type": "clock_show" if show else "clock_hide"})
+    return {"ok": True, "timer": _timer_public()}
+
+
 # ---------- Status / Einstellungen ----------
 
 @app.get("/api/remote/now-playing", dependencies=[Depends(require_remote_secret)])
@@ -888,6 +1039,7 @@ async def get_now_playing() -> dict:
         "jellyfin": jellyfin_now_playing,
         "jellyfin_error": jellyfin_error,
         "vinyl": _vinyl_public_state(),
+        "timer": _timer_public(),
         "vinyl_error": vinyl_error,
         "radio": {"playing": radio.is_playing(), "station": radio_stations.current_station(cfg)},
         "light": lighting.get_engine().state(),
@@ -993,6 +1145,12 @@ async def websocket_endpoint(ws: WebSocket) -> None:
         await ws.close(code=1008)
         return
     await manager.connect(ws)
+    # Frisch gestarteter Kiosk (z.B. Fernseher gerade fuer den Timer
+    # eingeschaltet): laufenden Timer und Vollbild-Uhr sofort uebernehmen
+    if timer_state["state"] != "idle":
+        await ws.send_json(_timer_message(show=True))
+    if clock_screen["on"]:
+        await ws.send_json({"type": "clock_show"})
     try:
         while True:
             raw = await ws.receive_text()

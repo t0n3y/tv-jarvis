@@ -210,6 +210,7 @@ const VIEW_HOOKS = {
   jellyfin: () => jellyfinLoadHome(),
   radio: () => loadStations(),
   vinyl: () => loadVinyl(),
+  clock: () => renderTimer(),
   light: () => loadLight(),
   settings: () => loadSettings(),
 };
@@ -1535,6 +1536,178 @@ async function saveAddAlbum() {
   }
 }
 
+// ---------- Uhr & Timer ----------
+// Den Timer fuehrt der Server; hier wird nur aus der gemeldeten Restzeit
+// weitergezaehlt. Laeuft er ab, pausiert der Server alles und der Fernseher
+// piept - bis die Fernbedienung geoeffnet wird (dann "ack").
+
+const TIMER_PRESETS = [1, 3, 5, 10, 15, 20, 30, 60];
+const TIMER_FINAL_SECONDS = 10;
+// "Geoeffnet" = Seite neu geladen oder aus dem Hintergrund geholt. War sie
+// die ganze Zeit offen (iPad auf dem Tisch), piept es bis zum ersten Tippen.
+const TIMER_ACK_WINDOW_MS = 8000;
+
+let timerEndsAt = 0;
+let timerSource = null;
+let timerAckedId = null;
+let remoteOpenedAt = Date.now();
+
+function timerInfo() {
+  return state.timer || { state: "idle", duration: 0, remaining_ms: 0 };
+}
+
+function formatCountdown(seconds) {
+  const total = Math.max(0, Math.ceil(seconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  return hours ? `${hours}:${pad(minutes)}:${pad(total % 60)}` : `${minutes}:${pad(total % 60)}`;
+}
+
+function timerLabel(seconds) {
+  if (seconds < 60) return `${seconds}-Sekunden-Timer`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  if (!hours) return `${minutes}-Minuten-Timer`;
+  return minutes ? `Timer · ${hours} Std ${minutes} Min` : `${hours}-Stunden-Timer`;
+}
+
+function timerRemaining(t) {
+  if (t.state === "running") return Math.max(0, (timerEndsAt - performance.now()) / 1000);
+  if (t.state === "paused") return (t.remaining_ms || 0) / 1000;
+  return 0;
+}
+
+function applyTimer(timer) {
+  state.timer = timer;
+  syncTimerFromState();
+}
+
+function syncTimerFromState() {
+  const t = timerInfo();
+  if (t !== timerSource) {
+    timerSource = t;
+    timerEndsAt = performance.now() + (t.remaining_ms || 0);
+  }
+  renderTimer();
+}
+
+function renderTimer() {
+  const t = timerInfo();
+  const active = t.state === "running" || t.state === "paused";
+  const remaining = timerRemaining(t);
+  const fraction = t.duration > 0 ? Math.min(1, remaining / t.duration) : 0;
+  const final = t.state === "running" && remaining <= TIMER_FINAL_SECONDS;
+
+  const pill = $("timer-pill");
+  pill.classList.toggle("hidden", !active);
+  pill.classList.toggle("paused", t.state === "paused");
+  pill.classList.toggle("final", final);
+  $("timer-pill-time").textContent = formatCountdown(remaining);
+
+  if (currentView === "clock") {
+    $("timer-setup").classList.toggle("hidden", active);
+    $("timer-run").classList.toggle("hidden", !active);
+    $("timer-run").classList.toggle("paused", t.state === "paused");
+    $("timer-run").classList.toggle("final", final);
+    if (active) {
+      $("timer-countdown").textContent = formatCountdown(remaining);
+      $("timer-ring-fill").style.strokeDashoffset = String(Math.round(1000 * (1 - fraction)));
+      $("timer-label").textContent = timerLabel(t.duration);
+      const end = new Date(Date.now() + remaining * 1000);
+      $("timer-sub").textContent = t.state === "paused" ? "Pausiert" : `Fertig um ${pad(end.getHours())}:${pad(end.getMinutes())}`;
+      setIcon($("timer-toggle"), t.state === "paused" ? "play" : "pause", t.state === "paused" ? "Weiter" : "Pause");
+    }
+    const full = $("ck-fullscreen");
+    full.classList.toggle("active", !!t.clock_screen);
+    setIcon(full, "tv", t.clock_screen ? "Vollbild beenden" : "Auf dem Fernseher zeigen");
+  }
+
+  const ringing = t.state === "ringing";
+  $("timer-modal").classList.toggle("hidden", !ringing);
+  if (ringing) {
+    $("tm-label").textContent = timerLabel(t.duration);
+    $("tm-restart-label").textContent = `Neu starten · ${formatCountdown(t.duration)}`;
+    const justOpened = Date.now() - remoteOpenedAt < TIMER_ACK_WINDOW_MS && document.visibilityState === "visible";
+    if (!t.acknowledged && justOpened) acknowledgeTimer();
+  }
+}
+
+// Fernbedienung ist offen -> Alarmton auf dem Fernseher aus
+function acknowledgeTimer() {
+  const t = timerInfo();
+  if (t.state !== "ringing" || t.acknowledged || timerAckedId === t.id) return;
+  timerAckedId = t.id;
+  apiRequest("POST", "/api/remote/timer", { action: "ack" }, { quiet: true }).catch(() => {
+    timerAckedId = null;
+  });
+}
+
+function tickClock() {
+  if (currentView === "clock") {
+    const now = new Date();
+    $("ck-hm").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    $("ck-sec").textContent = pad(now.getSeconds());
+    $("ck-date").textContent = `${WEEKDAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]}`;
+  }
+  const t = timerInfo();
+  if (t.state === "running" || currentView === "clock") renderTimer();
+}
+
+async function timerAction(body, message) {
+  const result = await api.post("/api/remote/timer", body);
+  applyTimer(result.timer);
+  if (message) toast(message);
+}
+
+async function startTimer(seconds) {
+  const message = state.tv_on ? "Timer läuft auf dem Fernseher" : "Fernseher wird eingeschaltet …";
+  await timerAction({ action: "start", seconds }, message);
+}
+
+$("timer-presets").replaceChildren(
+  ...TIMER_PRESETS.map((minutes) =>
+    h(
+      "button",
+      { class: "timer-preset", type: "button", onclick: () => startTimer(minutes * 60).catch((err) => toast(err.message, true)) },
+      minutes >= 60 ? String(minutes / 60) : String(minutes),
+      h("small", null, minutes >= 60 ? "Std" : "Min")
+    )
+  )
+);
+
+onTap($("timer-start"), () => {
+  const minutes = Math.max(0, Math.floor(Number($("timer-min").value) || 0));
+  const seconds = Math.max(0, Math.min(59, Math.floor(Number($("timer-sec").value) || 0)));
+  const total = minutes * 60 + seconds;
+  if (!total) throw new Error("Bitte eine Zeit eingeben");
+  document.activeElement.blur();
+  return startTimer(total);
+});
+
+["timer-min", "timer-sec"].forEach((id) =>
+  $(id).addEventListener("keydown", (event) => {
+    if (event.key === "Enter") $("timer-start").click();
+  })
+);
+
+onTap($("timer-toggle"), () => timerAction({ action: timerInfo().state === "paused" ? "resume" : "pause" }));
+onTap($("timer-add"), () => timerAction({ action: "add", seconds: 60 }, "+1 Minute"));
+onTap($("timer-cancel"), () => timerAction({ action: "cancel" }, "Timer gestoppt"));
+onTap($("timer-pill"), () => openView("clock"));
+
+onTap($("ck-fullscreen"), async () => {
+  const show = !timerInfo().clock_screen;
+  const result = await api.post("/api/remote/clock", { show });
+  applyTimer(result.timer);
+  if (show) toast(state.tv_on ? "Uhr im Vollbild" : "Fernseher wird eingeschaltet …");
+});
+
+$("timer-modal").addEventListener("pointerdown", acknowledgeTimer);
+onTap($("tm-stop"), () => timerAction({ action: "dismiss" }, "Timer beendet"));
+onTap($("tm-restart"), () => timerAction({ action: "restart" }, "Timer läuft wieder"));
+
+setInterval(tickClock, 250);
+
 // ---------- Licht ----------
 
 const LIGHT_SWATCHES = [
@@ -1910,6 +2083,7 @@ function renderAll() {
   renderJellyfinNow();
   renderRadio();
   renderVinylNow();
+  syncTimerFromState();
   syncLightFromPoll();
 }
 
@@ -1937,6 +2111,7 @@ async function poll() {
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
+    remoteOpenedAt = Date.now();
     updateClock();
     poll();
   }

@@ -47,6 +47,10 @@ def volume_down() -> None:
     _wpctl("set-volume", SINK, f"{VOLUME_STEP_PERCENT}%-")
 
 
+def unmute() -> None:
+    _wpctl("set-mute", SINK, "0")
+
+
 def mute_toggle() -> None:
     _wpctl("set-mute", SINK, "toggle")
 

@@ -120,6 +120,8 @@ const bootDone = new Promise((resolve) => {
 });
 
 function showScreen(name) {
+  // Waehrend ein Timer laeuft, ist der Vollbild-Countdown die "Startseite"
+  if (name === "dashboard" && timer.state !== "idle") name = "clock";
   if (currentScreen === "youtube" && name !== "youtube") stopYoutubePlayback();
   if (currentScreen === "jellyfin" && name !== "jellyfin") stopJellyfinPlayback();
   if (currentScreen === "vinyl" && name !== "vinyl") stopVinylPlayback();
@@ -128,6 +130,8 @@ function showScreen(name) {
   $("player-screen").classList.toggle("hidden", name !== "youtube");
   $("jellyfin-screen").classList.toggle("hidden", name !== "jellyfin");
   $("vinyl-screen").classList.toggle("hidden", name !== "vinyl");
+  $("clock-screen").classList.toggle("hidden", name !== "clock");
+  renderClock();
 }
 
 // ---------- YouTube (IFrame API) ----------
@@ -563,6 +567,156 @@ function reportVinylProgress() {
   });
 }
 
+// ---------- Uhr + Timer ----------
+// Den Timer fuehrt der Server (laeuft auch bei ausgeschaltetem Fernseher);
+// der Kiosk rechnet die Anzeige aus der gemeldeten Restzeit hoch.
+
+const TIMER_FINAL_SECONDS = 10;
+const ALARM_REPEAT_MS = 1400;
+const TIMER_TICK_MS = 250;
+
+let timer = { state: "idle", duration: 0, remaining_ms: 0, acknowledged: false, clock_screen: false };
+let timerEndsAt = 0;
+let clockPinned = false;
+let alarmCtx = null;
+let alarmTimer = null;
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function formatCountdown(seconds) {
+  const total = Math.max(0, Math.ceil(seconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  return hours ? `${hours}:${pad2(minutes)}:${pad2(total % 60)}` : `${minutes}:${pad2(total % 60)}`;
+}
+
+function timerLabel(seconds) {
+  if (seconds < 60) return `Timer · ${seconds} Sek`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  if (!hours) return `Timer · ${minutes} Min`;
+  return minutes ? `Timer · ${hours} Std ${minutes} Min` : `Timer · ${hours} Std`;
+}
+
+function timerActive() {
+  return timer.state === "running" || timer.state === "paused";
+}
+
+function timerRemaining() {
+  if (timer.state === "running") return Math.max(0, (timerEndsAt - performance.now()) / 1000);
+  if (timer.state === "paused") return timer.remaining_ms / 1000;
+  return 0;
+}
+
+// Alarmton ueber Web Audio (laeuft ueber PipeWire wie YouTube, der Kiosk
+// darf dank --autoplay-policy ohne Klick abspielen): dreimal piepen, Pause.
+function alarmBeep() {
+  const t = alarmCtx.currentTime;
+  [0, 0.22, 0.44].forEach((offset) => {
+    const osc = alarmCtx.createOscillator();
+    const gain = alarmCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = 988;
+    gain.gain.setValueAtTime(0, t + offset);
+    gain.gain.linearRampToValueAtTime(0.5, t + offset + 0.015);
+    gain.gain.setValueAtTime(0.5, t + offset + 0.13);
+    gain.gain.linearRampToValueAtTime(0, t + offset + 0.16);
+    osc.connect(gain).connect(alarmCtx.destination);
+    osc.start(t + offset);
+    osc.stop(t + offset + 0.18);
+  });
+}
+
+function startAlarm() {
+  if (alarmTimer) return;
+  alarmCtx = alarmCtx || new AudioContext();
+  alarmCtx.resume();
+  alarmBeep();
+  alarmTimer = setInterval(alarmBeep, ALARM_REPEAT_MS);
+}
+
+function stopAlarm() {
+  clearInterval(alarmTimer);
+  alarmTimer = null;
+}
+
+function updateAlarm() {
+  const ringing = timer.state === "ringing";
+  const alert = $("timer-alert");
+  alert.classList.toggle("hidden", !ringing);
+  alert.classList.toggle("quiet", ringing && timer.acknowledged);
+  if (!ringing || timer.acknowledged) stopAlarm();
+  else startAlarm();
+  if (ringing) {
+    $("ta-label").textContent = timerLabel(timer.duration);
+    $("ta-hint").textContent = timer.acknowledged
+      ? "Auf der Fernbedienung beenden oder neu starten"
+      : "Fernbedienung öffnen, um den Alarm zu beenden";
+  }
+}
+
+function renderClock() {
+  const now = new Date();
+  if (currentScreen === "clock") {
+    $("cs-hm").textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    $("cs-sec").textContent = pad2(now.getSeconds());
+    $("cs-date").textContent = now.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  }
+
+  const active = timerActive();
+  const remaining = timerRemaining();
+  const fraction = timer.duration > 0 ? Math.min(1, remaining / timer.duration) : 0;
+  const final = timer.state === "running" && remaining <= TIMER_FINAL_SECONDS;
+
+  const screen = $("clock-screen");
+  screen.classList.toggle("has-timer", active || timer.state === "ringing");
+  screen.classList.toggle("paused", timer.state === "paused");
+  screen.classList.toggle("final", final);
+  if (active) {
+    $("cs-countdown").textContent = formatCountdown(remaining);
+    $("cs-ring-fill").style.strokeDashoffset = String(Math.round(1000 * (1 - fraction)));
+    $("cs-timer-label").textContent = timerLabel(timer.duration);
+    const end = new Date(Date.now() + remaining * 1000);
+    $("cs-timer-state").textContent = timer.state === "paused" ? "Pausiert" : `Fertig um ${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+  }
+
+  const notch = $("timer-notch");
+  const showNotch = active && currentScreen !== "clock";
+  notch.classList.toggle("hidden", !showNotch);
+  if (showNotch) {
+    notch.classList.toggle("paused", timer.state === "paused");
+    notch.classList.toggle("final", final);
+    $("tn-time").textContent = formatCountdown(remaining);
+    $("tn-fill").style.width = `${(fraction * 100).toFixed(1)}%`;
+  }
+}
+
+function handleTimerMessage(msg) {
+  if (msg.type === "clock_show") {
+    clockPinned = true;
+    bootDone.then(() => showScreen("clock"));
+    return;
+  }
+  if (msg.type === "clock_hide") {
+    clockPinned = false;
+    if (currentScreen === "clock") showScreen("dashboard");
+    return;
+  }
+  timer = msg;
+  timerEndsAt = performance.now() + (msg.remaining_ms || 0);
+  clockPinned = !!msg.clock_screen;
+  // Neuer Timer: auf dem Dashboard im Vollbild herunterzaehlen. Laeuft
+  // gerade Plattenspieler/YouTube/Jellyfin, bleibt es bei der Notch.
+  if (msg.show) {
+    bootDone.then(() => {
+      if (currentScreen === "dashboard") showScreen("clock");
+    });
+  }
+  if (msg.state === "idle" && currentScreen === "clock" && !clockPinned) showScreen("dashboard");
+  updateAlarm();
+  renderClock();
+}
+
 // ---------- WebSocket + Fortschrittsmeldungen ----------
 
 let wsConn = null;
@@ -623,6 +777,8 @@ function connectWebSocket() {
         handleJellyfinMessage(msg);
       } else if (msg.type && msg.type.startsWith("vinyl_")) {
         handleVinylMessage(msg);
+      } else if (msg.type === "timer_state" || msg.type === "clock_show" || msg.type === "clock_hide") {
+        handleTimerMessage(msg);
       }
     } catch (err) {
       console.error("WS-Nachricht ungueltig", err);
@@ -654,5 +810,6 @@ updateClock();
 setInterval(updateClock, 1000);
 setInterval(refreshState, STATE_POLL_MS);
 setInterval(reportProgress, PROGRESS_REPORT_MS);
+setInterval(renderClock, TIMER_TICK_MS);
 connectWebSocket();
 startBootSequence();

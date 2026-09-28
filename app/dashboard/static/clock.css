@@ -1,0 +1,301 @@
+/* ============================================================
+   Uhr-App im Kiosk: Vollbild-Uhr mit Sekunden, Timer-Countdown,
+   Timer-Notch ueber anderen Apps und Alarm beim Ablauf.
+   Masse in vh (1080p-Fernseher), Jarvis-Look (Cyan, Orbitron).
+   ============================================================ */
+
+#clock-screen,
+#timer-notch,
+#timer-alert {
+  --cs-accent: 79, 216, 255;
+  --cs-warn: 255, 140, 66;
+  font-family: "Orbitron", system-ui, sans-serif;
+  color: #e8f6ff;
+}
+
+#clock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 50% 45%, rgba(79, 216, 255, 0.12), transparent 70%),
+    radial-gradient(120% 80% at 50% 120%, rgba(138, 125, 255, 0.12), transparent 60%),
+    #02060d;
+}
+
+/* feines HUD-Raster */
+#clock-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79, 216, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 216, 255, 0.05) 1px, transparent 1px);
+  background-size: 6vh 6vh;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 70%);
+}
+
+.cs-clock {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 2vh;
+  font-weight: 700;
+  font-size: 30vh;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: rgb(var(--cs-accent));
+  text-shadow: 0 0 6vh rgba(var(--cs-accent), 0.55);
+  font-variant-numeric: tabular-nums;
+  transition: font-size 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cs-sec {
+  min-width: 1.25em;
+  font-size: 0.36em;
+  font-weight: 500;
+  color: rgba(var(--cs-accent), 0.7);
+}
+
+.cs-date {
+  position: relative;
+  margin-top: 3vh;
+  font-family: "Rajdhani", system-ui, sans-serif;
+  font-size: 5vh;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #a9c3d9;
+}
+
+.cs-timer {
+  position: relative;
+  display: none;
+  width: 66vh;
+  height: 66vh;
+  margin-top: 3vh;
+}
+
+/* Mit Timer: Uhr klein oben, Countdown im Ring gross in der Mitte */
+#clock-screen.has-timer { justify-content: flex-start; padding-top: 6vh; }
+#clock-screen.has-timer .cs-clock { font-size: 9vh; }
+#clock-screen.has-timer .cs-date { display: none; }
+#clock-screen.has-timer .cs-timer { display: block; }
+
+.cs-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.cs-ring-track {
+  fill: none;
+  stroke: rgba(var(--cs-accent), 0.12);
+  stroke-width: 5;
+}
+
+.cs-ring-fill {
+  fill: none;
+  stroke: rgb(var(--cs-accent));
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 1.2vh rgba(var(--cs-accent), 0.9));
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+.cs-timer-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-timer-label,
+.cs-timer-state {
+  font-family: "Rajdhani", system-ui, sans-serif;
+  font-size: 3.4vh;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #6d88a1;
+}
+
+.cs-countdown {
+  margin: 1vh 0;
+  font-size: 15vh;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 5vh rgba(var(--cs-accent), 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+#clock-screen.paused .cs-countdown { animation: cs-blink 1.2s ease-in-out infinite; }
+#clock-screen.paused .cs-ring-fill { stroke: #6d88a1; filter: none; }
+#clock-screen.paused .cs-timer-state { color: rgb(var(--cs-warn)); }
+
+/* Letzte 10 Sekunden */
+#clock-screen.final .cs-ring-fill { stroke: rgb(var(--cs-warn)); filter: drop-shadow(0 0 1.4vh rgba(var(--cs-warn), 0.9)); }
+#clock-screen.final .cs-countdown { color: rgb(var(--cs-warn)); text-shadow: 0 0 5vh rgba(var(--cs-warn), 0.7); }
+
+@keyframes cs-blink { 50% { opacity: 0.3; } }
+
+/* ---------- Notch ---------- */
+
+#timer-notch {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 1.6vh;
+  min-width: 26vh;
+  padding: 1.2vh 3vh 1.4vh;
+  border-radius: 0 0 3vh 3vh;
+  background: rgba(2, 8, 16, 0.92);
+  box-shadow: 0 1vh 3vh rgba(0, 0, 0, 0.6), inset 0 -0.15vh 0 rgba(var(--cs-accent), 0.35);
+  transform: translateX(-50%);
+  animation: tn-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes tn-in { from { transform: translate(-50%, -110%); } }
+
+.tn-dot {
+  width: 1.3vh;
+  height: 1.3vh;
+  border-radius: 50%;
+  background: rgb(var(--cs-accent));
+  box-shadow: 0 0 1.2vh rgb(var(--cs-accent));
+  animation: cs-blink 1s ease-in-out infinite;
+}
+
+.tn-time {
+  font-size: 3.4vh;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tn-bar {
+  flex: 1;
+  height: 0.5vh;
+  min-width: 8vh;
+  overflow: hidden;
+  border-radius: 1vh;
+  background: rgba(var(--cs-accent), 0.18);
+}
+
+.tn-bar span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: rgb(var(--cs-accent));
+  transition: width 0.25s linear;
+}
+
+#timer-notch.paused .tn-dot { animation: none; background: #6d88a1; box-shadow: none; }
+#timer-notch.paused .tn-time { color: #a9c3d9; }
+#timer-notch.final .tn-dot,
+#timer-notch.final .tn-bar span { background: rgb(var(--cs-warn)); box-shadow: 0 0 1.2vh rgb(var(--cs-warn)); }
+#timer-notch.final .tn-time { color: rgb(var(--cs-warn)); }
+
+/* ---------- Alarm ---------- */
+
+#timer-alert {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vh;
+  /* deckend - der Countdown darunter soll nicht durchscheinen */
+  background: radial-gradient(60% 60% at 50% 50%, rgba(255, 140, 66, 0.28), transparent 70%), #02060d;
+}
+
+/* Aufblinken als eigene Ebene, damit der Hintergrund deckend bleibt */
+#timer-alert::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 140, 66, 0.2);
+  opacity: 0;
+  animation: ta-flash 1.4s ease-in-out infinite;
+}
+
+#timer-alert.quiet { background: radial-gradient(60% 60% at 50% 50%, rgba(255, 140, 66, 0.16), transparent 70%), #02060d; }
+#timer-alert.quiet::before { animation: none; }
+
+@keyframes ta-flash { 50% { opacity: 1; } }
+
+.ta-rings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.ta-rings span {
+  position: absolute;
+  left: -30vh;
+  top: -30vh;
+  width: 60vh;
+  height: 60vh;
+  border-radius: 50%;
+  border: 0.4vh solid rgba(var(--cs-warn), 0.7);
+  animation: ta-ring 2.4s ease-out infinite;
+}
+
+.ta-rings span:nth-child(2) { animation-delay: 0.8s; }
+.ta-rings span:nth-child(3) { animation-delay: 1.6s; }
+#timer-alert.quiet .ta-rings span { animation-duration: 4.8s; opacity: 0.5; }
+
+@keyframes ta-ring {
+  from { transform: scale(0.5); opacity: 1; }
+  to { transform: scale(1.7); opacity: 0; }
+}
+
+.ta-kicker {
+  position: relative;
+  font-size: 5vh;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgb(var(--cs-warn));
+  text-shadow: 0 0 3vh rgba(var(--cs-warn), 0.8);
+}
+
+.ta-time {
+  position: relative;
+  font-size: 24vh;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 6vh rgba(var(--cs-warn), 0.8);
+}
+
+.ta-label,
+.ta-hint {
+  position: relative;
+  font-family: "Rajdhani", system-ui, sans-serif;
+  font-size: 3.6vh;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #e8f6ff;
+}
+
+.ta-hint { color: #a9c3d9; font-size: 3vh; }

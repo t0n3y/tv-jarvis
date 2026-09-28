@@ -202,6 +202,14 @@ Aufbau wie ein Tablet-Homescreen:
   Etikett, Tonarm folgt dem Songfortschritt, Tracklist); der YouTube-Player
   spielt unsichtbar dahinter. Sammlung: `data/vinyl.json` (beim ersten Start
   aus `app/vinyl_seed.json` befüllt).
+- **Uhr-App**: Uhr mit Sekunden, auf Wunsch im Vollbild auf dem Fernseher.
+  Timer über Vorlagen (1 Min – 1 Std) oder eigene Zeit; er zählt auf dem
+  Fernseher im Vollbild mit Fortschrittsring herunter. Läuft gerade
+  Plattenspieler, YouTube oder Jellyfin, zeigt eine kleine Notch oben die
+  Restzeit. Beim Ablauf wird alles pausiert (Radio gestoppt), der Fernseher
+  (falls aus) eingeschaltet und ein Alarmton gespielt, bis die Fernbedienung
+  geöffnet wird; dort dann groß „Beenden“ oder „Neu starten“. Der Timer läuft
+  im Dashboard-Dienst, also auch bei ausgeschaltetem Fernseher.
 - **Licht-App**: DMX-Scheinwerfer über den uDMX-Adapter – Farbe, Helligkeit,
   Effekte (Soft/Hard/Ramp) im BPM-Takt mit Fader und Tap-Sync.
 - **Einstellungen-App**: Wecker an/aus + Weck-/Verlasszeiten für Wochentag und
