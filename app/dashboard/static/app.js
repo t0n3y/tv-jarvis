@@ -586,10 +586,12 @@ function handleJellyfinMessage(msg) {
 // hls.js waehlt daraus die Qualitaet und laedt die Videostuecke direkt.
 
 const HLS_JS_URL = "https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js";
-const TWITCH_MAX_HEIGHT = 1080;
-// Verwirft der Pi mehr Bilder als das, geht es auf diese Aufloesung herunter
+// Stufen, die der Player versucht. Verwirft der Pi mehr als TWITCH_DROP_LIMIT
+// der Bilder, geht es eine Stufe herunter - und der Kiosk merkt sich die
+// Stufe, die ruckelfrei lief, fuer den naechsten Stream.
+const TWITCH_HEIGHTS = [1080, 720, 480];
 const TWITCH_DROP_LIMIT = 0.1;
-const TWITCH_FALLBACK_HEIGHT = 720;
+const TWITCH_HEIGHT_KEY = "twitchMaxHeight";
 const TWITCH_MAX_RETRIES = 3;
 
 const twVideo = $("tw-video");
@@ -598,6 +600,14 @@ let twCurrent = null;
 let twRetries = 0;
 let hlsLoading = null;
 let twLastQuality = null;
+
+function twitchMaxHeight() {
+  try {
+    const saved = Number(localStorage.getItem(TWITCH_HEIGHT_KEY));
+    if (TWITCH_HEIGHTS.includes(saved)) return saved;
+  } catch (err) {}
+  return TWITCH_HEIGHTS[0];
+}
 
 function loadHlsJs() {
   if (window.Hls) return Promise.resolve();
@@ -664,13 +674,15 @@ function attachTwitchStream() {
     // Live: etwas Puffer statt minimaler Verzoegerung - lieber stabil
     liveSyncDurationCount: 3,
     maxBufferLength: 20,
-    capLevelToPlayerSize: true,
+    // Nicht an die Fenstergroesse koppeln: das wuerde die eigene Begrenzung
+    // unten jede Sekunde ueberschreiben (der Fernseher ist ohnehin 1080p)
+    capLevelToPlayerSize: false,
     startLevel: -1,
   });
   twHls = hls;
   hls.on(Hls.Events.MANIFEST_PARSED, () => {
     if (twCurrent !== current) return;
-    capTwitchLevel(TWITCH_MAX_HEIGHT);
+    capTwitchLevel(twitchMaxHeight());
     twVideo.play().catch(() => {});
   });
   hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -719,7 +731,20 @@ async function startTwitch(msg) {
 function capTwitchLevel(maxHeight) {
   if (!twHls || !twHls.levels) return;
   const allowed = twHls.levels.map((level, i) => ({ i, height: level.height || 0 })).filter((l) => l.height <= maxHeight);
-  if (allowed.length) twHls.autoLevelCapping = Math.max(...allowed.map((l) => l.i));
+  if (!allowed.length) return;
+  const best = allowed.reduce((a, b) => (b.height > a.height ? b : a));
+  twHls.autoLevelCapping = best.i;
+  // Sofort ab dem naechsten Videostueck, nicht erst wenn die ABR-Logik will
+  if (twHls.currentLevel > best.i) twHls.nextLevel = best.i;
+}
+
+function lowerTwitchQuality() {
+  const next = TWITCH_HEIGHTS.find((h) => h < twVideo.videoHeight);
+  if (!next) return;
+  try {
+    localStorage.setItem(TWITCH_HEIGHT_KEY, String(next));
+  } catch (err) {}
+  capTwitchLevel(next);
 }
 
 // Alle 10 s Aufloesung und verworfene Bilder melden (landet im Log des
@@ -727,18 +752,25 @@ function capTwitchLevel(maxHeight) {
 setInterval(() => {
   if (!twCurrent || twVideo.paused || !twVideo.getVideoPlaybackQuality) return;
   const q = twVideo.getVideoPlaybackQuality();
-  if (twLastQuality && twVideo.videoHeight > TWITCH_FALLBACK_HEIGHT) {
+  if (twLastQuality && twLastQuality.height === twVideo.videoHeight) {
     const total = q.totalVideoFrames - twLastQuality.totalVideoFrames;
     const dropped = q.droppedVideoFrames - twLastQuality.droppedVideoFrames;
-    if (total > 0 && dropped / total > TWITCH_DROP_LIMIT) capTwitchLevel(TWITCH_FALLBACK_HEIGHT);
+    if (total > 0 && dropped / total > TWITCH_DROP_LIMIT) lowerTwitchQuality();
   }
-  twLastQuality = { totalVideoFrames: q.totalVideoFrames, droppedVideoFrames: q.droppedVideoFrames };
+  twLastQuality = { totalVideoFrames: q.totalVideoFrames, droppedVideoFrames: q.droppedVideoFrames, height: twVideo.videoHeight };
+  const level = twHls && twHls.levels && twHls.levels[twHls.currentLevel];
   sendWs({
     type: "twitch_stats",
     login: twCurrent.login,
     height: twVideo.videoHeight,
     dropped: q.droppedVideoFrames,
     total: q.totalVideoFrames,
+    // Zur Fehlersuche beim Ton
+    muted: twVideo.muted,
+    volume: twVideo.volume,
+    audio_bytes: twVideo.webkitAudioDecodedByteCount,
+    codecs: level ? `${level.videoCodec || "?"}/${level.audioCodec || "?"}` : null,
+    audio_tracks: twHls ? twHls.audioTracks.length : null,
   });
 }, 10000);
 

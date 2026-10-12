@@ -12,7 +12,7 @@ import time
 
 import requests
 
-from app import kiosk_media, radio, tts
+from app import audio_control, kiosk_media, radio, tts
 from app.config import Config
 from app.dashboard import kiosk
 from app.tv_control import get_controller
@@ -44,6 +44,7 @@ def power_on(cfg: Config) -> None:
     logger.info("Schalte Fernseher ein ...")
     tv.turn_on()
     time.sleep(cfg.tv_control.boot_wait_seconds)
+    audio_control.ensure_hdmi_output()
     kiosk.start(cfg)
 
 

@@ -13,6 +13,7 @@ import logging
 import os
 import re
 import subprocess
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,52 @@ def _wpctl(*args: str) -> str | None:
         logger.warning("wpctl %s fehlgeschlagen: %s", " ".join(args), exc)
         return None
     return result.stdout
+
+
+_SINK_ID = re.compile(r"^[^0-9]*([0-9]+)\.")
+HDMI_WAIT_SECONDS = 8
+
+
+def _hdmi_sink_id() -> str | None:
+    status = _wpctl("status") or ""
+    audio = status.split("Video", 1)[0]
+    sinks = audio.split("Sinks:", 1)[-1].split("Sources:", 1)[0]
+    for line in sinks.splitlines():
+        match = _SINK_ID.match(line)
+        if match and "HDMI" in line:
+            return match.group(1)
+    return None
+
+
+def ensure_hdmi_output() -> None:
+    """Sorgt dafuer, dass Chromium (YouTube, Jellyfin, Twitch, Plattenspieler)
+    ueber HDMI am Fernseher ausgibt.
+
+    Startet der Pi, waehrend der Fernseher nicht per HDMI verbunden ist, legt
+    WirePlumber den HDMI-Ausgang nur als "aus" an und spaeter nicht von selbst
+    neu an - dann landet der Ton im leeren Kopfhoerer-Anschluss. Ein Neustart
+    von WirePlumber (Benutzerdienst, kein sudo) erkennt die Geraete neu."""
+    sink = _hdmi_sink_id()
+    if sink is None:
+        logger.warning("Kein HDMI-Audioausgang in PipeWire - lasse WirePlumber die Geraete neu erkennen")
+        env = os.environ.copy()
+        env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+        try:
+            subprocess.run(["systemctl", "--user", "restart", "wireplumber"], env=env, timeout=15, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+            logger.warning("WirePlumber-Neustart fehlgeschlagen: %s", exc)
+            return
+        for _ in range(HDMI_WAIT_SECONDS * 2):
+            time.sleep(0.5)
+            sink = _hdmi_sink_id()
+            if sink:
+                break
+    if sink is None:
+        logger.warning("Auch danach kein HDMI-Audioausgang gefunden")
+        return
+    if "hdmi" not in (_wpctl("inspect", SINK) or "").lower():
+        _wpctl("set-default", sink)
+        logger.info("Standard-Audioausgang auf HDMI gesetzt (ID %s)", sink)
 
 
 def volume_up() -> None:

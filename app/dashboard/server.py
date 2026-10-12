@@ -1407,8 +1407,9 @@ def _handle_kiosk_report(msg: dict) -> None:
         return
     if msg_type == "twitch_stats":
         logger.info(
-            "Twitch %s: %sp, %s von %s Bildern verworfen",
+            "Twitch %s: %sp, %s von %s Bildern verworfen (Ton: stumm=%s, Lautstaerke=%s, %s Bytes, Codecs %s, Tonspuren %s)",
             msg.get("login"), msg.get("height"), msg.get("dropped"), msg.get("total"),
+            msg.get("muted"), msg.get("volume"), msg.get("audio_bytes"), msg.get("codecs"), msg.get("audio_tracks"),
         )
         return
     if msg_type == "twitch_error":
