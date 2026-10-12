@@ -44,6 +44,7 @@ from app import (
     schedule_store,
     school_settings,
     tv_power,
+    twitch,
     vinyl_library,
 )
 from app.briefing import build_briefing
@@ -161,6 +162,16 @@ jellyfin_now_playing: dict = {
 # Fortlaufende id, damit die Fernbedienung jeden Fehler genau einmal anzeigt
 jellyfin_error: dict = {"id": 0, "message": None}
 
+twitch_now_playing: dict = {
+    "login": None,
+    "display_name": None,
+    "title": None,
+    "avatar": None,
+    "thumbnail": None,
+    "playing": False,
+}
+twitch_error: dict = {"id": 0, "message": None}
+
 # Plattenspieler: die Warteschlange lebt hier (nicht im Kiosk), damit die
 # Fernbedienung vor/zurueck schalten kann. Jeder Song bekommt ein neues token;
 # Meldungen des Kiosks zu einem alten token werden ignoriert.
@@ -204,6 +215,10 @@ def _spawn(coro) -> None:
     task = asyncio.create_task(coro)
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
+
+
+def _reset_twitch_state() -> None:
+    twitch_now_playing.update(login=None, display_name=None, title=None, avatar=None, thumbnail=None, playing=False)
 
 
 def _reset_youtube_state() -> None:
@@ -378,9 +393,29 @@ def _apply_command_state(body: dict) -> None:
     # Fernbedienung oder direkt aus tv_power.py beim Ausschalten ausgeloest -
     # so bleibt der now-playing-Stand unabhaengig vom Ausloeser aktuell.
     msg_type = body.get("type")
-    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play"):
+    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play", "twitch_play"):
         clock_screen["on"] = False
-    if msg_type == "youtube_play":
+    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play"):
+        _reset_twitch_state()
+    if msg_type == "twitch_play":
+        _finish_jellyfin_session()
+        _reset_youtube_state()
+        _reset_vinyl_state()
+        twitch_now_playing.update(
+            login=body.get("login"),
+            display_name=body.get("display_name"),
+            title=body.get("title"),
+            avatar=body.get("avatar"),
+            thumbnail=body.get("thumbnail"),
+            playing=True,
+        )
+    elif msg_type == "twitch_pause":
+        twitch_now_playing["playing"] = False
+    elif msg_type == "twitch_resume":
+        twitch_now_playing["playing"] = True
+    elif msg_type == "twitch_stop":
+        _reset_twitch_state()
+    elif msg_type == "youtube_play":
         _finish_jellyfin_session()
         _reset_vinyl_state()
         video_id = body.get("video_id")
@@ -435,7 +470,7 @@ async def _send_to_kiosk(body: dict) -> bool:
     _apply_command_state(body)
     delivered = await manager.broadcast(body)
     msg_type = body.get("type") or ""
-    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play"):
+    if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play", "twitch_play"):
         manager.pending_play = None if delivered else body
     elif msg_type.endswith("_stop"):
         manager.pending_play = None
@@ -501,6 +536,74 @@ async def remote_youtube(request: Request) -> dict:
     else:
         raise HTTPException(status_code=400, detail="unbekannte action")
     return {"ok": True}
+
+
+# ---------- Twitch ----------
+
+@app.get("/api/remote/twitch", dependencies=[Depends(require_remote_secret)])
+async def get_twitch(force: bool = False) -> dict:
+    try:
+        channels = await asyncio.to_thread(twitch.channel_status, force)
+        error = None
+    except twitch.TwitchError as exc:
+        channels = [{"login": c, "display_name": c, "live": False} for c in twitch.load_channels()]
+        error = str(exc)
+    return {"channels": channels, "error": error, "now_playing": twitch_now_playing}
+
+
+@app.post("/api/remote/twitch/channels", dependencies=[Depends(require_remote_secret)])
+async def add_twitch_channel(request: Request) -> dict:
+    body = await request.json()
+    try:
+        login = await asyncio.to_thread(twitch.add_channel, body.get("login", ""))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except twitch.TwitchError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"ok": True, "login": login}
+
+
+@app.delete("/api/remote/twitch/channels/{login}", dependencies=[Depends(require_remote_secret)])
+async def remove_twitch_channel(login: str) -> dict:
+    await asyncio.to_thread(twitch.remove_channel, login)
+    return {"ok": True}
+
+
+@app.post("/api/remote/twitch", dependencies=[Depends(require_remote_secret)])
+async def remote_twitch(request: Request) -> dict:
+    body = await request.json()
+    action = body.get("action")
+    if action == "play":
+        login = twitch.normalize_login(body.get("login", ""))
+        channels = await asyncio.to_thread(twitch.channel_status)
+        channel = next((c for c in channels if c["login"] == login), None)
+        if not channel or not channel.get("live"):
+            raise HTTPException(status_code=400, detail="Der Kanal ist gerade nicht live")
+        await asyncio.to_thread(radio.stop)
+        await _ensure_tv_on()
+        await _send_to_kiosk({
+            "type": "twitch_play",
+            "login": login,
+            "display_name": channel["display_name"],
+            "title": channel["title"],
+            "avatar": channel["avatar"],
+            "thumbnail": channel["thumbnail"],
+        })
+    elif action in ("pause", "resume", "stop"):
+        await _send_to_kiosk({"type": f"twitch_{action}"})
+    else:
+        raise HTTPException(status_code=400, detail="unbekannte action")
+    return {"ok": True}
+
+
+@app.get("/api/twitch/playlist/{login}.m3u8", dependencies=[Depends(require_local)])
+async def twitch_playlist(login: str) -> Response:
+    """Frische HLS-Uebersicht fuer den Kiosk (Twitch erlaubt sie nicht per CORS)."""
+    try:
+        text = await asyncio.to_thread(twitch.master_playlist, login)
+    except twitch.TwitchError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return Response(text, media_type="application/vnd.apple.mpegurl", headers={"Cache-Control": "no-store"})
 
 
 # ---------- Jellyfin ----------
@@ -1096,6 +1199,8 @@ async def _timer_wait(timer_id: int) -> None:
 
 
 async def _pause_all_media() -> None:
+    if twitch_now_playing["login"] and twitch_now_playing["playing"]:
+        await _send_to_kiosk({"type": "twitch_pause"})
     if youtube_now_playing["video_id"] and youtube_now_playing["playing"]:
         await _send_to_kiosk({"type": "youtube_pause"})
     if jellyfin_now_playing["item_id"] and jellyfin_now_playing["playing"]:
@@ -1195,6 +1300,8 @@ async def get_now_playing() -> dict:
     return {
         "tv_on": kiosk.is_running(),
         "youtube": youtube_now_playing,
+        "twitch": twitch_now_playing,
+        "twitch_error": twitch_error,
         "jellyfin": jellyfin_now_playing,
         "jellyfin_error": jellyfin_error,
         "vinyl": _vinyl_public_state(),
@@ -1293,6 +1400,22 @@ def _handle_kiosk_report(msg: dict) -> None:
     msg_type = msg.get("type")
     if isinstance(msg_type, str) and msg_type.startswith("vinyl_"):
         _handle_vinyl_report(msg)
+        return
+    if msg_type == "twitch_state":
+        if msg.get("login") == twitch_now_playing["login"]:
+            twitch_now_playing["playing"] = bool(msg.get("playing"))
+        return
+    if msg_type == "twitch_stats":
+        logger.info(
+            "Twitch %s: %sp, %s von %s Bildern verworfen",
+            msg.get("login"), msg.get("height"), msg.get("dropped"), msg.get("total"),
+        )
+        return
+    if msg_type == "twitch_error":
+        if msg.get("login") == twitch_now_playing["login"]:
+            _reset_twitch_state()
+            twitch_error["id"] += 1
+            twitch_error["message"] = msg.get("message") or "Der Stream ließ sich nicht abspielen"
         return
     if msg_type == "youtube_progress":
         youtube_now_playing["current_time"] = _as_float(msg.get("current_time"))

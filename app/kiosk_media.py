@@ -1,4 +1,4 @@
-"""Steuert die Medienwiedergabe (YouTube, Jellyfin, Plattenspieler) im Kiosk-Browser per WebSocket.
+"""Steuert die Medienwiedergabe (YouTube, Jellyfin, Plattenspieler, Twitch) im Kiosk-Browser per WebSocket.
 
 Die eigentlichen Player laufen im Frontend (YouTube IFrame API bzw. ein
 <video>-Element fuer Jellyfin, siehe dashboard/static/app.js) - dieses Modul
@@ -139,7 +139,12 @@ def stop_vinyl(cfg: Config) -> None:
     _send(cfg, {"type": "vinyl_stop"})
 
 
+def stop_twitch(cfg: Config) -> None:
+    _send(cfg, {"type": "twitch_stop"})
+
+
 def stop_all_media(cfg: Config) -> None:
+    stop_twitch(cfg)
     stop_youtube(cfg)
     stop_jellyfin(cfg)
     stop_vinyl(cfg)

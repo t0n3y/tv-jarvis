@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#02060d" />
+<meta name="theme-color" content="#000000" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -12,7 +12,6 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=DM+Sans:opsz,wght@9..40,400..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="remote.css" />
 <link rel="stylesheet" href="remote-vinyl.css" />
@@ -54,6 +53,9 @@
   <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.8" y="4.5" width="18.4" height="12.5" rx="2.2"/><path d="M8.5 20.2h7M12 17v3.2"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-twitch" viewBox="0 0 24 24"><path d="M5 3.5h15.5v10.2L15.6 18.6h-3.4l-3 2.9V18.6H5z"/><path d="M11 8v4.2M15.5 8v4.2"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20c.9-3.6 3.8-5.6 7.2-5.6s6.3 2 7.2 5.6"/></symbol>
+  <symbol id="i-minus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M7.8 12h8.4" stroke="#fff" stroke-width="2.4"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
 </svg>
 
@@ -103,31 +105,35 @@
 
     <div class="section-label">Apps</div>
     <div class="app-grid">
-      <button class="app-tile" data-open="jellyfin" style="--app-rgb: 167, 118, 255">
+      <button class="app-tile" data-open="jellyfin" style="--app-rgb: 94, 92, 230">
         <span class="app-icon"><svg class="icon"><use href="#i-jellyfin"/></svg></span>
         <span class="app-name">Jellyfin</span>
       </button>
-      <button class="app-tile" data-open="youtube" style="--app-rgb: 255, 94, 98">
+      <button class="app-tile" data-open="youtube" style="--app-rgb: 255, 59, 48">
         <span class="app-icon"><svg class="icon"><use href="#i-youtube"/></svg></span>
         <span class="app-name">YouTube</span>
       </button>
-      <button class="app-tile" data-open="radio" style="--app-rgb: 79, 216, 255">
+      <button class="app-tile" data-open="twitch" style="--app-rgb: 145, 70, 255">
+        <span class="app-icon"><svg class="icon"><use href="#i-twitch"/></svg></span>
+        <span class="app-name">Twitch</span>
+      </button>
+      <button class="app-tile" data-open="radio" style="--app-rgb: 255, 45, 85">
         <span class="app-icon"><svg class="icon"><use href="#i-radio"/></svg></span>
         <span class="app-name">Radio</span>
       </button>
-      <button class="app-tile" data-open="vinyl" style="--app-rgb: 255, 107, 61">
+      <button class="app-tile" data-open="vinyl" style="--app-rgb: 166, 102, 60">
         <span class="app-icon"><svg class="icon"><use href="#i-vinyl"/></svg></span>
         <span class="app-name">Platten</span>
       </button>
-      <button class="app-tile" data-open="clock" style="--app-rgb: 120, 230, 190">
+      <button class="app-tile" data-open="clock" style="--app-rgb: 255, 149, 0">
         <span class="app-icon"><svg class="icon"><use href="#i-timer"/></svg></span>
         <span class="app-name">Uhr</span>
       </button>
-      <button class="app-tile" data-open="light" style="--app-rgb: 255, 176, 59">
+      <button class="app-tile" data-open="light" style="--app-rgb: 255, 204, 0">
         <span class="app-icon"><svg class="icon"><use href="#i-sun"/></svg></span>
         <span class="app-name">Licht</span>
       </button>
-      <button class="app-tile" data-open="settings" style="--app-rgb: 170, 190, 214">
+      <button class="app-tile" data-open="settings" style="--app-rgb: 142, 142, 147">
         <span class="app-icon"><svg class="icon"><use href="#i-sliders"/></svg></span>
         <span class="app-name">Einstellungen</span>
       </button>
@@ -219,6 +225,40 @@
       <button class="btn btn-primary btn-block" id="yt-play"><svg class="icon"><use href="#i-play"/></svg>Abspielen</button>
       <p class="hint">In der YouTube-App: Teilen → Link kopieren → hier einfügen. Das × stoppt das laufende Video.</p>
     </div>
+  </section>
+
+  <!-- ================= Twitch ================= -->
+  <section class="view hidden" id="view-twitch">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Twitch</h1>
+      <button class="tw-edit hidden" id="tw-edit" type="button">Bearbeiten</button>
+    </div>
+
+    <div class="card np-card hidden" id="tw-now">
+      <div class="np-art" id="tw-now-art">
+        <div class="np-art-meta">
+          <div class="kicker"><span class="live-dot"></span>Auf dem Fernseher</div>
+          <div class="np-title" id="tw-now-title"></div>
+          <div class="np-sub" id="tw-now-sub"></div>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="pill-btn" id="tw-toggle"><svg class="icon"><use href="#i-pause"/></svg><span>Pause</span></button>
+        <button class="round-btn" id="tw-stop" aria-label="Stopp"><svg class="icon"><use href="#i-stop"/></svg></button>
+      </div>
+    </div>
+
+    <div class="tw-live" id="tw-live"></div>
+    <div class="empty-state hidden" id="tw-empty"></div>
+
+    <div class="section-label hidden" id="tw-offline-label">Offline</div>
+    <div class="list hidden" id="tw-offline"></div>
+
+    <form class="tw-add" id="tw-form" autocomplete="off">
+      <label class="field"><svg class="icon"><use href="#i-plus"/></svg><input id="tw-input" type="text" placeholder="Streamer oder twitch.tv-Link" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" /></label>
+      <button class="btn btn-primary" type="submit">Hinzufügen</button>
+    </form>
   </section>
 
   <!-- ================= Radio ================= -->

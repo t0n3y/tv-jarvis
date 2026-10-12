@@ -3,7 +3,7 @@
 /* ============================================================
    JARVIS Fernbedienung
    Aufbau: Grundlagen (DOM, API, Toast) → Navigation → Homescreen →
-   Apps (YouTube, Jellyfin, Radio, Einstellungen) → Status-Poll + Dock.
+   Apps (YouTube, Jellyfin, Twitch, Radio, Einstellungen) → Status-Poll + Dock.
    ============================================================ */
 
 const POLL_MS = 1500;
@@ -12,10 +12,13 @@ const OPTIMISTIC_HOLD_MS = 2500;
 const POWER_HOLD_MS = 15000;
 const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 const MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
-const JELLYFIN_RGB = "167, 118, 255";
-const YOUTUBE_RGB = "255, 94, 98";
-const RADIO_RGB = "79, 216, 255";
+// iOS-Systemfarben je App (als "r, g, b" fuer rgba())
+const JELLYFIN_RGB = "94, 92, 230";
+const YOUTUBE_RGB = "255, 69, 58";
+const RADIO_RGB = "255, 55, 95";
 const VINYL_RGB = "255, 107, 61";
+const TWITCH_RGB = "145, 70, 255";
+const TWITCH_REFRESH_MS = 30000;
 
 // ---------- DOM-Helfer ----------
 
@@ -177,7 +180,7 @@ function onTap(el, handler) {
 
 // ---------- Globaler Zustand (vom Status-Poll) ----------
 
-let state = { tv_on: false, youtube: {}, jellyfin: {}, radio: {}, jellyfin_error: null };
+let state = { tv_on: false, youtube: {}, jellyfin: {}, twitch: {}, radio: {}, jellyfin_error: null };
 let playingHold = null;
 let powerHold = null;
 
@@ -208,6 +211,7 @@ let currentView = "home";
 
 const VIEW_HOOKS = {
   jellyfin: () => jellyfinLoadHome(),
+  twitch: () => loadTwitch(true),
   radio: () => loadStations(),
   vinyl: () => loadVinyl(),
   clock: () => renderTimer(),
@@ -219,7 +223,10 @@ function showView(name) {
   if (!$(`view-${name}`)) name = "home";
   document.querySelectorAll(".view").forEach((el) => el.classList.toggle("hidden", el.id !== `view-${name}`));
   currentView = name;
+  // Fuer das Stylesheet: z.B. Zurueck-Knopf in der Kopfzeile ausserhalb von Home
+  document.body.dataset.view = name;
   document.body.classList.toggle("retro", name === "vinyl");
+  if (name !== "twitch") clearTimeout(tw.timer);
   $("dock-home").classList.toggle("current", name === "home");
   window.scrollTo(0, 0);
   if (VIEW_HOOKS[name]) VIEW_HOOKS[name]();
@@ -335,6 +342,20 @@ function activeMedia() {
       rgb: JELLYFIN_RGB,
     };
   }
+  const twitchState = state.twitch || {};
+  if (twitchState.login) {
+    return {
+      kind: "twitch",
+      view: "twitch",
+      playing: !!twitchState.playing,
+      title: twitchState.display_name || twitchState.login,
+      sub: twitchState.title || "Live auf Twitch",
+      image: twitchState.avatar,
+      icon: "twitch",
+      source: "Twitch",
+      rgb: TWITCH_RGB,
+    };
+  }
   if (yt.video_id) {
     return {
       kind: "youtube",
@@ -400,7 +421,7 @@ onTap($("mini-toggle"), () => toggleActiveMedia());
 
 async function togglePlayback(kind) {
   const media = state[kind] || {};
-  const endpoint = { jellyfin: "/api/remote/jellyfin", vinyl: "/api/remote/vinyl" }[kind] || "/api/remote/youtube";
+  const endpoint = { jellyfin: "/api/remote/jellyfin", vinyl: "/api/remote/vinyl", twitch: "/api/remote/twitch" }[kind] || "/api/remote/youtube";
   const action = media.playing ? "pause" : "resume";
   holdPlaying(kind, !media.playing);
   await api.post(endpoint, { action });
@@ -408,7 +429,7 @@ async function togglePlayback(kind) {
 
 async function toggleActiveMedia() {
   const media = activeMedia();
-  if (media && (media.kind === "jellyfin" || media.kind === "youtube" || media.kind === "vinyl")) {
+  if (media && ["jellyfin", "youtube", "vinyl", "twitch"].includes(media.kind)) {
     await togglePlayback(media.kind);
     return;
   }
@@ -2486,6 +2507,194 @@ onTap($("dock-vol-up"), () => changeVolume(1));
 onTap($("dock-vol-down"), () => changeVolume(-1));
 onTap($("dock-mute"), () => changeVolume(0));
 
+// ---------- Twitch: Lieblings-Streamer, wer live ist ----------
+
+const tw = { channels: [], editing: false, timer: null, lastErrorId: null, loaded: false };
+
+function formatViewers(n) {
+  if (n >= 1000) return `${(n / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 })} Tsd.`;
+  return String(n || 0);
+}
+
+async function loadTwitch(force = false) {
+  clearTimeout(tw.timer);
+  try {
+    const data = await api.get(`/api/remote/twitch${force ? "?force=true" : ""}`);
+    tw.channels = data.channels || [];
+    tw.loaded = true;
+    if (data.error) toast(data.error, true);
+    renderTwitch();
+  } catch (err) {
+    toast(err.message, true);
+  }
+  if (currentView === "twitch") tw.timer = setTimeout(() => loadTwitch(), TWITCH_REFRESH_MS);
+}
+
+function twitchRemoveButton(channel) {
+  return h(
+    "button",
+    {
+      class: "tw-row-remove",
+      type: "button",
+      "aria-label": `${channel.display_name} entfernen`,
+      onclick: async (event) => {
+        event.stopPropagation();
+        try {
+          await api.del(`/api/remote/twitch/channels/${encodeURIComponent(channel.login)}`);
+          tw.channels = tw.channels.filter((c) => c.login !== channel.login);
+          if (!tw.channels.length) tw.editing = false;
+          renderTwitch();
+        } catch (err) {
+          toast(err.message, true);
+        }
+      },
+    },
+    icon("minus-circle")
+  );
+}
+
+async function playTwitch(channel) {
+  if (tw.editing) return;
+  try {
+    await api.post("/api/remote/twitch", { action: "play", login: channel.login });
+    toast(`${channel.display_name} kommt auf den Fernseher`);
+    poll();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+function renderTwitch() {
+  const playingLogin = (state.twitch || {}).login;
+  const live = tw.channels.filter((c) => c.live);
+  const offline = tw.channels.filter((c) => !c.live);
+
+  const edit = $("tw-edit");
+  edit.classList.toggle("hidden", !tw.channels.length);
+  edit.textContent = tw.editing ? "Fertig" : "Bearbeiten";
+
+  $("tw-live").replaceChildren(
+    ...live.map((c) => {
+      const thumb = h(
+        "div",
+        { class: "tw-thumb" },
+        h("span", { class: "tw-badge" }, "LIVE"),
+        h("span", { class: "tw-viewers glass" }, icon("person"), formatViewers(c.viewers)),
+        c.login === playingLogin ? h("span", { class: "tw-on-tv glass" }, icon("tv"), "Läuft") : null,
+        tw.editing ? twitchRemoveButton(c) : null
+      );
+      setBackground(thumb, c.thumbnail);
+      const avatar = h("span", { class: "tw-avatar" });
+      setBackground(avatar, c.avatar);
+      return h(
+        "div",
+        {
+          class: c.login === playingLogin ? "tw-card playing" : "tw-card",
+          role: "button",
+          tabindex: "0",
+          "aria-label": `${c.display_name} auf dem Fernseher ansehen`,
+          onclick: () => playTwitch(c),
+        },
+        thumb,
+        h(
+          "div",
+          { class: "tw-info" },
+          avatar,
+          h(
+            "div",
+            { class: "tw-text" },
+            h("div", { class: "tw-name" }, c.display_name),
+            h("div", { class: "tw-title" }, c.title),
+            c.game ? h("div", { class: "tw-game" }, c.game) : null
+          )
+        )
+      );
+    })
+  );
+
+  const empty = $("tw-empty");
+  if (!tw.loaded) {
+    empty.classList.add("hidden");
+  } else if (!tw.channels.length) {
+    empty.replaceChildren(icon("twitch"), "Füge unten deine Lieblings-Streamer hinzu. Wer live ist, erscheint dann hier.");
+    empty.classList.remove("hidden");
+  } else if (!live.length) {
+    empty.replaceChildren(icon("twitch"), "Gerade ist niemand live.");
+    empty.classList.remove("hidden");
+  } else {
+    empty.classList.add("hidden");
+  }
+
+  $("tw-offline-label").classList.toggle("hidden", !offline.length);
+  const list = $("tw-offline");
+  list.classList.toggle("hidden", !offline.length);
+  list.replaceChildren(
+    ...offline.map((c) => {
+      const avatar = h("span", { class: "tw-avatar" });
+      setBackground(avatar, c.avatar);
+      return h(
+        "div",
+        { class: "row tw-row" },
+        avatar,
+        h("span", { class: "row-main" }, h("div", null, c.display_name), h("div", { class: "row-sub" }, "Offline")),
+        tw.editing ? twitchRemoveButton(c) : null
+      );
+    })
+  );
+}
+
+function renderTwitchNow() {
+  const now = state.twitch || {};
+  const active = !!now.login;
+  $("tw-now").classList.toggle("hidden", !active);
+  const error = state.twitch_error;
+  if (error) {
+    if (tw.lastErrorId !== null && error.id !== tw.lastErrorId && error.message) toast(error.message, true);
+    tw.lastErrorId = error.id;
+  }
+  if (!active) return;
+  setBackground($("tw-now-art"), now.thumbnail || now.avatar);
+  $("tw-now-title").textContent = now.display_name || now.login;
+  $("tw-now-sub").textContent = now.title || "";
+  const toggle = $("tw-toggle");
+  setIcon(toggle, now.playing ? "pause" : "play", now.playing ? "Pause" : "Weiter");
+  if (currentView === "twitch") {
+    document.querySelectorAll("#tw-live .tw-card").forEach((card, i) => {
+      const live = tw.channels.filter((c) => c.live)[i];
+      card.classList.toggle("playing", !!live && live.login === now.login);
+    });
+  }
+}
+
+onTap($("tw-toggle"), () => togglePlayback("twitch"));
+onTap($("tw-stop"), async () => {
+  await api.post("/api/remote/twitch", { action: "stop" });
+  poll();
+});
+onTap($("tw-edit"), () => {
+  tw.editing = !tw.editing;
+  renderTwitch();
+});
+
+$("tw-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = $("tw-input");
+  const login = input.value.trim();
+  if (!login) {
+    toast("Bitte einen Twitch-Namen eingeben", true);
+    return;
+  }
+  try {
+    const data = await api.post("/api/remote/twitch/channels", { login });
+    input.value = "";
+    document.activeElement?.blur();
+    toast(`${data.login} hinzugefügt`);
+    loadTwitch(true);
+  } catch (err) {
+    toast(err.message, true);
+  }
+});
+
 // ---------- Status-Poll ----------
 
 function renderAll() {
@@ -2497,6 +2706,7 @@ function renderAll() {
   renderJellyfinNow();
   renderRadio();
   renderVinylNow();
+  renderTwitchNow();
   syncTimerFromState();
   syncLightFromPoll();
 }

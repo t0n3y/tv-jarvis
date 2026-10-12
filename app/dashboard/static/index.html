@@ -112,6 +112,24 @@
     </div>
   </div>
 
+  <!-- Twitch: nur das Video, ohne Chat und ohne Twitch-Oberflaeche -->
+  <div id="twitch-screen" class="media-screen hidden">
+    <video id="tw-video" playsinline></video>
+    <div id="tw-loading" class="media-loading hidden">
+      <div class="loader-rings"><span></span><span></span><span></span></div>
+      <div class="media-loading-label">LADE</div>
+      <div class="media-loading-title" id="tw-loading-title"></div>
+    </div>
+    <div id="tw-pause" class="pause-overlay hidden">
+      <div class="pause-icon">&#10073;&#10073;</div>
+      <div class="pause-title" id="tw-pause-title"></div>
+    </div>
+    <div id="tw-error" class="media-error hidden">
+      <div class="media-error-icon">!</div>
+      <div class="media-error-text" id="tw-error-text"></div>
+    </div>
+  </div>
+
   <!-- Plattenspieler: der YouTube-Player liegt unsichtbar HINTER der Buehne
        (nicht display:none - dann wuerde er nicht zuverlaessig abspielen) -->
   <div id="vinyl-screen" class="hidden">

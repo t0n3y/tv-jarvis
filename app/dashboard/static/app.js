@@ -336,11 +336,13 @@ function showScreen(name) {
   if (currentScreen === "youtube" && name !== "youtube") stopYoutubePlayback();
   if (currentScreen === "jellyfin" && name !== "jellyfin") stopJellyfinPlayback();
   if (currentScreen === "vinyl" && name !== "vinyl") stopVinylPlayback();
+  if (currentScreen === "twitch" && name !== "twitch") stopTwitchPlayback();
   currentScreen = name;
   $("dashboard").classList.toggle("hidden", name !== "dashboard");
   $("player-screen").classList.toggle("hidden", name !== "youtube");
   $("jellyfin-screen").classList.toggle("hidden", name !== "jellyfin");
   $("vinyl-screen").classList.toggle("hidden", name !== "vinyl");
+  $("twitch-screen").classList.toggle("hidden", name !== "twitch");
   $("clock-screen").classList.toggle("hidden", name !== "clock");
   renderClock();
 }
@@ -576,6 +578,199 @@ function handleJellyfinMessage(msg) {
     jfVideo.currentTime = Math.max(0, Math.min(jfVideo.currentTime + Number(msg.seconds || 0), end));
   } else if (msg.type === "jellyfin_seek_to") {
     jfVideo.currentTime = Math.max(0, Number(msg.seconds) || 0);
+  }
+}
+
+// ---------- Twitch (HLS ueber hls.js, ganz ohne Twitch-Oberflaeche) ----------
+// Der Server liefert die frische Stream-Uebersicht unter /api/twitch/playlist;
+// hls.js waehlt daraus die Qualitaet und laedt die Videostuecke direkt.
+
+const HLS_JS_URL = "https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js";
+const TWITCH_MAX_HEIGHT = 1080;
+// Verwirft der Pi mehr Bilder als das, geht es auf diese Aufloesung herunter
+const TWITCH_DROP_LIMIT = 0.1;
+const TWITCH_FALLBACK_HEIGHT = 720;
+const TWITCH_MAX_RETRIES = 3;
+
+const twVideo = $("tw-video");
+let twHls = null;
+let twCurrent = null;
+let twRetries = 0;
+let hlsLoading = null;
+let twLastQuality = null;
+
+function loadHlsJs() {
+  if (window.Hls) return Promise.resolve();
+  if (!hlsLoading) {
+    hlsLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = HLS_JS_URL;
+      script.onload = resolve;
+      script.onerror = () => {
+        hlsLoading = null;
+        reject(new Error("hls.js nicht geladen"));
+      };
+      document.head.append(script);
+    });
+  }
+  return hlsLoading;
+}
+
+function setTwitchLoading(show) {
+  $("tw-loading").classList.toggle("hidden", !show);
+}
+
+function setTwitchPause(show) {
+  $("tw-pause").classList.toggle("hidden", !show);
+}
+
+function reportTwitch() {
+  if (twCurrent) sendWs({ type: "twitch_state", login: twCurrent.login, playing: !twVideo.paused });
+}
+
+function destroyTwitchHls() {
+  if (twHls) {
+    twHls.destroy();
+    twHls = null;
+  }
+}
+
+function stopTwitchPlayback() {
+  twCurrent = null;
+  destroyTwitchHls();
+  twVideo.pause();
+  twVideo.removeAttribute("src");
+  twVideo.load();
+  setTwitchLoading(false);
+  setTwitchPause(false);
+}
+
+function showTwitchError(message) {
+  const login = twCurrent && twCurrent.login;
+  stopTwitchPlayback();
+  if (login) sendWs({ type: "twitch_error", login, message });
+  $("tw-error-text").textContent = message;
+  $("tw-error").classList.remove("hidden");
+  setTimeout(() => {
+    $("tw-error").classList.add("hidden");
+    if (currentScreen === "twitch") showScreen("dashboard");
+  }, ERROR_DISPLAY_MS);
+}
+
+function attachTwitchStream() {
+  const current = twCurrent;
+  destroyTwitchHls();
+  const hls = new Hls({
+    // Live: etwas Puffer statt minimaler Verzoegerung - lieber stabil
+    liveSyncDurationCount: 3,
+    maxBufferLength: 20,
+    capLevelToPlayerSize: true,
+    startLevel: -1,
+  });
+  twHls = hls;
+  hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    if (twCurrent !== current) return;
+    capTwitchLevel(TWITCH_MAX_HEIGHT);
+    twVideo.play().catch(() => {});
+  });
+  hls.on(Hls.Events.ERROR, (_event, data) => {
+    if (twCurrent !== current || !data.fatal) return;
+    if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+      hls.recoverMediaError();
+    } else if (twRetries < TWITCH_MAX_RETRIES) {
+      // Abgelaufener Zugangsschluessel oder Netzaussetzer: frisch laden
+      twRetries += 1;
+      setTimeout(() => {
+        if (twCurrent === current) attachTwitchStream();
+      }, 1500 * twRetries);
+    } else {
+      showTwitchError(`${current.displayName} ist offline oder der Stream lädt nicht.`);
+    }
+  });
+  hls.loadSource(`/api/twitch/playlist/${encodeURIComponent(current.login)}.m3u8?t=${Date.now()}`);
+  hls.attachMedia(twVideo);
+}
+
+async function startTwitch(msg) {
+  showScreen("twitch");
+  $("tw-error").classList.add("hidden");
+  setTwitchPause(false);
+  twCurrent = { login: msg.login, displayName: msg.display_name || msg.login };
+  twRetries = 0;
+  twLastQuality = null;
+  $("tw-loading-title").textContent = twCurrent.displayName;
+  $("tw-pause-title").textContent = twCurrent.displayName;
+  setTwitchLoading(true);
+  const current = twCurrent;
+  try {
+    await loadHlsJs();
+  } catch (err) {
+    if (twCurrent === current) showTwitchError("Der Twitch-Player ließ sich nicht laden.");
+    return;
+  }
+  if (twCurrent !== current) return;
+  if (!Hls.isSupported()) {
+    showTwitchError("Dieser Browser kann Twitch-Streams nicht abspielen.");
+    return;
+  }
+  attachTwitchStream();
+}
+
+function capTwitchLevel(maxHeight) {
+  if (!twHls || !twHls.levels) return;
+  const allowed = twHls.levels.map((level, i) => ({ i, height: level.height || 0 })).filter((l) => l.height <= maxHeight);
+  if (allowed.length) twHls.autoLevelCapping = Math.max(...allowed.map((l) => l.i));
+}
+
+// Alle 10 s Aufloesung und verworfene Bilder melden (landet im Log des
+// Dienstes). Schafft der Pi die Aufloesung nicht ruckelfrei, eine Stufe runter.
+setInterval(() => {
+  if (!twCurrent || twVideo.paused || !twVideo.getVideoPlaybackQuality) return;
+  const q = twVideo.getVideoPlaybackQuality();
+  if (twLastQuality && twVideo.videoHeight > TWITCH_FALLBACK_HEIGHT) {
+    const total = q.totalVideoFrames - twLastQuality.totalVideoFrames;
+    const dropped = q.droppedVideoFrames - twLastQuality.droppedVideoFrames;
+    if (total > 0 && dropped / total > TWITCH_DROP_LIMIT) capTwitchLevel(TWITCH_FALLBACK_HEIGHT);
+  }
+  twLastQuality = { totalVideoFrames: q.totalVideoFrames, droppedVideoFrames: q.droppedVideoFrames };
+  sendWs({
+    type: "twitch_stats",
+    login: twCurrent.login,
+    height: twVideo.videoHeight,
+    dropped: q.droppedVideoFrames,
+    total: q.totalVideoFrames,
+  });
+}, 10000);
+
+twVideo.addEventListener("playing", () => {
+  twRetries = 0;
+  setTwitchLoading(false);
+  setTwitchPause(false);
+  reportTwitch();
+});
+twVideo.addEventListener("pause", () => {
+  if (!twCurrent) return;
+  setTwitchPause(true);
+  reportTwitch();
+});
+twVideo.addEventListener("waiting", () => {
+  if (twCurrent && !twVideo.paused) setTwitchLoading(true);
+});
+
+function handleTwitchMessage(msg) {
+  if (msg.type === "twitch_play") {
+    bootDone.then(() => startTwitch(msg));
+    return;
+  }
+  if (currentScreen !== "twitch" || !twCurrent) return;
+  if (msg.type === "twitch_stop") {
+    showScreen("dashboard");
+  } else if (msg.type === "twitch_pause") {
+    twVideo.pause();
+  } else if (msg.type === "twitch_resume") {
+    // Nach einer Pause wieder an die Live-Kante springen
+    if (twHls && Number.isFinite(twHls.liveSyncPosition)) twVideo.currentTime = twHls.liveSyncPosition;
+    twVideo.play().catch(() => {});
   }
 }
 
@@ -991,6 +1186,8 @@ function connectWebSocket() {
         handleJellyfinMessage(msg);
       } else if (msg.type && msg.type.startsWith("vinyl_")) {
         handleVinylMessage(msg);
+      } else if (msg.type && msg.type.startsWith("twitch_")) {
+        handleTwitchMessage(msg);
       } else if (msg.type === "timer_state" || msg.type === "clock_show" || msg.type === "clock_hide") {
         handleTimerMessage(msg);
       }
