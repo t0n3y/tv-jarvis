@@ -19,9 +19,13 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
+import shutil
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 
 from app.config import Config
@@ -130,8 +134,98 @@ def _synthesize(job: dict) -> None:
         out.flush()
 
 
+class Speaker:
+    """Haelt das Sprachmodell in einem eigenen Prozess geladen - fuer viele
+    kurze Ansagen hintereinander (Sprachschach). speak() laedt es dagegen
+    jedes Mal neu, was pro Satz rund eine Sekunde kostet."""
+
+    def __init__(self, cfg: Config) -> None:
+        self.cfg = cfg
+        self._proc: subprocess.Popen | None = None
+        self._lock = threading.Lock()
+
+    def _ensure(self) -> subprocess.Popen:
+        if self._proc is not None and self._proc.poll() is None:
+            return self._proc
+        model_path = self.cfg.tts.model_dir / f"{self.cfg.tts.voice}.onnx"
+        config_path = self.cfg.tts.model_dir / f"{self.cfg.tts.voice}.onnx.json"
+        settings = {
+            "model": str(model_path),
+            "length_scale": 1.0 / self.cfg.tts.speed if self.cfg.tts.speed else 1.0,
+            "sample_rate": _sample_rate(config_path),
+            "device": self.cfg.audio.alsa_device,
+        }
+        self._proc = subprocess.Popen(
+            [sys.executable, "-m", "app.tts", "--serve", json.dumps(settings)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+            cwd=str(Path(__file__).resolve().parent.parent),
+        )
+        return self._proc
+
+    def warm_up(self) -> None:
+        """Modell schon laden, bevor die erste Ansage kommt."""
+        with self._lock:
+            self._ensure()
+
+    def say(self, text: str, times: int = 1) -> None:
+        """Spricht und kehrt erst zurueck, wenn die Ansage zu Ende ist (oder
+        stop() sie abgebrochen hat)."""
+        if not text.strip():
+            return
+        with self._lock:
+            proc = self._ensure()
+            try:
+                assert proc.stdin is not None and proc.stdout is not None
+                proc.stdin.write(json.dumps({"text": text, "times": max(1, min(int(times), 3))}) + "\n")
+                proc.stdin.flush()
+                proc.stdout.readline()
+            except (BrokenPipeError, OSError, ValueError):
+                self._proc = None
+
+    def stop(self) -> None:
+        """Laufende Ansage sofort abbrechen (das Modell wird beim naechsten
+        Satz neu geladen)."""
+        proc, self._proc = self._proc, None
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+
+
+def _serve(settings: dict) -> None:
+    """Worker fuer Speaker: liest Auftraege zeilenweise, spielt sie ab und
+    meldet "done"."""
+    from piper import PiperVoice, SynthesisConfig
+
+    voice = PiperVoice.load(settings["model"])
+    syn_config = SynthesisConfig(length_scale=settings["length_scale"])
+    # Ueber PipeWire statt direkt aufs HDMI-Geraet: spielt Chromium gleichzeitig
+    # Ton (chess.com-Zuggeraeusche), haelt PipeWire das Geraet belegt und aplay
+    # bekaeme "Geraet belegt"
+    if shutil.which("pw-play"):
+        player = ["pw-play", "--raw", "--rate", str(settings["sample_rate"]), "--channels", "1", "--format", "s16", "-"]
+    else:
+        player = ["aplay", "-q", "-r", str(settings["sample_rate"]), "-f", "S16_LE", "-t", "raw"]
+        if settings.get("device"):
+            player += ["-D", settings["device"]]
+        player.append("-")
+    env = os.environ.copy()
+    env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    for line in sys.stdin:
+        job = json.loads(line)
+        audio = b"".join(chunk.audio_int16_bytes for chunk in voice.synthesize(job["text"], syn_config=syn_config))
+        for i in range(job.get("times", 1)):
+            subprocess.run(player, input=audio, env=env, check=False)
+            if i < job.get("times", 1) - 1:
+                time.sleep(0.9)
+        print("done", flush=True)
+
+
 if __name__ == "__main__":
     try:
-        _synthesize(json.loads(sys.stdin.read()))
-    except BrokenPipeError:
+        if len(sys.argv) > 2 and sys.argv[1] == "--serve":
+            _serve(json.loads(sys.argv[2]))
+        else:
+            _synthesize(json.loads(sys.stdin.read()))
+    except (BrokenPipeError, KeyboardInterrupt):
         pass

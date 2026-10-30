@@ -56,6 +56,11 @@
   <symbol id="i-twitch" viewBox="0 0 24 24"><path d="M5 3.5h15.5v10.2L15.6 18.6h-3.4l-3 2.9V18.6H5z"/><path d="M11 8v4.2M15.5 8v4.2"/></symbol>
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20c.9-3.6 3.8-5.6 7.2-5.6s6.3 2 7.2 5.6"/></symbol>
   <symbol id="i-minus-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M7.8 12h8.4" stroke="#fff" stroke-width="2.4"/></symbol>
+  <symbol id="i-knight" viewBox="0 0 24 24"><path d="M7 20.5h11"/><path d="M8.5 20.5c0-3 1.6-4.6 3.4-6.4-1.8.4-3.4.2-4.6-.8l2.8-4.2c.2-2 1.6-4.1 3.9-4.6l.6-1.5 1.1 1.8c2.2 1.4 3.3 4 3.3 7.2v8.5"/><circle cx="12.6" cy="8.3" r=".7" fill="currentColor"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.8 11.5a6.2 6.2 0 0 0 12.4 0M12 17.7v2.8"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.8" y="6" width="18.4" height="12" rx="2.2"/><path d="M6.5 9.5h.01M10 9.5h.01M13.5 9.5h.01M17 9.5h.01M6.5 12.5h.01M17.5 12.5h.01M8.5 15h7"/><path d="M10 12.5h4"/></symbol>
+  <symbol id="i-forward-arrow" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9.5M17.5 7H20M4 17h3M11 17h9"/><circle cx="15.5" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
 </svg>
 
@@ -116,6 +121,14 @@
       <button class="app-tile" data-open="twitch" style="--app-rgb: 145, 70, 255">
         <span class="app-icon"><svg class="icon"><use href="#i-twitch"/></svg></span>
         <span class="app-name">Twitch</span>
+      </button>
+      <button class="app-tile" data-open="chess" style="--app-rgb: 52, 120, 84">
+        <span class="app-icon"><svg class="icon"><use href="#i-knight"/></svg></span>
+        <span class="app-name">Schach</span>
+      </button>
+      <button class="app-tile" data-open="browser" style="--app-rgb: 0, 122, 255">
+        <span class="app-icon"><svg class="icon"><use href="#i-globe"/></svg></span>
+        <span class="app-name">Browser</span>
       </button>
       <button class="app-tile" data-open="radio" style="--app-rgb: 255, 45, 85">
         <span class="app-icon"><svg class="icon"><use href="#i-radio"/></svg></span>
@@ -259,6 +272,112 @@
       <label class="field"><svg class="icon"><use href="#i-plus"/></svg><input id="tw-input" type="text" placeholder="Streamer oder twitch.tv-Link" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" /></label>
       <button class="btn btn-primary" type="submit">Hinzufügen</button>
     </form>
+  </section>
+
+  <!-- ================= Sprachschach ================= -->
+  <section class="view hidden" id="view-chess">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Schach</h1>
+    </div>
+
+    <!-- Auswahl vor der Partie -->
+    <div class="chess-setup" id="chess-setup">
+      <div class="segmented seg-wide" id="chess-mode">
+        <button class="seg-btn active" data-mode="bot" type="button">Bots</button>
+        <button class="seg-btn" data-mode="online" type="button">Online</button>
+      </div>
+
+      <div class="card chess-pick" id="chess-pick">
+        <div class="chess-pick-head" id="chess-pick-head"></div>
+        <div class="chess-bot-only">
+          <div class="kicker">Du spielst</div>
+          <div class="segmented seg-wide" id="chess-color">
+            <button class="seg-btn" data-color="w" type="button">Weiß</button>
+            <button class="seg-btn active" data-color="r" type="button">Zufall</button>
+            <button class="seg-btn" data-color="b" type="button">Schwarz</button>
+          </div>
+        </div>
+        <div class="kicker">Bedenkzeit</div>
+        <div class="chess-times" id="chess-times"></div>
+        <button class="btn btn-primary btn-block" id="chess-start" type="button"><svg class="icon"><use href="#i-play"/></svg><span>Partie starten</span></button>
+      </div>
+
+      <div class="chess-groups" id="chess-bots"></div>
+      <p class="hint">Gespielt wird auf chess.com mit dem Account, der im TV-Browser angemeldet ist. Anmelden: App „Browser“ → chess.com. Bot-Partien zählen nicht für deine Elo, Online-Partien schon.</p>
+    </div>
+
+    <!-- Laufende Partie -->
+    <div class="chess-game hidden" id="chess-game">
+      <div class="card chess-status">
+        <div class="kicker" id="chess-label"></div>
+        <div class="chess-prompt" id="chess-prompt">Wird gestartet …</div>
+        <div class="chess-last" id="chess-last"></div>
+      </div>
+
+      <button class="chess-mic" id="chess-mic" type="button" aria-label="Sprechen">
+        <svg class="icon"><use href="#i-mic"/></svg>
+        <span id="chess-mic-label">Tippen und Zug sagen</span>
+      </button>
+      <div class="chess-heard" id="chess-heard">&nbsp;</div>
+
+      <div class="chess-confirm hidden" id="chess-confirm">
+        <button class="btn btn-primary" id="chess-yes" type="button"><svg class="icon"><use href="#i-check"/></svg>Ja</button>
+        <button class="btn btn-ghost" id="chess-no" type="button"><svg class="icon"><use href="#i-close"/></svg>Nein</button>
+      </div>
+      <div class="chess-options hidden" id="chess-options"></div>
+
+      <form class="tw-add" id="chess-type" autocomplete="off">
+        <label class="field"><svg class="icon"><use href="#i-keyboard"/></svg><input id="chess-type-input" type="text" placeholder="Zug tippen oder diktieren" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="send" /></label>
+        <button class="btn btn-ghost" type="submit">Senden</button>
+      </form>
+
+      <div class="chess-tools">
+        <button class="btn btn-ghost" id="chess-repeat" type="button"><svg class="icon"><use href="#i-replay"/></svg>Wiederholen</button>
+        <button class="btn btn-ghost" id="chess-board" type="button"><svg class="icon"><use href="#i-tv"/></svg>Übersicht</button>
+      </div>
+      <button class="btn btn-ghost btn-block chess-end" id="chess-end" type="button"><svg class="icon"><use href="#i-close"/></svg>Schach beenden</button>
+    </div>
+  </section>
+
+  <!-- ================= TV-Browser ================= -->
+  <section class="view hidden" id="view-browser">
+    <div class="view-header">
+      <button class="icon-btn" data-back aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <h1>Browser</h1>
+    </div>
+
+    <form class="tvb-address" id="tvb-form" autocomplete="off">
+      <label class="field"><svg class="icon"><use href="#i-search"/></svg><input id="tvb-url" type="text" inputmode="url" placeholder="Adresse oder Suche" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" /></label>
+    </form>
+
+    <div class="tvb-screen" id="tvb-screen">
+      <img id="tvb-img" alt="Bild des Fernseher-Browsers" draggable="false" />
+      <div class="tvb-empty" id="tvb-empty">
+        <svg class="icon"><use href="#i-globe"/></svg>
+        <span>Der Browser auf dem Fernseher ist zu.</span>
+        <button class="btn btn-primary" id="tvb-open" type="button">Browser öffnen</button>
+      </div>
+    </div>
+    <p class="hint">Tippen klickt, Wischen scrollt. Das Bild ist live vom Fernseher.</p>
+
+    <div class="tvb-bar">
+      <button class="icon-btn" id="tvb-back" type="button" aria-label="Zurück"><svg class="icon"><use href="#i-back"/></svg></button>
+      <button class="icon-btn" id="tvb-forward" type="button" aria-label="Vor"><svg class="icon"><use href="#i-forward-arrow"/></svg></button>
+      <button class="icon-btn" id="tvb-reload" type="button" aria-label="Neu laden"><svg class="icon"><use href="#i-replay"/></svg></button>
+      <button class="icon-btn tvb-kbd" id="tvb-kbd" type="button" aria-label="Tastatur"><svg class="icon"><use href="#i-keyboard"/></svg></button>
+      <button class="icon-btn" id="tvb-close" type="button" aria-label="Browser schließen"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="tvb-keys">
+      <button class="chip" data-key="Tab" type="button">Tab</button>
+      <button class="chip" data-key="Backspace" type="button">⌫</button>
+      <button class="chip" data-key="Enter" type="button">Enter</button>
+      <button class="chip" data-key="Escape" type="button">Esc</button>
+      <button class="chip" data-key="ArrowUp" type="button">↑</button>
+      <button class="chip" data-key="ArrowDown" type="button">↓</button>
+    </div>
+    <!-- Unsichtbares Feld: holt die iPhone-Tastatur, jede Taste geht direkt an den Fernseher -->
+    <input class="tvb-input" id="tvb-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Tastatur für den Fernseher" />
   </section>
 
   <!-- ================= Radio ================= -->
@@ -561,5 +680,6 @@
 </div>
 
 <script src="remote.js"></script>
+<script src="remote-chess.js"></script>
 </body>
 </html>

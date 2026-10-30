@@ -12,7 +12,7 @@ import time
 
 import requests
 
-from app import audio_control, kiosk_media, radio, tts
+from app import audio_control, kiosk_media, radio, tts, tv_browser
 from app.config import Config
 from app.dashboard import kiosk
 from app.tv_control import get_controller
@@ -51,6 +51,7 @@ def power_on(cfg: Config) -> None:
 def power_off(cfg: Config, farewell: bool = False) -> None:
     logger.info("Stoppe Radio ...")
     radio.stop()
+    tv_browser.kill()
     kiosk_media.stop_all_media(cfg)
 
     if farewell:

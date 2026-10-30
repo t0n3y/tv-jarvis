@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Brettstimme – physisches Brett für chess.com",
+  "short_name": "Brettstimme",
+  "version": "1.0.0",
+  "description": "Sagt die Züge des Gegners groß und laut an und nimmt deine Züge per Sprache entgegen – zum Spielen auf einem echten Schachbrett.",
+  "content_scripts": [
+    {
+      "matches": ["https://www.chess.com/*", "https://chess.com/*"],
+      "js": ["src/parser.js", "src/stimme.js", "src/anzeige.js", "src/main.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ]
+}

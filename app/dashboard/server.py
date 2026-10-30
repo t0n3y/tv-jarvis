@@ -19,6 +19,7 @@ Laeuft dauerhaft (systemd/dashboard.service). Aufgaben:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import dataclasses
 import json
 import logging
@@ -36,6 +37,7 @@ from starlette.datastructures import MutableHeaders
 
 from app import (
     audio_control,
+    chess_tv,
     jellyfin_client,
     kiosk_media,
     media_upload,
@@ -44,6 +46,7 @@ from app import (
     schedule_store,
     school_settings,
     tv_power,
+    tv_browser,
     twitch,
     vinyl_library,
 )
@@ -274,6 +277,7 @@ def _finish_jellyfin_session(position: float | None = None) -> None:
 @app.on_event("startup")
 async def _start_scheduler() -> None:
     Scheduler(get_config()).start()
+    chess_tv.setup(get_config())
     lighting.get_engine().start()
 
 
@@ -468,6 +472,8 @@ def _apply_command_state(body: dict) -> None:
 
 async def _send_to_kiosk(body: dict) -> bool:
     _apply_command_state(body)
+    if str(body.get("type", "")).endswith("_play") and tv_browser.is_running():
+        await chess_tv.end()
     delivered = await manager.broadcast(body)
     msg_type = body.get("type") or ""
     if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play", "twitch_play"):
@@ -604,6 +610,159 @@ async def twitch_playlist(login: str) -> Response:
     except twitch.TwitchError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(text, media_type="application/vnd.apple.mpegurl", headers={"Cache-Control": "no-store"})
+
+
+# ---------- Sprachschach (chess.com im TV-Browser) ----------
+
+def _chess_error(exc: Exception) -> HTTPException:
+    return HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/remote/chess", dependencies=[Depends(require_remote_secret)])
+async def get_chess(bots: bool = False) -> dict:
+    data = chess_tv.public_state()
+    if bots:
+        data["bots"] = await asyncio.to_thread(chess_tv.bots)
+    return data
+
+
+@app.post("/api/remote/chess/start", dependencies=[Depends(require_remote_secret)])
+async def start_chess(request: Request) -> dict:
+    body = await request.json()
+    await asyncio.to_thread(radio.stop)
+    try:
+        if body.get("mode") == "bot":
+            time_control = body.get("time")
+            await chess_tv.start_bot(
+                get_config(),
+                str(body.get("bot", "")),
+                body.get("color") if body.get("color") in ("w", "b", "r") else "r",
+                tuple(time_control) if time_control else None,
+            )
+        elif body.get("mode") == "online":
+            await chess_tv.start_online(get_config(), tuple(body.get("time") or (10, 0)))
+        else:
+            raise ValueError("mode muss bot oder online sein")
+    except (ValueError, tv_browser.CDPError) as exc:
+        raise _chess_error(exc) from exc
+    return chess_tv.public_state()
+
+
+@app.post("/api/remote/chess/heard", dependencies=[Depends(require_remote_secret)])
+async def chess_heard(request: Request) -> dict:
+    body = await request.json()
+    try:
+        await chess_tv.heard(body.get("alternatives") or [])
+    except tv_browser.CDPError as exc:
+        raise _chess_error(exc) from exc
+    return {"ok": True}
+
+
+@app.post("/api/remote/chess/action", dependencies=[Depends(require_remote_secret)])
+async def chess_action(request: Request) -> dict:
+    body = await request.json()
+    try:
+        if body.get("action") == "beenden":
+            await chess_tv.end()
+        else:
+            await chess_tv.action(str(body.get("action")), body.get("value"))
+    except (ValueError, tv_browser.CDPError) as exc:
+        raise _chess_error(exc) from exc
+    return chess_tv.public_state()
+
+
+# ---------- TV-Browser (Surfen mit Handy als Touchpad) ----------
+
+@app.get("/api/remote/browser", dependencies=[Depends(require_remote_secret)])
+async def get_browser() -> dict:
+    info = await tv_browser.browser.page_info() if tv_browser.browser.connected else {"url": "", "title": ""}
+    return {"open": tv_browser.is_running(), **info}
+
+
+@app.post("/api/remote/browser", dependencies=[Depends(require_remote_secret)])
+async def remote_browser(request: Request) -> dict:
+    body = await request.json()
+    action = body.get("action")
+    b = tv_browser.browser
+    try:
+        if action == "open":
+            await asyncio.to_thread(radio.stop)
+            await b.open(get_config(), tv_browser.normalize_url(body.get("url", "")) if body.get("url") else None)
+        elif action == "close":
+            await chess_tv.end()
+        elif not b.connected:
+            if not tv_browser.is_running():
+                raise HTTPException(status_code=409, detail="Der TV-Browser ist zu")
+            await b.open(get_config())
+        if action == "navigate":
+            await b.navigate(tv_browser.normalize_url(body.get("url", "")))
+        elif action == "back":
+            await b.history(-1)
+        elif action == "forward":
+            await b.history(1)
+        elif action == "reload":
+            await b.reload()
+    except tv_browser.CDPError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"open": tv_browser.is_running(), **(await b.page_info() if b.connected else {"url": "", "title": ""})}
+
+
+@app.websocket("/ws/remote/browser")
+async def browser_ws(ws: WebSocket) -> None:
+    """Live-Bild des TV-Browsers fuer die Fernbedienung + Eingaben zurueck
+    (Tippen, Scrollen, Tastatur). Secret per ?secret=, wie bei den Bildern."""
+    expected = get_config().secrets.remote_control_secret
+    if expected and ws.query_params.get("secret") != expected:
+        await ws.close(code=4401)
+        return
+    await ws.accept()
+    b = tv_browser.browser
+    queue: asyncio.Queue | None = None
+
+    async def pump() -> None:
+        nonlocal queue
+        while True:
+            if queue is None and b.connected:
+                queue = await b.add_viewer()
+            if queue is None:
+                await asyncio.sleep(0.5)
+                continue
+            try:
+                frame = await asyncio.wait_for(queue.get(), timeout=5)
+            except asyncio.TimeoutError:
+                if not b.connected:
+                    await b.remove_viewer(queue)
+                    queue = None
+                continue
+            await ws.send_json({"type": "frame", **frame, "url": b.url})
+
+    sender = asyncio.create_task(pump())
+    try:
+        if tv_browser.is_running() and not b.connected:
+            with contextlib.suppress(tv_browser.CDPError):
+                await b.open(get_config())
+        while True:
+            msg = await ws.receive_json()
+            if not b.connected:
+                continue
+            kind = msg.get("type")
+            try:
+                if kind == "tap":
+                    await b.tap(float(msg["x"]), float(msg["y"]))
+                elif kind == "scroll":
+                    await b.scroll(float(msg["x"]), float(msg["y"]), float(msg.get("dx", 0)), float(msg.get("dy", 0)))
+                elif kind == "text":
+                    await b.insert_text(str(msg.get("text", ""))[:500])
+                elif kind == "key":
+                    await b.key(str(msg.get("key")))
+            except (tv_browser.CDPError, KeyError, ValueError):
+                pass
+    except (WebSocketDisconnect, RuntimeError):
+        pass
+    finally:
+        sender.cancel()
+        if queue is not None:
+            await b.remove_viewer(queue)
 
 
 # ---------- Jellyfin ----------
