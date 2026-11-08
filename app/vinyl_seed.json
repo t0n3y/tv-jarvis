@@ -19,6 +19,10 @@
     {
       "id": "reggae",
       "name": "Reggae"
+    },
+    {
+      "id": "weihnachten",
+      "name": "Weihnachten"
     }
   ],
   "records": [
@@ -2778,6 +2782,821 @@
         {
           "title": "Miss Understanding",
           "youtube": "XQVpelS9P2I"
+        }
+      ]
+    },
+    {
+      "id": "xmas-mariah",
+      "album": "Merry Christmas",
+      "artist": "Mariah Carey",
+      "year": 1994,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c6/b7/27/c6b727f7-3a32-6b43-cee2-05bb71daf1cf/dj.itfmdeif.jpg/600x600bb.jpg",
+      "color": "#a61e2b",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Silent Night",
+          "youtube": "Q63O54RuL-o"
+        },
+        {
+          "title": "All I Want for Christmas Is You",
+          "youtube": "ueLKoC0wFJo"
+        },
+        {
+          "title": "O Holy Night",
+          "youtube": "bM9UGg1FINk"
+        },
+        {
+          "title": "Christmas (Baby Please Come Home)",
+          "youtube": "ah-U9ECRZog"
+        },
+        {
+          "title": "Miss You Most (At Christmas Time)",
+          "youtube": "vAOIC737e_k"
+        },
+        {
+          "title": "Joy to the World",
+          "youtube": "1tcbarFCk3w"
+        },
+        {
+          "title": "Jesus Born on This Day",
+          "youtube": "r8uUEcQBLIE"
+        },
+        {
+          "title": "Santa Claus Is Comin' to Town",
+          "youtube": "OsyxFkYZ-aU"
+        },
+        {
+          "title": "Hark! The Herald Angels Sing / Gloria (In Excelsis Deo)",
+          "youtube": "SMVRmOt_n9s"
+        },
+        {
+          "title": "Jesus Oh What a Wonderful Child",
+          "youtube": "jKVK8XH1ulY"
+        }
+      ]
+    },
+    {
+      "id": "xmas-buble",
+      "album": "Christmas",
+      "artist": "Michael Bublé",
+      "year": 2011,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/2d/6e/372d6e16-7a32-91f0-1a03-0f2d9dbe389e/093624942788.jpg/600x600bb.jpg",
+      "color": "#1f6f43",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "It's Beginning To Look a Lot Like Christmas",
+          "youtube": "QJ5DOWPGxwg"
+        },
+        {
+          "title": "Santa Claus Is Coming To Town",
+          "youtube": "FlylggiFRbA"
+        },
+        {
+          "title": "Jingle Bells (feat. The Puppini Sisters)",
+          "youtube": "Nx-DvH41Tjo"
+        },
+        {
+          "title": "White Christmas (Duet With Shania Twain)",
+          "youtube": "qhMS8ij1fsg"
+        },
+        {
+          "title": "All I Want For Christmas Is You",
+          "youtube": "pw3PhhSfcQg"
+        },
+        {
+          "title": "Holly Jolly Christmas",
+          "youtube": "Dkq3LD-4pmM"
+        },
+        {
+          "title": "Santa Baby",
+          "youtube": "JnOLam2AwXY"
+        },
+        {
+          "title": "Have Yourself a Merry Little Christmas",
+          "youtube": "l3l83C-we-k"
+        },
+        {
+          "title": "Christmas (Baby Please Come Home)",
+          "youtube": "mBycW6iu8GM"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "-iZGh91-v7Y"
+        },
+        {
+          "title": "Blue Christmas",
+          "youtube": "im2JjOhTW80"
+        },
+        {
+          "title": "Cold December Night",
+          "youtube": "XtB0LqyJsdA"
+        },
+        {
+          "title": "I'll Be Home For Christmas",
+          "youtube": "0yhI35F2NB0"
+        },
+        {
+          "title": "Ave Maria",
+          "youtube": "323gz5xNZMI"
+        },
+        {
+          "title": "Mis Deseos/Feliz Navidad (Duet With Thalia)",
+          "youtube": "yQ_QD0wh8no"
+        },
+        {
+          "title": "Michael's Christmas Greeting",
+          "youtube": "32aJFNsKBOE"
+        }
+      ]
+    },
+    {
+      "id": "xmas-wham",
+      "album": "Last Christmas",
+      "artist": "Wham!",
+      "year": 1984,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/eb/4a/f9/eb4af984-fc68-56ab-7b89-1d070c04e1dd/5099765318524.jpg/600x600bb.jpg",
+      "color": "#a61e2b",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Last Christmas (Single Version)",
+          "youtube": "MLrx0P8p_s8"
+        },
+        {
+          "title": "Last Christmas (Pudding Mix)",
+          "youtube": "rdBF5seCfwg"
+        },
+        {
+          "title": "Everything She Wants",
+          "youtube": "OtVuivhlwEg"
+        }
+      ]
+    },
+    {
+      "id": "xmas-sinatra",
+      "album": "A Jolly Christmas from Frank Sinatra",
+      "artist": "Frank Sinatra",
+      "year": 1957,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/b2/dd/ff/b2ddffc3-a222-6046-e40b-ddc154c9020b/13UAAIM05202.rgb.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Jingle Bells",
+          "youtube": "-aQw3DoGuqs"
+        },
+        {
+          "title": "The Christmas Song (Merry Christmas To You)",
+          "youtube": "h1Y7Bp4rFf0"
+        },
+        {
+          "title": "Mistletoe and Holly",
+          "youtube": "DYBQ8ZcAp9I"
+        },
+        {
+          "title": "I'll Be Home for Christmas (If Only In My Dreams)",
+          "youtube": "tItGjgFZpjk"
+        },
+        {
+          "title": "The Christmas Waltz",
+          "youtube": "hSPRUKeJ-Js"
+        },
+        {
+          "title": "Have Yourself a Merry Little Christmas",
+          "youtube": "mkMMEMy4t6Q"
+        },
+        {
+          "title": "The First Noël",
+          "youtube": "oQ_2K6Jk8vs"
+        },
+        {
+          "title": "Hark! The Herald Angels Sing",
+          "youtube": "TFAjb283EXc"
+        },
+        {
+          "title": "O Little Town of Bethlehem",
+          "youtube": "8MoEvt3Bzw8"
+        },
+        {
+          "title": "Adeste Fideles",
+          "youtube": "Kg2Z0H3L3yE"
+        },
+        {
+          "title": "It Came Upon a Midnight Clear",
+          "youtube": "qSfQjcjJObI"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "iUnWS9R2RUo"
+        },
+        {
+          "title": "White Christmas",
+          "youtube": "aDmVtvAvR18"
+        },
+        {
+          "title": "The Christmas Waltz",
+          "youtube": "hSPRUKeJ-Js"
+        },
+        {
+          "title": "Christmas Seals Public Service Announcement",
+          "youtube": "Rd8ehjfDu6U"
+        }
+      ]
+    },
+    {
+      "id": "xmas-crosby",
+      "album": "White Christmas",
+      "artist": "Bing Crosby",
+      "year": 1945,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/9f/05/d3/9f05d3bb-c85c-3d87-af68-a82129e86f1f/06UMGIM06377.rgb.jpg/600x600bb.jpg",
+      "color": "#1f6f43",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Silent Night",
+          "youtube": "moHobaO9TlM"
+        },
+        {
+          "title": "Adeste Fideles",
+          "youtube": "QBEn29N3j40"
+        },
+        {
+          "title": "White Christmas",
+          "youtube": "v5ryZdpEHqM"
+        },
+        {
+          "title": "God Rest Ye Merry Gentlemen",
+          "youtube": "RINooG1X0AQ"
+        },
+        {
+          "title": "Faith of Our Fathers",
+          "youtube": "mi6Tok9PiDs"
+        },
+        {
+          "title": "I'll Be Home for Christmas",
+          "youtube": "Pt6qDe3S0uw"
+        },
+        {
+          "title": "Jingle Bells (feat. The Andrews Sisters)",
+          "youtube": "G31sRUemWhE"
+        },
+        {
+          "title": "Santa Claus Is Comin' to Town",
+          "youtube": "4PUh3GsLiKQ"
+        },
+        {
+          "title": "Silver Bells (feat. Carol Richards)",
+          "youtube": "ul3kWA09ItQ"
+        },
+        {
+          "title": "It's Beginning to Look Like Christmas",
+          "youtube": "A4zBSnMhvI0"
+        },
+        {
+          "title": "Christmas in Killarney",
+          "youtube": "qJ1HGslHVlE"
+        },
+        {
+          "title": "Mele Kalikimaka (Merry Christmas)",
+          "youtube": "Mw2ghKkKFq8"
+        }
+      ]
+    },
+    {
+      "id": "xmas-cole",
+      "album": "The Christmas Song",
+      "artist": "Nat King Cole",
+      "year": 1960,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/0f/19/eb/0f19eb0e-1d72-9b00-6e3b-4a8a6fca817d/18UMGIM52342.rgb.jpg/600x600bb.jpg",
+      "color": "#a61e2b",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "The Christmas Song (Merry Christmas to You)",
+          "youtube": "g8UmqvOqB1A"
+        },
+        {
+          "title": "Deck the Hall",
+          "youtube": "kORRidv-p0Y"
+        },
+        {
+          "title": "Adeste Fideles",
+          "youtube": "9hi2R5OfdEU"
+        },
+        {
+          "title": "O Tannenbaum",
+          "youtube": "9l_3ZOS9P34"
+        },
+        {
+          "title": "O Little Town of Bethlehem",
+          "youtube": "EHKORmpW4Cg"
+        },
+        {
+          "title": "I Saw Three Ships",
+          "youtube": "RETFNVpIxFo"
+        },
+        {
+          "title": "O Holy Night",
+          "youtube": "dLY_GU4UhrM"
+        },
+        {
+          "title": "Hark! The Herald Angels Sing",
+          "youtube": "n01fpjM42Wk"
+        },
+        {
+          "title": "A Cradle in Bethlehem",
+          "youtube": "Jog--n9qJOI"
+        },
+        {
+          "title": "Away in a Manger",
+          "youtube": "KT2CFyR_KRE"
+        },
+        {
+          "title": "Joy to the World",
+          "youtube": "nc8OAsqN_rI"
+        },
+        {
+          "title": "The First Noel",
+          "youtube": "Gqs8pqSCLZQ"
+        },
+        {
+          "title": "Caroling, Caroling",
+          "youtube": "QFM9XwBXtdU"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "IjOGEQzaMPo"
+        },
+        {
+          "title": "Buon Natale (Means Merry Christmas to You)",
+          "youtube": "hASAooNyjbU"
+        },
+        {
+          "title": "God Rest Ye Merry, Gentlemen",
+          "youtube": "MWVcQ2-E7PE"
+        },
+        {
+          "title": "O Come All Ye Faithful",
+          "youtube": "9UwpVfZ_LPY"
+        },
+        {
+          "title": "The Happiest Christmas Tree",
+          "youtube": "tqXzZH31Mbw"
+        },
+        {
+          "title": "The Christmas Song (feat. Natalie Cole)",
+          "youtube": "A8eWaR8ONvw"
+        }
+      ]
+    },
+    {
+      "id": "xmas-spector",
+      "album": "A Christmas Gift for You",
+      "artist": "Phil Spector",
+      "year": 1963,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/2e/92/5f/2e925fa4-6a4e-a15e-7cfc-bb3f13f053e1/mzi.ermvbetx.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "White Christmas",
+          "youtube": "YZVqiyAMw1o",
+          "artist": "Darlene Love"
+        },
+        {
+          "title": "Frosty the Snowman",
+          "youtube": "h87IGPQBkSE",
+          "artist": "The Ronettes"
+        },
+        {
+          "title": "Santa Claus Is Coming to Town",
+          "youtube": "FK2tcFFB6ZM",
+          "artist": "The Crystals"
+        },
+        {
+          "title": "Sleigh Ride",
+          "youtube": "XZTzai1H9DM",
+          "artist": "The Ronettes"
+        },
+        {
+          "title": "A Marshmallow World",
+          "youtube": "AA35Ehv-uEc",
+          "artist": "Darlene Love"
+        },
+        {
+          "title": "I Saw Mommy Kissing Santa Claus",
+          "youtube": "aOIp3or3Lhc",
+          "artist": "The Ronettes"
+        },
+        {
+          "title": "Rudolph the Red-Nosed Reindeer",
+          "youtube": "t7GmQjHQ29M",
+          "artist": "The Crystals"
+        },
+        {
+          "title": "Winter Wonderland",
+          "youtube": "TnUz2QtgoVQ",
+          "artist": "Darlene Love"
+        },
+        {
+          "title": "Parade Of The Wooden Soldiers",
+          "youtube": "SEBnMLNxrhk",
+          "artist": "The Crystals"
+        },
+        {
+          "title": "Christmas (Baby Please Come Home)",
+          "youtube": "4EvZOXEoJ84",
+          "artist": "Darlene Love"
+        },
+        {
+          "title": "Here Comes Santa Claus",
+          "youtube": "od15IXLWw80",
+          "artist": "Bob B. Soxx & The Blue Jeans"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "qnbKrqBgG7U",
+          "artist": "Phil Spector, Bob B. Soxx & The Blue Jeans, Darlene Love, The Crystals & The Ronettes"
+        }
+      ]
+    },
+    {
+      "id": "xmas-dino",
+      "album": "The Dean Martin Christmas Album",
+      "artist": "Dean Martin",
+      "year": 1966,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music6/v4/16/7f/9e/167f9e0d-6b8a-f011-2aa6-fbbdcb594cee/886444222402.jpg/600x600bb.jpg",
+      "color": "#1f6f43",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "White Christmas",
+          "youtube": "srHQe_qEJzQ"
+        },
+        {
+          "title": "Jingle Bells",
+          "youtube": "eP3RhTbq3Ds"
+        },
+        {
+          "title": "I'll Be Home for Christmas",
+          "youtube": "VcGSdLgq3vo"
+        },
+        {
+          "title": "Blue Christmas",
+          "youtube": "jwC6Co1yAXY"
+        },
+        {
+          "title": "Let It Snow! Let It Snow! Let It Snow!",
+          "youtube": "Rnil5LyK_B0"
+        },
+        {
+          "title": "A Marshmallow World",
+          "youtube": "5QFKKap5V3U"
+        },
+        {
+          "title": "Silver Bells",
+          "youtube": "lylWDAo9hFw"
+        },
+        {
+          "title": "Winter Wonderland",
+          "youtube": "9UeGgZVQXhc"
+        },
+        {
+          "title": "The Things We Did Last Summer",
+          "youtube": "m0c8jW4_kiY"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "eut867oOmOs"
+        }
+      ]
+    },
+    {
+      "id": "xmas-elvis",
+      "album": "Elvis' Christmas Album",
+      "artist": "Elvis Presley",
+      "year": 1957,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e0/04/02/e0040287-bd23-a030-693b-c48d146de930/886444095303.jpg/600x600bb.jpg",
+      "color": "#a61e2b",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Santa Claus Is Back In Town",
+          "youtube": "Ae7CtryWCkc"
+        },
+        {
+          "title": "White Christmas",
+          "youtube": "-XNXT4-SIK8"
+        },
+        {
+          "title": "Here Comes Santa Claus (Right Down Santa Claus Lane)",
+          "youtube": "yWcFiGKm-JU"
+        },
+        {
+          "title": "I'll Be Home for Christmas",
+          "youtube": "oBV8KFtGSXU"
+        },
+        {
+          "title": "Blue Christmas",
+          "youtube": "B6WnnZRSKYs"
+        },
+        {
+          "title": "Santa Bring My Baby Back (To Me)",
+          "youtube": "DmVQqM_Ufto"
+        },
+        {
+          "title": "O Little Town of Bethlehem",
+          "youtube": "KZbdXlb-S8g"
+        },
+        {
+          "title": "Silent Night",
+          "youtube": "XO7Cubs4zVw"
+        },
+        {
+          "title": "(There'll Be) Peace In the Valley (For Me)",
+          "youtube": "YYR8_iHvU1Y"
+        },
+        {
+          "title": "I Believe",
+          "youtube": "jfpJhIROZVs"
+        },
+        {
+          "title": "Take My Hand, Precious Lord",
+          "youtube": "d58bZ4kSPDs"
+        },
+        {
+          "title": "It Is No Secret (What God Can Do)",
+          "youtube": "zcXmzVcPAaA"
+        }
+      ]
+    },
+    {
+      "id": "xmas-guaraldi",
+      "album": "A Charlie Brown Christmas",
+      "artist": "Vince Guaraldi Trio",
+      "year": 1965,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/a3/ba/9d/a3ba9d71-f095-621c-330b-c44c5b48ad12/cover.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "O Tannenbaum",
+          "youtube": "t-ulBNozjN4"
+        },
+        {
+          "title": "What Child Is This",
+          "youtube": "e2HFIDW8DdM"
+        },
+        {
+          "title": "My Little Drum",
+          "youtube": "39b61_d0SMg"
+        },
+        {
+          "title": "Linus and Lucy",
+          "youtube": "x6zypc_LhnM"
+        },
+        {
+          "title": "Christmas Time Is Here (Instrumental)",
+          "youtube": "oXY85B_9n1k"
+        },
+        {
+          "title": "Christmas Time Is Here (Vocal)",
+          "youtube": "4PzetPqepXA"
+        },
+        {
+          "title": "Skating",
+          "youtube": "CSnfgs6NJ8o"
+        },
+        {
+          "title": "Hark, the Herald Angels Sing",
+          "youtube": "gduHH3epR2A"
+        },
+        {
+          "title": "Christmas Is Coming",
+          "youtube": "VVB18xbRMI4"
+        },
+        {
+          "title": "The Christmas Song",
+          "youtube": "1LSqgZhS8XY"
+        },
+        {
+          "title": "Greensleeves",
+          "youtube": "SHU99s793q8"
+        }
+      ]
+    },
+    {
+      "id": "xmas-ella",
+      "album": "Ella Wishes You a Swinging Christmas",
+      "artist": "Ella Fitzgerald",
+      "year": 1960,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/b6/0b/c0/b60bc03c-e899-8bf7-0632-8067aa00795b/06UMGIM12344.rgb.jpg/600x600bb.jpg",
+      "color": "#1f6f43",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Jingle Bells",
+          "youtube": "DUyxx4Hsjeg"
+        },
+        {
+          "title": "Santa Claus Is Coming To Town",
+          "youtube": "jLYu49z4cYo"
+        },
+        {
+          "title": "Have Yourself A Merry Little Christmas",
+          "youtube": "IwY9KGWU_KU"
+        },
+        {
+          "title": "What Are You Doing New Year's Eve?",
+          "youtube": "O3tNN8atZBQ"
+        },
+        {
+          "title": "Sleigh Ride",
+          "youtube": "NRSvczD9840"
+        },
+        {
+          "title": "The Christmas Song",
+          "youtube": "sylFTAiSRh8"
+        },
+        {
+          "title": "Good Morning Blues",
+          "youtube": "4aEK-BBU7gc"
+        },
+        {
+          "title": "Let It Snow! Let It Snow! Let It Snow!",
+          "youtube": "dD0pMejSlGA"
+        },
+        {
+          "title": "Winter Wonderland",
+          "youtube": "aa4k4Z7gaNw"
+        },
+        {
+          "title": "Rudolph The Red-Nosed Reindeer",
+          "youtube": "Ym_izmi8NtQ"
+        },
+        {
+          "title": "Frosty The Snowman",
+          "youtube": "b2DeVUdx2Dg"
+        },
+        {
+          "title": "White Christmas",
+          "youtube": "-Z5oyUASo3c"
+        }
+      ]
+    },
+    {
+      "id": "xmas-helene",
+      "album": "Weihnachten",
+      "artist": "Helene Fischer",
+      "year": 2015,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/16/bd/b9/16bdb980-cec8-b31c-ea06-305ef74ed4df/15UMGIM59540.rgb.jpg/600x600bb.jpg",
+      "color": "#a61e2b",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Stille Nacht",
+          "youtube": "nsV9bCW3sLM"
+        },
+        {
+          "title": "O Du fröhliche",
+          "youtube": "-gBtW4GhF3Y"
+        },
+        {
+          "title": "Ihr Kinderlein kommet",
+          "youtube": "3-oqGxnJTrA"
+        },
+        {
+          "title": "Fröhliche Weihnacht überall",
+          "youtube": "FogVyl1Imnc"
+        },
+        {
+          "title": "Alle Jahre wieder",
+          "youtube": "dLz2h6DaXR8"
+        },
+        {
+          "title": "Süßer die Glocken nie klingen",
+          "youtube": "y6bqUPPDdAU"
+        },
+        {
+          "title": "Vom Himmel hoch da komm ich her (feat. Xavier Naidoo)",
+          "youtube": "hU-YAXKti2U"
+        },
+        {
+          "title": "Lasst uns froh und munter sein",
+          "youtube": "U7EsAdDed9k"
+        },
+        {
+          "title": "Leise rieselt der Schnee",
+          "youtube": "1NdN1kgiLx8"
+        },
+        {
+          "title": "Maria durch ein Dornwald ging",
+          "youtube": "M5KoWHa7SOI"
+        },
+        {
+          "title": "Adeste Fideles",
+          "youtube": "waLkQpVQMYc"
+        },
+        {
+          "title": "Tochter Zion",
+          "youtube": "xBby89eXe1g"
+        },
+        {
+          "title": "Am Weihnachtsbaum die Lichter brennen",
+          "youtube": "x5msrsNzlJY"
+        },
+        {
+          "title": "In der Weihnachtsbäckerei",
+          "youtube": "VvxxYEteb_8"
+        },
+        {
+          "title": "O Tannenbaum",
+          "youtube": "EhodV6HI13k"
+        },
+        {
+          "title": "Es ist ein Ros' entsprungen",
+          "youtube": "jEoL1knrYM0"
+        },
+        {
+          "title": "Heilige Nacht",
+          "youtube": "DnpRah6vsi4"
+        },
+        {
+          "title": "Ave Maria",
+          "youtube": "xQkdY16h8II"
+        },
+        {
+          "title": "Kling Glöckchen, klingelingeling",
+          "youtube": "f9MU0T_Ea9U"
+        },
+        {
+          "title": "Aba heidschi bumbeidschi",
+          "youtube": "WvqHNlilyyI"
+        }
+      ]
+    },
+    {
+      "id": "xmas-rolf",
+      "album": "Winterkinder",
+      "artist": "Rolf Zuckowski",
+      "year": 1987,
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/65/c3/d5/65c3d592-0a18-f3d8-3377-d5b43231a423/10UMGIM33127.rgb.jpg/600x600bb.jpg",
+      "color": "#c9a24a",
+      "genre": "weihnachten",
+      "songs": [
+        {
+          "title": "Die Weihnachtsspieluhr",
+          "youtube": "cpgp1AFCQtg"
+        },
+        {
+          "title": "Winterkinder",
+          "youtube": "9RMjtCutjC4"
+        },
+        {
+          "title": "Guten Tag, ich bin der Nikolaus",
+          "youtube": "FZPOX_prrGg"
+        },
+        {
+          "title": "Wann kommst du, Weihnachtsmann (Petit Papa Noel)",
+          "youtube": "RWKZvNrjPJ8"
+        },
+        {
+          "title": "In der Weihnachtsbäckerei",
+          "youtube": "IFZqDcFU4Ow"
+        },
+        {
+          "title": "Es schneit",
+          "youtube": "4_p8B0s2mW0"
+        },
+        {
+          "title": "Auf der Suche nach Weihnachten",
+          "youtube": "--yo__7qb6Y"
+        },
+        {
+          "title": "Leise rieselt der Schnee",
+          "youtube": "Zx_73pPKPW4"
+        },
+        {
+          "title": "Kling Glöckchen",
+          "youtube": "l8VMcu1K7Hg"
+        },
+        {
+          "title": "Ihr Kinderlein kommet",
+          "youtube": "vbxbytIPWmE"
+        },
+        {
+          "title": "Unterm Tannenbaum (O Tannenbaum / O du fröhliche)",
+          "youtube": "mPmaAel8VXY"
+        },
+        {
+          "title": "Gloria (Hört ihr, wie die Engel singen)",
+          "youtube": "nMbxqFuuAD4"
+        },
+        {
+          "title": "Wär' uns der Himmel immer so nah",
+          "youtube": "hiCyl_G6aq8"
         }
       ]
     }

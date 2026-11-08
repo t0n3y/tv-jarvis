@@ -62,8 +62,8 @@ function updateClock() {
 // ---------- Wetter-Symbole (SVG statt Emoji: der Kiosk hat keine Emoji-Schrift) ----------
 
 const WX_SUN = "#ffc857";
-const WX_CLOUD = "#d6e6f3";
-const WX_RAIN = "#4fd8ff";
+const WX_CLOUD = "#e5e5ea";
+const WX_RAIN = "#64d2ff";
 
 const wxParts = {
   sun: (x = 32, y = 32, r = 11) => {
@@ -99,14 +99,14 @@ function weatherSvg(key, isDay = true) {
   const shapes = {
     sun: isDay ? wxParts.sun() : wxParts.moon(),
     "sun-cloud": small + wxParts.cloud(4),
-    cloud: wxParts.cloud(0, "#c3d6e6") + wxParts.cloud(-6),
-    fog: `<g stroke="#b8c9d8" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="16" y1="36" x2="48" y2="36"/><line x1="12" y1="46" x2="52" y2="46"/></g>`,
+    cloud: wxParts.cloud(0, "#c7c7cc") + wxParts.cloud(-6),
+    fog: `<g stroke="#aeaeb2" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="16" y1="36" x2="48" y2="36"/><line x1="12" y1="46" x2="52" y2="46"/></g>`,
     drizzle: wxParts.cloud(-8) + wxParts.drops(3, 4),
     rain: wxParts.cloud(-8) + wxParts.drops(3, 9),
     showers: small + wxParts.cloud(-2) + wxParts.drops(2, 6).replace(/y1="49"/g, 'y1="53"').replace(/y2="(\d+)"/g, (m, v) => `y2="${Number(v) + 4}"`),
     sleet: wxParts.cloud(-8) + wxParts.drops(1, 8) + `<circle cx="36" cy="54" r="2.6" fill="#fff"/><circle cx="44" cy="51" r="2.6" fill="#fff"/>`,
     snow: wxParts.cloud(-8) + wxParts.flakes(),
-    thunder: wxParts.cloud(-8, "#a9bccd") + `<path d="M34 44 26 56h7l-3 9 11-14h-7l3-7z" fill="#ffd23b"/>`,
+    thunder: wxParts.cloud(-8, "#8e8e93") + `<path d="M34 44 26 56h7l-3 9 11-14h-7l3-7z" fill="#ffd23b"/>`,
   };
   return `<svg viewBox="0 0 64 64" aria-hidden="true">${shapes[key] || shapes.cloud}</svg>`;
 }

@@ -1,12 +1,23 @@
+/* ============================================================
+   Kiosk (Fernseher). Gleiche Sprache wie die Fernbedienung: schwarzer
+   Grund, ruhige graue Flaechen, Weiss fuer Inhalte, Farbe nur dort, wo
+   sie etwas bedeutet. Masse in vh: der Fernseher ist 1080p, alles
+   skaliert mit der Hoehe. Der Plattenspieler hat seine eigene Optik
+   (vinyl.css).
+   ============================================================ */
+
 :root {
-  --bg: #030810;
-  --bg-panel: rgba(11, 23, 38, 0.65);
-  --border: rgba(79, 216, 255, 0.25);
-  --accent: #4fd8ff;
-  --accent-glow: rgba(79, 216, 255, 0.55);
-  --accent-warn: #ff8c42;
-  --text: #d9f2ff;
-  --text-dim: #6f8ba3;
+  --bg: #000;
+  --bg-2: #1c1c1e;
+  --fill: rgba(118, 118, 128, 0.24);
+  --separator: rgba(84, 84, 88, 0.65);
+  --text: #fff;
+  --text-2: rgba(235, 235, 245, 0.6);
+  --text-3: rgba(235, 235, 245, 0.3);
+  --green: #30d158;
+  --red: #ff453a;
+  --orange: #ff9f0a;
+  --font: "Inter", -apple-system, system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -18,7 +29,9 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: "Rajdhani", sans-serif;
+  font-family: var(--font);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
 
@@ -31,75 +44,52 @@ body:not(.remote-body) {
 
 .hidden { display: none !important; }
 
-/* ---------- Boot-Screen ---------- */
+/* ---------- Start ---------- */
 
 #boot-screen {
   position: fixed;
   inset: 0;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 48px;
-  background: radial-gradient(circle at center, #081722 0%, #030810 70%);
-  z-index: 50;
+  gap: 4vh;
+  background: var(--bg);
 }
 
-.boot-rings {
-  position: relative;
-  width: 260px;
-  height: 260px;
+.boot-word {
+  font-size: 9vh;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  animation: fade-in 0.8s ease-out both;
 }
 
-.ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
-  opacity: 0;
-  box-shadow: 0 0 24px var(--accent-glow);
-  animation: ring-appear 1.8s ease-out infinite;
+.boot-bar {
+  width: 22vh;
+  height: 0.5vh;
+  overflow: hidden;
+  border-radius: 1vh;
+  background: var(--fill);
 }
 
-.ring-1 { animation-delay: 0s; }
-.ring-2 { inset: 30px; animation-delay: 0.3s; border-color: rgba(79, 216, 255, 0.7); }
-.ring-3 { inset: 60px; animation-delay: 0.6s; border-style: dashed; }
-
-.ring-core {
-  position: absolute;
-  inset: 110px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 40px 10px var(--accent-glow);
-  animation: core-pulse 1.6s ease-in-out infinite;
+.boot-bar span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text);
+  animation: boot-slide 1.4s ease-in-out infinite;
 }
 
-@keyframes ring-appear {
-  0%   { transform: scale(0.6) rotate(0deg); opacity: 0; }
-  40%  { opacity: 1; }
-  100% { transform: scale(1) rotate(180deg); opacity: 0.15; }
+@keyframes boot-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
 }
 
-@keyframes core-pulse {
-  0%, 100% { transform: scale(0.85); opacity: 0.8; }
-  50%      { transform: scale(1.05); opacity: 1; }
-}
+@keyframes fade-in { from { opacity: 0; } }
 
-.boot-text {
-  font-family: "Orbitron", sans-serif;
-  letter-spacing: 6px;
-  font-size: 20px;
-  color: var(--accent);
-  text-shadow: 0 0 12px var(--accent-glow);
-  animation: text-flicker 2s ease-in-out infinite;
-}
-
-@keyframes text-flicker {
-  0%, 100% { opacity: 0.7; }
-  50%      { opacity: 1; }
-}
-
-/* ---------- Shutdown-Animation ---------- */
+/* ---------- Ausschalten (Roehren-Effekt) ---------- */
 
 .shutdown-bar {
   position: fixed;
@@ -126,8 +116,7 @@ body:not(.remote-body) {
   top: 50%;
   height: 0;
   transform: translateY(-50%);
-  background: var(--accent);
-  box-shadow: 0 0 30px 6px var(--accent-glow);
+  background: #fff;
   opacity: 0;
   z-index: 101;
   pointer-events: none;
@@ -142,9 +131,7 @@ body:not(.remote-body) {
   100% { height: 0; opacity: 0; }
 }
 
-/* ---------- Dashboard ----------
-   Masse in vh: der Fernseher ist 1080p, alles skaliert mit der Hoehe.
-   Glas-Kacheln im Stil der Fernbedienung. */
+/* ---------- Dashboard ---------- */
 
 #dashboard {
   position: fixed;
@@ -152,25 +139,7 @@ body:not(.remote-body) {
   display: flex;
   flex-direction: column;
   padding: 3.4vh 4vh 3vh;
-  background:
-    radial-gradient(90vh 60vh at 8% -10%, rgba(79, 216, 255, 0.16), transparent 60%),
-    radial-gradient(80vh 60vh at 105% 15%, rgba(138, 125, 255, 0.13), transparent 60%),
-    radial-gradient(100vh 70vh at 50% 125%, rgba(79, 216, 255, 0.07), transparent 60%),
-    linear-gradient(180deg, #030b17 0%, #02060d 100%);
-}
-
-/* feines HUD-Raster, nach unten ausgeblendet */
-#dashboard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(79, 216, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(79, 216, 255, 0.045) 1px, transparent 1px);
-  background-size: 4.4vh 4.4vh;
-  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 75%);
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 75%);
-  pointer-events: none;
+  background: var(--bg);
 }
 
 header {
@@ -182,21 +151,18 @@ header {
   margin-bottom: 2.6vh;
 }
 
-.header-left {
-  padding-top: 1.2vh;
-}
+.header-left { padding-top: 1.2vh; }
 
 .dash-hello {
-  font-size: 3.6vh;
+  font-size: 4vh;
   font-weight: 600;
-  color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .dash-sub {
   margin-top: 0.4vh;
-  font-size: 2.4vh;
-  font-weight: 500;
-  color: var(--text-dim);
+  font-size: 2.6vh;
+  color: var(--text-2);
 }
 
 /* Absolut zentriert statt per flex/grid-Spalte, damit die Uhr unabhaengig
@@ -210,50 +176,37 @@ header {
 }
 
 .clock {
-  font-family: "Orbitron", sans-serif;
-  font-size: 11.5vh;
-  font-weight: 700;
-  color: var(--accent);
-  text-shadow: 0 0 4vh var(--accent-glow);
+  font-size: 12.5vh;
+  font-weight: 600;
   line-height: 1;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 
 .date {
-  margin-top: 1vh;
-  font-size: 2.6vh;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.header-right {
-  padding-top: 1.4vh;
-  text-align: right;
-}
-
-.brand {
-  font-family: "Orbitron", sans-serif;
+  margin-top: 0.8vh;
   font-size: 2.8vh;
-  letter-spacing: 0.4em;
-  color: var(--accent);
-  text-shadow: 0 0 1.4vh var(--accent-glow);
+  font-weight: 500;
+  color: var(--text-2);
 }
+
+.header-right { padding-top: 1.6vh; }
 
 .onair {
-  margin-top: 1.2vh;
-  font-size: 2vh;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: var(--accent-warn);
-  text-shadow: 0 0 1vh rgba(255, 140, 66, 0.6);
-  animation: onair-pulse 1.6s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 1vh;
+  font-size: 2.6vh;
+  font-weight: 500;
+  color: var(--text-2);
 }
 
-@keyframes onair-pulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
+.onair::before {
+  content: "";
+  width: 1.1vh;
+  height: 1.1vh;
+  border-radius: 50%;
+  background: var(--red);
 }
 
 .grid {
@@ -261,94 +214,49 @@ header {
   flex: 1;
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr;
-  gap: 2.6vh;
+  gap: 2.2vh;
   min-height: 0;
 }
 
 .side-stack {
   display: flex;
   flex-direction: column;
-  gap: 2.6vh;
+  gap: 2.2vh;
   min-height: 0;
 }
 
 .side-stack .panel { flex: 1; }
 .side-stack .plan-panel { flex: 1.3; }
 
-/* Kalender rechts unten: kompakte Zeilen */
-.side-stack .calendar-panel .list { gap: 0.8vh; }
-.side-stack .calendar-panel .list li { min-height: 5.2vh; padding: 0.7vh 1.4vh; font-size: 2.6vh; }
-.side-stack .calendar-panel .list li .item-text { -webkit-line-clamp: 1; }
-.side-stack .calendar-panel .list .time { min-width: 8vh; font-size: 2vh; }
-
-/* Vertretungsplan: viele kurze Eintraege -> kompakter */
-.plan-panel .list { gap: 0.8vh; }
-.plan-panel .list li { min-height: 5.2vh; padding: 0.7vh 1.4vh; font-size: 2.6vh; }
-.plan-panel .list li .item-text { -webkit-line-clamp: 1; display: block; white-space: nowrap; text-overflow: ellipsis; }
-.plan-panel .list .note { font-size: 2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.plan-panel .list .time { min-width: 8vh; font-size: 2vh; }
-
 .panel {
   position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 2.4vh 2.6vh;
-  border-radius: 2.4vh;
-  border: 1px solid rgba(120, 200, 255, 0.14);
-  background: linear-gradient(160deg, rgba(26, 50, 80, 0.55), rgba(10, 22, 38, 0.62));
-  box-shadow: 0 2.4vh 5vh -2.4vh rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 2.6vh 3vh;
+  border-radius: 3.2vh;
+  background: var(--bg-2);
   overflow: hidden;
-}
-
-/* Verlaufsrand oben links -> unten rechts */
-.panel::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(79, 216, 255, 0.6), transparent 38%, transparent 70%, rgba(138, 125, 255, 0.4));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 
 .panel-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 1.4vh;
-  margin-bottom: 2vh;
-}
-
-.panel-icon {
-  width: 3vh;
-  height: 3vh;
-  flex: none;
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 0.8vh var(--accent-glow));
+  margin-bottom: 1.4vh;
 }
 
 .panel h2 {
   margin: 0;
-  font-family: "Orbitron", sans-serif;
-  font-size: 2.2vh;
+  font-size: 3.2vh;
   font-weight: 700;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
 }
 
 .panel-meta {
   margin-left: auto;
-  font-size: 2.2vh;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-size: 2.3vh;
+  color: var(--text-2);
 }
 
 .panel-body {
@@ -366,20 +274,18 @@ header {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.2vh;
 }
 
 .list li {
   display: flex;
   align-items: center;
-  gap: 1.8vh;
-  min-height: 6.4vh;
-  padding: 1.1vh 1.6vh;
-  border-radius: 1.4vh;
-  background: rgba(79, 216, 255, 0.05);
-  border: 1px solid rgba(79, 216, 255, 0.08);
+  gap: 2vh;
+  min-height: 6.6vh;
+  padding: 1.1vh 0;
   line-height: 1.2;
 }
+
+.list li + li { box-shadow: inset 0 1px 0 var(--separator); }
 
 .list li .item-text {
   flex: 1;
@@ -392,77 +298,67 @@ header {
 
 .list .time {
   flex: none;
-  min-width: 10.5vh;
-  padding: 0.6vh 1.2vh;
-  border-radius: 1vh;
-  background: rgba(79, 216, 255, 0.14);
-  color: var(--accent);
-  font-family: "Orbitron", sans-serif;
-  font-size: 2.2vh;
-  font-weight: 700;
-  text-align: center;
+  min-width: 9vh;
+  color: var(--text-2);
+  font-size: 2.6vh;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-.list .time.all-day {
-  font-family: "Rajdhani", sans-serif;
-  font-size: 2.2vh;
-  letter-spacing: 0.05em;
-}
+.list .time.all-day { font-size: 2.2vh; }
 
 /* Termin laeuft gerade / ist vorbei */
-.list li.now { border-color: rgba(79, 216, 255, 0.5); background: rgba(79, 216, 255, 0.12); }
-.list li.past { opacity: 0.45; }
-
-.todo-dot {
-  flex: none;
-  width: 2.4vh;
-  height: 2.4vh;
-  border-radius: 50%;
-  border: 0.3vh solid rgba(79, 216, 255, 0.7);
-  box-shadow: 0 0 1vh rgba(79, 216, 255, 0.35);
-}
+.list li.now .time { color: var(--green); font-weight: 600; }
+.list li.past { opacity: 0.4; }
 
 .list .note {
   display: block;
-  margin-top: 0.3vh;
-  font-size: 2.3vh;
-  color: var(--accent-warn);
+  margin-top: 0.2vh;
+  font-size: 2.2vh;
+  color: var(--text-2);
 }
 
 .list li.day-sep {
   min-height: 0;
-  padding: 0.6vh 0.4vh 0;
-  background: none;
-  border: 0;
-  font-family: "Orbitron", sans-serif;
-  font-size: 1.8vh;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  padding: 1vh 0 0;
+  font-size: 2.2vh;
+  font-weight: 600;
+  color: var(--text-2);
 }
 
-.list li.cancelled { border-color: rgba(255, 140, 66, 0.4); background: rgba(255, 140, 66, 0.08); }
-.list li.cancelled .time { background: rgba(255, 140, 66, 0.2); color: var(--accent-warn); }
+.list li.cancelled .time { color: var(--red); font-weight: 600; }
 
 .list li.more {
   min-height: 0;
-  justify-content: center;
-  background: none;
-  border: 0;
+  padding-top: 1.2vh;
   font-size: 2.3vh;
-  color: var(--text-dim);
+  color: var(--text-2);
 }
 
-/* Abgehakte ToDos: sichtbar, aber zurueckgenommen */
-.todo-dot { display: grid; place-items: center; }
-.todo-dot svg { width: 1.8vh; height: 1.8vh; fill: none; stroke: #02141f; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
-.list li.done { background: rgba(79, 216, 255, 0.02); border-color: rgba(79, 216, 255, 0.05); }
-.list li.done .todo-dot { background: rgba(79, 216, 255, 0.55); border-color: transparent; box-shadow: none; }
-.list li.done .item-text { color: var(--text-dim); text-decoration: line-through; text-decoration-color: rgba(111, 139, 163, 0.7); }
+/* Rechte Spalte: kompakte Zeilen */
+.side-stack .list li { min-height: 5.2vh; padding: 0.6vh 0; font-size: 2.7vh; }
+.side-stack .calendar-panel .list li .item-text { -webkit-line-clamp: 1; }
+.side-stack .list .time { min-width: 8vh; font-size: 2.3vh; }
+.plan-panel .list li .item-text { -webkit-line-clamp: 1; display: block; white-space: nowrap; text-overflow: ellipsis; }
+.plan-panel .list .note { font-size: 2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ToDos: Kreis wie in Erinnerungen, abgehakte zurueckgenommen */
+.todo-dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.8vh;
+  height: 2.8vh;
+  border-radius: 50%;
+  border: 0.22vh solid var(--text-3);
+}
+
+.todo-dot svg { width: 1.9vh; height: 1.9vh; fill: none; stroke: #000; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.list li.done .todo-dot { background: var(--text-2); border-color: transparent; }
+.list li.done .item-text { color: var(--text-2); text-decoration: line-through; text-decoration-color: var(--text-3); }
 
 /* Leer / nicht eingerichtet */
-.list li.panel-empty { min-height: 100%; padding: 2vh; background: none; border: 0; }
+.list li.panel-empty { min-height: 100%; padding: 2vh; box-shadow: none; }
 
 .panel-empty {
   height: 100%;
@@ -470,19 +366,19 @@ header {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.4vh;
+  gap: 1.2vh;
   padding: 2vh;
   text-align: center;
-  color: var(--text-dim);
-  font-size: 2.8vh;
-  font-weight: 600;
+  color: var(--text-2);
+  font-size: 2.7vh;
+  font-weight: 500;
 }
 
 .panel-empty svg {
-  width: 7vh;
-  height: 7vh;
+  width: 6vh;
+  height: 6vh;
   fill: none;
-  stroke: rgba(79, 216, 255, 0.45);
+  stroke: var(--text-3);
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -491,9 +387,9 @@ header {
 .panel-empty small {
   max-width: 38vh;
   font-size: 2.1vh;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
-  color: rgba(111, 139, 163, 0.85);
+  color: var(--text-3);
 }
 
 /* ---------- Wetter ---------- */
@@ -510,59 +406,44 @@ header {
   gap: 2.6vh;
 }
 
-.wx-icon-big { width: 17vh; height: 17vh; flex: none; filter: drop-shadow(0 0 2vh rgba(255, 200, 87, 0.25)); }
+.wx-icon-big { width: 16vh; height: 16vh; flex: none; }
 
 .wx-temp {
-  font-family: "Orbitron", sans-serif;
-  font-size: 10vh;
-  font-weight: 700;
+  font-size: 11vh;
+  font-weight: 300;
   line-height: 1;
-  color: #fff;
-  text-shadow: 0 0 3vh var(--accent-glow);
+  letter-spacing: -0.03em;
 }
 
 .wx-desc {
   margin-top: 0.8vh;
-  font-size: 3.4vh;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 3.2vh;
+  font-weight: 600;
 }
 
 .wx-sub {
-  margin-top: 0.3vh;
+  margin-top: 0.2vh;
   font-size: 2.3vh;
-  font-weight: 500;
-  color: var(--text-dim);
+  color: var(--text-2);
 }
 
 .wx-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.2vh;
-}
-
-.wx-stat {
-  padding: 1.1vh 1.4vh;
-  border-radius: 1.4vh;
-  background: rgba(79, 216, 255, 0.06);
-  border: 1px solid rgba(79, 216, 255, 0.08);
+  gap: 1.6vh;
 }
 
 .wx-stat span {
   display: block;
-  font-size: 1.8vh;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  font-size: 2.1vh;
+  color: var(--text-2);
 }
 
 .wx-stat b {
   display: block;
-  margin-top: 0.3vh;
+  margin-top: 0.2vh;
   font-size: 2.8vh;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -570,6 +451,9 @@ header {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.8vh;
+  padding: 1.6vh 0;
+  border-top: 1px solid var(--separator);
+  border-bottom: 1px solid var(--separator);
 }
 
 .wx-hour {
@@ -577,16 +461,13 @@ header {
   flex-direction: column;
   align-items: center;
   gap: 0.4vh;
-  padding: 1.1vh 0.4vh;
-  border-radius: 1.4vh;
-  background: rgba(79, 216, 255, 0.04);
   font-size: 2.1vh;
-  color: var(--text-dim);
+  color: var(--text-2);
 }
 
 .wx-hour svg { width: 5vh; height: 5vh; }
-.wx-hour b { font-size: 2.8vh; color: var(--text); }
-.wx-rain { font-size: 1.9vh; color: #7fdcff; }
+.wx-hour b { font-size: 2.7vh; font-weight: 600; color: var(--text); }
+.wx-rain { font-size: 1.9vh; color: #64d2ff; }
 .wx-rain.zero { visibility: hidden; }
 
 .wx-days {
@@ -602,18 +483,17 @@ header {
   align-items: center;
   gap: 1.2vh;
   font-size: 2.7vh;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .wx-day svg { width: 4.6vh; height: 4.6vh; }
-.wx-day .lo { color: var(--text-dim); text-align: right; }
-.wx-day .hi { color: var(--text); }
+.wx-day .lo { color: var(--text-2); text-align: right; }
 
 .wx-bar {
   position: relative;
-  height: 0.8vh;
+  height: 0.7vh;
   border-radius: 1vh;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--fill);
 }
 
 .wx-bar i {
@@ -621,7 +501,7 @@ header {
   top: 0;
   bottom: 0;
   border-radius: 1vh;
-  background: linear-gradient(90deg, #4fd8ff, #ffc857);
+  background: rgba(255, 255, 255, 0.75);
 }
 
 /* ---------- Hinweise (echte Fehler, nicht "nicht eingerichtet") ---------- */
@@ -629,14 +509,14 @@ header {
 footer#errors {
   position: relative;
   margin-top: 1.6vh;
-  font-size: 1.8vh;
-  color: rgba(255, 140, 66, 0.75);
+  font-size: 1.9vh;
+  color: var(--text-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---------- Medien-Bildschirme (YouTube + Jellyfin) ---------- */
+/* ---------- Medien-Bildschirme (YouTube, Jellyfin, Twitch) ---------- */
 
 .media-screen {
   position: fixed;
@@ -672,45 +552,37 @@ footer#errors {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  background-size: cover;
-  background-position: center;
+  gap: 2vh;
+  background: #000 center / cover no-repeat;
 }
 
 .pause-overlay::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(3, 8, 16, 0.82);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
 }
 
-.pause-overlay > * {
-  position: relative;
-}
+.pause-overlay > * { position: relative; }
 
 .pause-icon {
-  font-size: 64px;
-  color: var(--accent);
-  text-shadow: 0 0 24px var(--accent-glow);
-  animation: core-pulse 1.6s ease-in-out infinite;
+  font-size: 8vh;
+  color: var(--text);
 }
 
 .pause-title {
-  font-family: "Orbitron", sans-serif;
-  font-size: 26px;
-  letter-spacing: 2px;
-  color: var(--text);
-  text-align: center;
   max-width: 80%;
-  text-shadow: 0 0 12px var(--accent-glow);
+  font-size: 4vh;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
 }
 
 .pause-sub {
-  margin-top: -8px;
-  font-size: 20px;
-  letter-spacing: 3px;
-  color: var(--text-dim);
+  margin-top: -0.8vh;
+  font-size: 2.8vh;
+  color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -722,59 +594,40 @@ footer#errors {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  background: radial-gradient(circle at center, rgba(8, 23, 34, 0.75) 0%, rgba(3, 8, 16, 0.55) 70%);
+  gap: 2vh;
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .loader-rings {
-  position: relative;
-  width: 120px;
-  height: 120px;
+  width: 7vh;
+  height: 7vh;
 }
 
 .loader-rings span {
-  position: absolute;
-  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  border: 3px solid transparent;
-  border-top-color: var(--accent);
-  box-shadow: 0 0 18px -4px var(--accent-glow);
-  animation: loader-spin 1.1s linear infinite;
+  border: 0.5vh solid var(--fill);
+  border-top-color: var(--text);
+  animation: loader-spin 0.9s linear infinite;
 }
 
-.loader-rings span:nth-child(2) {
-  inset: 18px;
-  border-top-color: transparent;
-  border-right-color: rgba(79, 216, 255, 0.7);
-  animation-duration: 1.6s;
-  animation-direction: reverse;
-}
-
-.loader-rings span:nth-child(3) {
-  inset: 42px;
-  border: none;
-  background: var(--accent);
-  box-shadow: 0 0 30px 6px var(--accent-glow);
-  animation: core-pulse 1.4s ease-in-out infinite;
-}
+.loader-rings span + span { display: none; }
 
 @keyframes loader-spin {
   to { transform: rotate(360deg); }
 }
 
 .media-loading-label {
-  font-family: "Orbitron", sans-serif;
-  font-size: 16px;
-  letter-spacing: 8px;
-  color: var(--accent);
-  text-shadow: 0 0 12px var(--accent-glow);
+  font-size: 2.6vh;
+  color: var(--text-2);
 }
 
 .media-loading-title {
-  font-size: 22px;
-  letter-spacing: 1px;
-  color: var(--text);
   max-width: 70%;
+  font-size: 3.6vh;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -786,26 +639,24 @@ footer#errors {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  background: rgba(3, 8, 16, 0.94);
+  gap: 2.4vh;
+  background: #000;
 }
 
 .media-error-icon {
-  width: 96px;
-  height: 96px;
+  width: 9vh;
+  height: 9vh;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-family: "Orbitron", sans-serif;
-  font-size: 48px;
-  color: var(--accent-warn);
-  border: 3px solid var(--accent-warn);
-  box-shadow: 0 0 30px -4px rgba(255, 140, 66, 0.7);
+  background: var(--red);
+  font-size: 5.4vh;
+  font-weight: 700;
 }
 
 .media-error-text {
-  font-size: 26px;
-  color: var(--text);
   max-width: 70%;
+  font-size: 3.4vh;
+  font-weight: 500;
   text-align: center;
 }
