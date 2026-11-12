@@ -49,6 +49,7 @@ from app import (
     tv_browser,
     twitch,
     vinyl_library,
+    youtube_subs,
 )
 from app.briefing import build_briefing
 from app.config import ROOT_DIR, get_config
@@ -542,6 +543,15 @@ async def remote_youtube(request: Request) -> dict:
     else:
         raise HTTPException(status_code=400, detail="unbekannte action")
     return {"ok": True}
+
+
+@app.get("/api/remote/youtube/subscriptions", dependencies=[Depends(require_remote_secret)])
+async def youtube_subscriptions(force: bool = False) -> dict:
+    """Neueste Videos der abonnierten Kanaele (Anmeldung im TV-Browser)."""
+    try:
+        return {"videos": await youtube_subs.videos(force)}
+    except youtube_subs.SubscriptionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 # ---------- Twitch ----------
