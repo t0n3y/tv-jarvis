@@ -18,6 +18,7 @@ import os
 import signal
 import subprocess
 import time
+from pathlib import Path
 from typing import Awaitable, Callable
 
 import httpx
@@ -91,28 +92,54 @@ def _pid() -> int:
         return 0
 
 
+def _profile_pids() -> list[int]:
+    """Haupt-Prozesse von Chromium mit dem TV-Browser-Profil.
+
+    Nicht die gemerkte PID: laeuft schon ein Chromium mit diesem Profil,
+    haengt sich ein neuer Start nur als Fenster an und beendet sich sofort -
+    die gemerkte PID gehoert dann zu einem laengst beendeten Prozess, und
+    das eigentliche Fenster bliebe beim Schliessen offen."""
+    marker = f"--user-data-dir={PROFILE_DIR}".encode()
+    pids = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            # Chromium schreibt seine Befehlszeile zu einem einzigen, durch
+            # Leerzeichen getrennten Text um - deshalb im ganzen Text suchen
+            cmdline = (entry / "cmdline").read_bytes().replace(b"\0", b" ") + b" "
+        except OSError:
+            continue
+        if marker + b" " in cmdline and b"--type=" not in cmdline:
+            pids.append(int(entry.name))
+    return pids
+
+
 def is_running() -> bool:
-    pid = _pid()
-    if pid <= 0:
-        return False
-    try:
-        os.kill(pid, 0)
-        return True
-    except OSError:
-        return False
+    return bool(_profile_pids())
 
 
 def kill() -> None:
     """Fenster schliessen (synchron, auch aus anderen Threads/Prozessen)."""
-    pid = _pid()
-    if pid > 0:
+    pids = _profile_pids()
+    for pid in pids:
         with contextlib.suppress(OSError):
             os.kill(pid, signal.SIGTERM)
-            logger.info("TV-Browser geschlossen (PID %s)", pid)
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline and _profile_pids():
+        time.sleep(0.2)
+    for pid in _profile_pids():
+        with contextlib.suppress(OSError):
+            os.kill(pid, signal.SIGKILL)
+    if pids:
+        logger.info("TV-Browser geschlossen (PID %s)", ", ".join(map(str, pids)))
     PID_FILE.unlink(missing_ok=True)
 
 
 def _launch(cfg: Config, url: str) -> None:
+    # Ein uebrig gebliebenes Fenster wuerde den Start sonst schlucken
+    if _profile_pids():
+        kill()
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     for name in ("SingletonLock", "SingletonCookie", "SingletonSocket"):
         (PROFILE_DIR / name).unlink(missing_ok=True)

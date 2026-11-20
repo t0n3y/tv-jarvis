@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 PID_FILE = ROOT_DIR / "data" / "kiosk.pid"
 PROFILE_DIR = ROOT_DIR / "data" / "chromium-profile"
+H264IFY_DIR = ROOT_DIR / "extensions" / "h264ify"
 
 CHROMIUM_CANDIDATES = ["chromium-browser", "chromium"]
 
@@ -128,6 +129,9 @@ def start(cfg: Config) -> None:
             # (Fernbedienung) kommt statt per echtem Klick im Browser.
             "--autoplay-policy=no-user-gesture-required",
             "--check-for-update-interval=31536000",
+            # YouTube als H.264 mit hoechstens 30 fps: VP9/AV1 kann der Pi nur
+            # in Software dekodieren, dann ruckelt es mit Ladekreis
+            f"--load-extension={H264IFY_DIR}",
             f"--app={url}",
         ],
         env=env,
