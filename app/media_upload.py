@@ -42,6 +42,7 @@ FREE_SPACE_RESERVE_BYTES = 2 * 1024**3
 STALE_SECONDS = 7 * 24 * 3600
 VIDEO_EXTENSIONS = {".mp4", ".m4v", ".mkv", ".mov", ".avi", ".webm", ".ts", ".m2ts", ".wmv", ".mpg", ".mpeg"}
 SUBTITLE_EXTENSIONS = {".srt", ".ass", ".ssa", ".vtt", ".sub"}
+COMIC_EXTENSIONS = {".cbz", ".cbr", ".cb7", ".pdf", ".zip", ".rar"}
 _UNSAFE = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 _ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
@@ -55,12 +56,12 @@ class UploadError(Exception):
 # ---------- Ziele ----------
 
 def targets(cfg: Config) -> list[dict]:
-    """Die Jellyfin-Bibliotheken fuer Filme und Serien samt Ordner."""
+    """Die Jellyfin-Bibliotheken fuer Filme, Serien und Comics samt Ordner."""
     folders = jellyfin_client._request(cfg, "GET", "/Library/VirtualFolders").json()
     result = []
     for folder in folders:
         kind = folder.get("CollectionType")
-        if kind in ("movies", "tvshows") and folder.get("Locations"):
+        if kind in ("movies", "tvshows", "books") and folder.get("Locations"):
             result.append({
                 "id": folder.get("ItemId"),
                 "name": folder.get("Name"),
@@ -84,6 +85,12 @@ def _clean(name: str, fallback: str = "") -> str:
 def _final_path(target: dict, body: dict, filename: str) -> Path:
     base = Path(target["path"])
     ext = Path(filename).suffix.lower()
+    if target["kind"] == "books":
+        # Comics: <Comics>/<Reihe>/<Datei>, ohne Reihe direkt in den Ordner
+        if ext not in COMIC_EXTENSIONS:
+            raise UploadError(f"„{filename}“ ist kein Comic (CBZ, CBR, CB7 oder PDF)")
+        series = _clean(body.get("series"))
+        return (base / series if series else base) / _clean(filename, f"Comic{ext}")
     if ext not in VIDEO_EXTENSIONS | SUBTITLE_EXTENSIONS:
         raise UploadError(f"„{filename}“ ist keine Videodatei")
     if target["kind"] == "movies":

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Comics" />
+<title>Comics</title>
+<link rel="stylesheet" href="comics.css" />
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15"/><path d="M9.5 7V4.5h5V7"/><path d="m6.5 7 1 12.5h9l1-12.5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.5c-2-1.6-4.8-2-8-1.5v13c3.2-.5 6-.1 8 1.5 2-1.6 4.8-2 8-1.5V5c-3.2-.5-6-.1-8 1.5z"/><path d="M12 6.5v13"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15"/></symbol>
+</svg>
+
+<!-- ============ Bibliothek ============ -->
+<main id="library">
+  <header class="lib-head">
+    <h1>Comics</h1>
+    <label class="round" aria-label="Hinzufügen">
+      <svg class="icon"><use href="#i-plus"/></svg>
+      <input type="file" id="add-input" multiple accept=".cbz,.cbr,.cb7,.pdf,.zip,.rar" />
+    </label>
+  </header>
+
+  <section class="uploads hidden" id="uploads"></section>
+
+  <section id="continue-section" class="hidden">
+    <h2>Weiterlesen</h2>
+    <div class="rail" id="continue"></div>
+  </section>
+
+  <div id="shelves"></div>
+
+  <div class="empty hidden" id="empty">
+    <svg class="icon"><use href="#i-book"/></svg>
+    <p>Noch keine Comics.</p>
+    <p class="sub">Tippe auf + und wähle CBZ-, CBR- oder PDF-Dateien. Sie landen auch in Jellyfin unter „Comics“.</p>
+  </div>
+</main>
+
+<!-- ============ Reader ============ -->
+<div id="reader" class="hidden">
+  <div class="stage" id="stage"><div class="book" id="book"></div></div>
+  <div class="tap tap-prev" id="tap-prev"></div>
+  <div class="tap tap-menu" id="tap-menu"></div>
+  <div class="tap tap-next" id="tap-next"></div>
+
+  <div class="bar top" id="bar-top">
+    <button class="round" id="r-back" aria-label="Zur Bibliothek"><svg class="icon"><use href="#i-back"/></svg></button>
+    <div class="r-title"><div id="r-title"></div><div class="r-sub" id="r-series"></div></div>
+    <button class="round" id="r-full" aria-label="Vollbild"><svg class="icon"><use href="#i-expand"/></svg></button>
+    <button class="round" id="r-delete" aria-label="Heft löschen"><svg class="icon"><use href="#i-trash"/></svg></button>
+  </div>
+  <div class="bar bottom" id="bar-bottom">
+    <input type="range" id="r-slider" min="0" max="0" value="0" aria-label="Seite" />
+    <div class="r-count" id="r-count">1 / 1</div>
+  </div>
+  <div class="loading" id="r-loading"><span></span></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="comics.js"></script>
+</body>
+</html>

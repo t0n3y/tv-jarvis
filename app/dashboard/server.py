@@ -25,12 +25,13 @@ import json
 import logging
 import random
 import re
+import subprocess
 import time
 from pathlib import Path
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 from starlette.datastructures import MutableHeaders
@@ -38,6 +39,7 @@ from starlette.datastructures import MutableHeaders
 from app import (
     audio_control,
     chess_tv,
+    comics,
     jellyfin_client,
     kiosk_media,
     media_upload,
@@ -106,8 +108,25 @@ class NoCacheMiddleware:
         await self.app(scope, receive, send_with_cache_header)
 
 
+class ComicsHostMiddleware:
+    """comics.bassbunkerfm.de (Cloudflare-Tunnel auf denselben Server) oeffnet
+    direkt den Comic-Reader statt des Kiosk-Dashboards."""
+
+    def __init__(self, asgi_app) -> None:
+        self.app = asgi_app
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope["type"] == "http" and scope.get("path") == "/":
+            host = dict(scope.get("headers") or []).get(b"host", b"").decode("latin-1")
+            if host.startswith("comics."):
+                await RedirectResponse("/comics.html", status_code=302)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
 app = FastAPI(title="TV-Jarvis Dashboard")
 app.add_middleware(NoCacheMiddleware)
+app.add_middleware(ComicsHostMiddleware)
 
 
 class ConnectionManager:
@@ -952,6 +971,47 @@ async def upload_cancel(upload_id: str) -> dict:
     await _upload(media_upload.cancel, upload_id)
     return {"ok": True}
 
+
+
+# ---------- Comics (eigener Reader unter comics.bassbunkerfm.de) ----------
+
+async def _comics(fn, *args):
+    try:
+        return await asyncio.to_thread(fn, *args)
+    except comics.ComicError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except jellyfin_client.JellyfinError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("Comics: %s", exc)
+        raise HTTPException(status_code=500, detail="Das Heft ließ sich nicht lesen") from exc
+
+
+@app.get("/api/comics", dependencies=[Depends(require_remote_secret)])
+async def comics_library() -> dict:
+    return await _comics(comics.library, get_config())
+
+
+@app.get("/api/comics/{book_id}/page/{number}", dependencies=[Depends(require_remote_secret)])
+async def comics_page(book_id: str, number: int) -> Response:
+    content, mime = await _comics(comics.page, get_config(), book_id, number)
+    headers = {"Cache-Control": "private, max-age=604800"}
+    if isinstance(content, Path):
+        return FileResponse(content, media_type=mime, headers=headers)
+    return Response(content, media_type=mime, headers=headers)
+
+
+@app.post("/api/comics/{book_id}/progress", dependencies=[Depends(require_remote_secret)])
+async def comics_progress(book_id: str, request: Request) -> dict:
+    body = await request.json()
+    await asyncio.to_thread(comics.save_progress, book_id, int(body.get("page") or 0))
+    return {"ok": True}
+
+
+@app.delete("/api/comics/{book_id}", dependencies=[Depends(require_remote_secret)])
+async def comics_delete(book_id: str) -> dict:
+    await _comics(comics.delete_book, get_config(), book_id)
+    return {"ok": True}
 
 
 # ---------- Radio ----------
