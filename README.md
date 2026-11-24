@@ -2,6 +2,8 @@
 
 **Ein Raspberry Pi macht aus jedem Fernseher ein kleines Zuhause-System – gesteuert mit dem Handy.**
 
+**[▶ Live-Vorschau ausprobieren](https://t0n3y.github.io/tv-jarvis/)** – Fernbedienung und Fernseher direkt im Browser (Tablet oder Computer), ohne Installation.
+
 Morgens geht der Fernseher von selbst an, zeigt Wetter, Termine, ToDos,
 Vertretungsplan und die nächsten Busse und liest alles vor. Danach läuft
 Radio. Den Rest des Tages ist er Mediacenter, Plattenspieler, Bilderrahmen
