@@ -1,8 +1,10 @@
-"""App Store: welche Apps es gibt, was man fuer sie einstellt und wie man sie
-einrichtet. Neue App = ein Eintrag in APPS (und, wenn sie eine eigene Ansicht
-hat, eine Kachel in remote.html mit data-app="<id>").
+"""App Store: eingebaute Apps (BUILTIN_APPS) und eigene Apps aus dem Ordner
+apps/ (siehe app/plugins.py und apps/README.md).
 
-Felder:
+Neue App? Am einfachsten als Ordner in apps/:
+    .venv/bin/python -m app.new_app "Mein App-Name"
+
+Felder eingebauter Apps:
   {"config": "pfad.in.der.config", ...}  -> data/settings.json
   {"secret": "ENV_NAME", ...}            -> .env (wird nie ausgeliefert)
   type: text | url | password | number | lines (eine Angabe pro Zeile)
@@ -14,10 +16,10 @@ from __future__ import annotations
 
 from typing import Callable
 
-from app import settings_store
+from app import plugins, settings_store
 from app.config import Config, get_config
 
-APPS: list[dict] = [
+BUILTIN_APPS: list[dict] = [
     {
         "id": "jellyfin",
         "name": "Jellyfin",
@@ -92,21 +94,6 @@ APPS: list[dict] = [
             "Adapter an den Pi stecken, Scheinwerfer per DMX-Kabel verbinden.",
             "Am ersten Scheinwerfer Adresse <b>d001</b> und 8-Kanal-Modus einstellen, am zweiten <b>d009</b>, dann d017 … (immer +8).",
             "In der App Licht unten die Anzahl der Lampen einstellen.",
-        ],
-    },
-    {
-        "id": "chess",
-        "name": "Sprachschach",
-        "icon": "knight",
-        "color": "52, 120, 84",
-        "category": "Spiele",
-        "summary": "Auf chess.com gegen Bots oder online spielen – Züge sagst du ins Handy, der Fernseher sagt die Gegnerzüge an.",
-        "fields": [],
-        "guide": [
-            "App <b>Browser</b> öffnen, <b>chess.com</b> aufrufen und dich mit deinem Konto anmelden.",
-            "Fürs Sprechen braucht das iPhone eine https-Adresse: Fernzugriff einrichten (App „Fernzugriff“) und die Fernbedienung darüber öffnen. Ohne https kannst du Züge tippen oder diktieren.",
-            "In der App Schach einen Bot oder eine Online-Bedenkzeit wählen und starten.",
-            "Hinweis: Die Erweiterung macht keine Zugvorschläge. chess.com sieht Programme, die Züge ausführen, bei gewerteten Partien offiziell nicht vor.",
         ],
     },
     {
@@ -207,7 +194,7 @@ APPS: list[dict] = [
         "icon": "globe",
         "color": "142, 142, 147",
         "category": "System",
-        "summary": "Die Fernbedienung von unterwegs und mit https nutzen (nötig fürs Sprechen beim Schach).",
+        "summary": "Die Fernbedienung von unterwegs und mit https nutzen – nötig z. B. für die Spracheingabe am iPhone.",
         "fields": [],
         "guide": [
             "Kostenloses Konto bei <b>Cloudflare</b> anlegen und deine Domain dort hinzufügen.",
@@ -218,16 +205,28 @@ APPS: list[dict] = [
     },
 ]
 
-BY_ID = {app["id"]: app for app in APPS}
+BUILTIN_IDS = {app["id"] for app in BUILTIN_APPS}
+
+
+def all_apps() -> list[dict]:
+    """Eingebaute Apps + Ordner aus apps/ (eine eigene App kann keine
+    eingebaute ueberschreiben)."""
+    extra = [app for app in plugins.discover() if app["id"] not in BUILTIN_IDS]
+    return BUILTIN_APPS + extra
+
+
+def by_id(app_id: str) -> dict | None:
+    return next((app for app in all_apps() if app["id"] == app_id), None)
 
 
 def enabled_map() -> dict[str, bool]:
     data = settings_store.load()
     saved = data["apps"]
+    apps = all_apps()
     if not isinstance(saved, dict):
         # Bestehende Installation ohne App-Auswahl: alles sichtbar
-        return {a["id"]: settings_store._legacy_install() for a in APPS}
-    return {a["id"]: bool(saved.get(a["id"], False)) for a in APPS}
+        return {a["id"]: settings_store._legacy_install() and not a.get("error") for a in apps}
+    return {a["id"]: bool(saved.get(a["id"], False)) and not a.get("error") for a in apps}
 
 
 def _raw_config() -> dict:
@@ -258,7 +257,7 @@ def public_list() -> list[dict]:
     enabled = enabled_map()
     raw = _raw_config()
     result = []
-    for app in APPS:
+    for app in all_apps():
         fields = []
         for field in app["fields"]:
             item = {k: field[k] for k in ("label", "type", "placeholder", "generate") if k in field}
@@ -272,9 +271,11 @@ def public_list() -> list[dict]:
             fields.append(item)
         result.append({
             **{k: app[k] for k in ("id", "name", "icon", "color", "category", "summary", "guide")},
+            **{k: app[k] for k in ("icon_svg", "author", "version", "homepage", "view", "files", "error") if app.get(k)},
+            "plugin": bool(app.get("plugin")),
             "enabled": enabled[app["id"]],
             "fields": fields,
-            "testable": app["id"] in TESTS,
+            "testable": app["id"] in TESTS or plugins.test_function(app["id"]) is not None,
             "configured": _configured(app, raw),
         })
     return result
@@ -293,9 +294,11 @@ def _configured(app: dict, raw: dict) -> bool:
 
 
 def save(app_id: str, enabled: bool | None, values: dict) -> None:
-    app = BY_ID.get(app_id)
+    app = by_id(app_id)
     if not app:
         raise ValueError("Unbekannte App")
+    if enabled and app.get("error"):
+        raise ValueError(f"Die App hat einen Fehler: {app['error']}")
     config_updates: dict = {}
     secrets_updates: dict = {}
     raw = _raw_config()
@@ -381,6 +384,9 @@ TESTS: dict[str, Callable[[Config], str]] = {
 
 
 def test(app_id: str) -> str:
-    if app_id not in TESTS:
+    if app_id in TESTS:
+        return TESTS[app_id](get_config())
+    plugin_test = plugins.test_function(app_id)
+    if plugin_test is None:
         raise ValueError("Für diese App gibt es keinen Test")
-    return TESTS[app_id](get_config())
+    return str(plugin_test())

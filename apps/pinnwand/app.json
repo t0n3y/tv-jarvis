@@ -1,0 +1,21 @@
+{
+  "name": "Pinnwand",
+  "icon": "star",
+  "color": "255, 149, 0",
+  "category": "Weitere Apps",
+  "summary": "Schickt eine Nachricht vom Handy groß auf den Fernseher. Beispiel-App: Vorlage für eigene Apps.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "signature",
+      "label": "Unterschrift unter jeder Nachricht",
+      "type": "text",
+      "placeholder": "z. B. Mama"
+    }
+  ],
+  "guide": [
+    "In der App eine Nachricht eintippen und <b>Auf den Fernseher</b> drücken.",
+    "Mit <b>Schließen</b> zeigt der Fernseher wieder das Dashboard."
+  ]
+}

@@ -225,3 +225,6 @@ body.setup-open .topbar { display: none; }
 .setup-nav { display: flex; gap: 10px; margin-top: 8px; }
 .setup-nav .btn-primary { flex: 1; }
 a.app-tile { text-decoration: none; }
+
+/* Eigene Apps (apps/<id>/): Inhalt mit dem ueblichen Abstand */
+.app-body { display: flex; flex-direction: column; gap: 20px; }

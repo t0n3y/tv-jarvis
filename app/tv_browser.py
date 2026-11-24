@@ -1,9 +1,10 @@
 """TV-Browser: ein zweites Chromium-Fenster auf dem Fernseher, das die
 Fernbedienung wie einen normalen Browser bedient (Seiten oeffnen, antippen,
-scrollen, tippen) - und in dem Sprachschach auf chess.com laeuft.
+scrollen, tippen). Eigene Apps zeigen darin ihre Fernseher-Seite
+(app/plugins.py: ctx.show_on_tv).
 
 Es liegt ueber dem Kiosk und hat ein eigenes Profil (data/tvbrowser-profile):
-Logins wie chess.com bleiben dort erhalten. Gesteuert wird es ueber das
+Logins (z.B. YouTube) bleiben dort erhalten. Gesteuert wird es ueber das
 Chrome-DevTools-Protokoll (CDP) auf 127.0.0.1:9223 - nur vom Pi selbst
 erreichbar. Schliesst man es, ist wieder der Kiosk zu sehen.
 """
@@ -40,32 +41,16 @@ SCREENCAST = {"format": "jpeg", "quality": 55, "maxWidth": 1280, "maxHeight": 72
 SNAPSHOT_AFTER_SECONDS = 1.5
 
 # Laeuft vor jeder Seite: Links und Popups im selben Fenster oeffnen (ein
-# Kiosk-Fenster hat keine Tabs) und die Bruecke fuer Sprachschach bereitstellen.
+# Kiosk-Fenster hat keine Tabs).
 PREAMBLE = r"""
 (() => {
-  if (window.__jarvisChess) return;
+  if (window.__rpitvPreamble) return;
+  window.__rpitvPreamble = true;
   document.addEventListener('click', (e) => {
     const a = e.target && e.target.closest && e.target.closest('a[target]');
     if (a && a.target !== '_self') a.target = '_self';
   }, true);
   window.open = (url) => { if (url) location.href = url; return null; };
-  const send = (obj) => { try { window.jarvisBridge(JSON.stringify(obj)); } catch (e) {} };
-  let n = 0;
-  const wartet = {};
-  window.__jarvisChess = {
-    sprich(text, mal) {
-      const id = ++n;
-      return new Promise((resolve) => {
-        wartet[id] = resolve;
-        send({ type: 'sprich', id, text, mal: mal || 1 });
-        // Falls Jarvis nicht antwortet: nicht ewig haengen bleiben
-        setTimeout(() => { if (wartet[id]) { delete wartet[id]; resolve(); } }, 15000 * (mal || 1));
-      });
-    },
-    fertig(id) { const r = wartet[id]; if (r) { delete wartet[id]; r(); } },
-    verstummen() { send({ type: 'verstummen' }); },
-    status(s) { send(Object.assign({ type: 'status' }, s)); },
-  };
 })();
 """
 
@@ -246,7 +231,6 @@ class Browser:
         self.url = target.get("url", "")
         await self.send("Page.enable")
         await self.send("Runtime.enable")
-        await self.send("Runtime.addBinding", {"name": "jarvisBridge"})
         await self.send("Page.addScriptToEvaluateOnNewDocument", {"source": PREAMBLE})
         await self.evaluate(PREAMBLE)
         if self._viewers:
@@ -433,7 +417,7 @@ browser = Browser()
 
 
 def normalize_url(raw: str) -> str:
-    """Adresszeile: "chess.com" -> https://chess.com, Suchbegriffe -> Google."""
+    """Adresszeile: "youtube.com" -> https://youtube.com, Suchbegriffe -> Google."""
     text = (raw or "").strip()
     if not text:
         return HOME_URL

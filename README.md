@@ -4,7 +4,8 @@ Ein Raspberry Pi macht aus jedem Fernseher mit HDMI ein kleines Zuhause-System:
 morgens geht der Fernseher von selbst an, zeigt Wetter, Termine, ToDos und den
 Vertretungsplan und liest alles vor. Danach läuft Radio. Gesteuert wird alles
 mit dem Handy über eine Fernbedienungs-Web-App im Apple-Stil, inklusive
-Jellyfin, YouTube, Twitch, Plattenschrank, Licht, Comics und Sprachschach.
+Jellyfin, YouTube, Twitch, Plattenschrank, Licht und Comics – und eigene
+Apps, die jeder in wenigen Minuten selbst bauen kann.
 
 Name, Apps und Zugangsdaten stellst du in der Fernbedienung ein. Den Namen
 „RPi TV“ kannst du durch deinen eigenen ersetzen: Er erscheint dann auf dem
@@ -60,12 +61,12 @@ außerdem „Verbindung testen“.
 | **Twitch** | Lieblings-Streamer: wer ist live, Stream im Vollbild ohne Chat | nichts |
 | **Plattenschrank** | Plattenspieler auf dem Fernseher, Schränke pro Genre | nichts |
 | **Licht** | DMX-Scheinwerfer, Farben und Effekte im Takt | uDMX-USB-Adapter |
-| **Sprachschach** | chess.com gegen Bots oder online, Züge per Sprache | chess.com-Konto |
 | **Comics** | Reader mit Doppelseiten und Blätteranimation (CBZ/CBR/PDF) | nichts |
 | **IServ-Vertretungsplan** | Vertretungen für deine Kurse auf dem Dashboard und im Wecker | IServ-Zugang |
 | **Google / iCloud Kalender** | Termine auf dem Dashboard und im Wecker | iCal-Adresse bzw. App-Passwort |
 | **ToDos aus Notizen** | Checkliste aus der Notizen-App | iPhone-Kurzbefehl |
 | **Fernzugriff** | Fernbedienung von unterwegs mit https | Cloudflare-Konto + Domain |
+| **Pinnwand** | Beispiel-App: Nachricht vom Handy groß auf den Fernseher | nichts |
 
 Apps, die aus sind, verschwinden vom Homescreen der Fernbedienung und vom
 Dashboard auf dem Fernseher.
@@ -76,11 +77,7 @@ Das ganze Projekt ist offen: Du darfst es für dich umbauen (Lizenz siehe
 unten).
 
 - **Name**: *Einstellungen → Allgemein*. Ersetzt „RPi TV“ überall.
-- **Eigene App**: einen Eintrag in `app/apps.py` anlegen (Name, Symbol, Farbe,
-  Felder, Anleitung). Die Felder speichert der App Store automatisch, normale
-  Werte in `data/settings.json`, Zugangsdaten in `.env`. Hat die App eine
-  eigene Ansicht, kommt eine Kachel mit `data-open="<id>"` in
-  `app/dashboard/static/remote.html`.
+- **Eigene Apps**: siehe nächster Abschnitt.
 - **Einstellungen als Datei**: Alle Standardwerte stehen in
   `config.example.yaml`. Wer lieber Dateien bearbeitet, kopiert sie nach
   `config.yaml`. Es gilt die Reihenfolge
@@ -89,6 +86,22 @@ unten).
 - **Eigener Fork**: Mit dem Installer kannst du auch deinen eigenen Fork
   installieren:
   `curl -fsSL …/install.sh | RPITV_REPO=https://github.com/<du>/tv-jarvis.git bash`
+
+## Eigene Apps bauen
+
+Eine App ist ein Ordner in [`apps/`](apps) – mit Steckbrief (`app.json`),
+Ansicht für die Fernbedienung, Seite für den Fernseher und auf Wunsch einer
+eigenen API in Python. Sie erscheint automatisch im App Store, mit Schalter,
+Einstellungen und Anleitung. Eine fertige Vorlage erzeugt:
+
+```bash
+.venv/bin/python -m app.new_app "Meine App"
+sudo systemctl restart dashboard.service
+```
+
+Alles Weitere – Bausteine, `RPiTV.app()` im Browser, `ctx` im Server – steht in
+[apps/README.md](apps/README.md). Weitergeben heißt: Ordner teilen, andere
+legen ihn nach `apps/`.
 
 ## Aktualisieren
 
@@ -228,6 +241,8 @@ app/
   config.py            Einstellungen laden (Standardwerte -> config.yaml -> data/settings.json)
   settings_store.py     Speichert, was in der Fernbedienung eingestellt wird (+ .env)
   apps.py               App Store: Apps, Felder, Anleitungen, Verbindungstests
+  plugins.py            Laedt eigene Apps aus apps/ (+ ctx fuer deren server.py)
+  new_app.py            Vorlage fuer eine neue App: python -m app.new_app "Name"
   briefing.py           Sammelt alle Quellen parallel, baut Text + JSON
   tts.py                 Piper-Wrapper
   radio.py                mpv-Steuerung, spielt den aktuell gewaehlten Sender

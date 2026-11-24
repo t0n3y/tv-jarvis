@@ -136,7 +136,7 @@ def _synthesize(job: dict) -> None:
 
 class Speaker:
     """Haelt das Sprachmodell in einem eigenen Prozess geladen - fuer viele
-    kurze Ansagen hintereinander (Sprachschach). speak() laedt es dagegen
+    kurze Ansagen hintereinander (z.B. fuer eigene Apps). speak() laedt es dagegen
     jedes Mal neu, was pro Satz rund eine Sekunde kostet."""
 
     def __init__(self, cfg: Config) -> None:
@@ -200,7 +200,7 @@ def _serve(settings: dict) -> None:
     voice = PiperVoice.load(settings["model"])
     syn_config = SynthesisConfig(length_scale=settings["length_scale"])
     # Ueber PipeWire statt direkt aufs HDMI-Geraet: spielt Chromium gleichzeitig
-    # Ton (chess.com-Zuggeraeusche), haelt PipeWire das Geraet belegt und aplay
+    # Ton (Video im TV-Browser), haelt PipeWire das Geraet belegt und aplay
     # bekaeme "Geraet belegt"
     if shutil.which("pw-play"):
         player = ["pw-play", "--raw", "--rate", str(settings["sample_rate"]), "--channels", "1", "--format", "s16", "-"]

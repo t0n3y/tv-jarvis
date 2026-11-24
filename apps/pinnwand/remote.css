@@ -1,0 +1,3 @@
+/* Nur fuer diese App. Immer mit #view-app-pinnwand beginnen, dann bleibt der
+   Rest der Fernbedienung unberuehrt. */
+#view-app-pinnwand .hint:empty { display: none; }

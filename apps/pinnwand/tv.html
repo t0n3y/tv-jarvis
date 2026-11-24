@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Pinnwand</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #fff; cursor: none;
+    font-family: -apple-system, "Inter", "Helvetica Neue", system-ui, sans-serif; }
+  main { height: 100%; display: grid; place-content: center; gap: 4vh; padding: 8vw; text-align: center; }
+  #text { font-size: 9vh; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+  #signature { font-size: 3.4vh; color: rgba(235, 235, 245, 0.6); }
+</style>
+</head>
+<body>
+<main>
+  <div id="text"></div>
+  <div id="signature"></div>
+</main>
+<script>
+  // Laeuft auf dem Fernseher (TV-Browser auf dem Pi) - darf die API der App
+  // ohne Passwort aufrufen, weil die Anfrage vom Pi selbst kommt.
+  async function update() {
+    const data = await fetch("/api/apps/pinnwand/message").then((r) => r.json());
+    document.getElementById("text").textContent = data.text || "";
+    document.getElementById("signature").textContent = data.signature ? `– ${data.signature}` : "";
+  }
+  update();
+  setInterval(update, 2000);
+</script>
+</body>
+</html>

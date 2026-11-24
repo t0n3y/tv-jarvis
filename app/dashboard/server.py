@@ -39,11 +39,11 @@ from starlette.datastructures import MutableHeaders
 from app import apps as apps_registry
 from app import (
     audio_control,
-    chess_tv,
     comics,
     jellyfin_client,
     kiosk_media,
     media_upload,
+    plugins,
     radio,
     radio_stations,
     schedule_store,
@@ -299,7 +299,6 @@ def _finish_jellyfin_session(position: float | None = None) -> None:
 @app.on_event("startup")
 async def _start_scheduler() -> None:
     Scheduler(get_config()).start()
-    chess_tv.setup(get_config())
     lighting.get_engine().start()
 
 
@@ -309,8 +308,18 @@ async def _close_http_client() -> None:
         await _http_client.aclose()
 
 
-def _is_local(host: str | None) -> bool:
-    return host in LOCAL_HOSTS
+# Header, die ein Reverse-Proxy/Tunnel setzt: cloudflared verbindet sich vom
+# Pi selbst (127.0.0.1) - ohne diese Pruefung waere alles "nur lokal" ueber
+# die oeffentliche Adresse ohne Passwort erreichbar.
+PROXY_HEADERS = ("cf-connecting-ip", "cf-ray", "x-forwarded-for", "x-real-ip", "forwarded")
+
+
+def _is_local(conn) -> bool:
+    """Anfrage vom Pi selbst (Kiosk, TV-Browser) - nicht ueber einen Tunnel."""
+    host = conn.client.host if conn.client else None
+    if host not in LOCAL_HOSTS:
+        return False
+    return not any(name in conn.headers for name in PROXY_HEADERS)
 
 
 def require_remote_secret(
@@ -328,7 +337,7 @@ def require_remote_secret(
 
 
 def require_local(request: Request) -> None:
-    if not _is_local(request.client.host if request.client else None):
+    if not _is_local(request):
         raise HTTPException(status_code=403, detail="nur fuer den Kiosk auf dem Pi selbst")
 
 
@@ -338,7 +347,7 @@ def require_local_or_remote_secret(
     secret: str | None = Query(default=None),
 ) -> None:
     # Bilder brauchen Kiosk (lokal, kennt kein Secret) UND Fernbedienung.
-    if _is_local(request.client.host if request.client else None):
+    if _is_local(request):
         return
     require_remote_secret(x_remote_secret, secret)
 
@@ -498,7 +507,7 @@ def _apply_command_state(body: dict) -> None:
 async def _send_to_kiosk(body: dict) -> bool:
     _apply_command_state(body)
     if str(body.get("type", "")).endswith("_play") and tv_browser.is_running():
-        await chess_tv.end()
+        await tv_browser.browser.close()
     delivered = await manager.broadcast(body)
     msg_type = body.get("type") or ""
     if msg_type in ("youtube_play", "jellyfin_play", "vinyl_play", "twitch_play"):
@@ -646,65 +655,6 @@ async def twitch_playlist(login: str) -> Response:
     return Response(text, media_type="application/vnd.apple.mpegurl", headers={"Cache-Control": "no-store"})
 
 
-# ---------- Sprachschach (chess.com im TV-Browser) ----------
-
-def _chess_error(exc: Exception) -> HTTPException:
-    return HTTPException(status_code=400, detail=str(exc))
-
-
-@app.get("/api/remote/chess", dependencies=[Depends(require_remote_secret)])
-async def get_chess(bots: bool = False) -> dict:
-    data = chess_tv.public_state()
-    if bots:
-        data["bots"] = await asyncio.to_thread(chess_tv.bots)
-    return data
-
-
-@app.post("/api/remote/chess/start", dependencies=[Depends(require_remote_secret)])
-async def start_chess(request: Request) -> dict:
-    body = await request.json()
-    await asyncio.to_thread(radio.stop)
-    try:
-        if body.get("mode") == "bot":
-            time_control = body.get("time")
-            await chess_tv.start_bot(
-                get_config(),
-                str(body.get("bot", "")),
-                body.get("color") if body.get("color") in ("w", "b", "r") else "r",
-                tuple(time_control) if time_control else None,
-            )
-        elif body.get("mode") == "online":
-            await chess_tv.start_online(get_config(), tuple(body.get("time") or (10, 0)))
-        else:
-            raise ValueError("mode muss bot oder online sein")
-    except (ValueError, tv_browser.CDPError) as exc:
-        raise _chess_error(exc) from exc
-    return chess_tv.public_state()
-
-
-@app.post("/api/remote/chess/heard", dependencies=[Depends(require_remote_secret)])
-async def chess_heard(request: Request) -> dict:
-    body = await request.json()
-    try:
-        await chess_tv.heard(body.get("alternatives") or [])
-    except tv_browser.CDPError as exc:
-        raise _chess_error(exc) from exc
-    return {"ok": True}
-
-
-@app.post("/api/remote/chess/action", dependencies=[Depends(require_remote_secret)])
-async def chess_action(request: Request) -> dict:
-    body = await request.json()
-    try:
-        if body.get("action") == "beenden":
-            await chess_tv.end()
-        else:
-            await chess_tv.action(str(body.get("action")), body.get("value"))
-    except (ValueError, tv_browser.CDPError) as exc:
-        raise _chess_error(exc) from exc
-    return chess_tv.public_state()
-
-
 # ---------- TV-Browser (Surfen mit Handy als Touchpad) ----------
 
 @app.get("/api/remote/browser", dependencies=[Depends(require_remote_secret)])
@@ -723,7 +673,7 @@ async def remote_browser(request: Request) -> dict:
             await asyncio.to_thread(radio.stop)
             await b.open(get_config(), tv_browser.normalize_url(body.get("url", "")) if body.get("url") else None)
         elif action == "close":
-            await chess_tv.end()
+            await b.close()
         elif not b.connected:
             if not tv_browser.is_running():
                 raise HTTPException(status_code=409, detail="Der TV-Browser ist zu")
@@ -1698,7 +1648,7 @@ async def set_system(request: Request) -> dict:
     apps = body.get("apps") if isinstance(body.get("apps"), dict) else None
     if apps:
         for app_id, enabled in apps.items():
-            if app_id in apps_registry.BY_ID:
+            if apps_registry.by_id(app_id) is not None:
                 await asyncio.to_thread(apps_registry.save, app_id, bool(enabled), {})
     finish = True if body.get("finish") else None
     if finish and not settings_store.secret_is_set("REMOTE_CONTROL_SECRET"):
@@ -1835,7 +1785,7 @@ def _handle_kiosk_report(msg: dict) -> None:
 async def websocket_endpoint(ws: WebSocket) -> None:
     # Nur der Kiosk auf dem Pi selbst - seine Fortschrittsmeldungen schreiben
     # in Jellyfin, das soll niemand sonst im WLAN faelschen koennen.
-    if not _is_local(ws.client.host if ws.client else None):
+    if not _is_local(ws):
         await ws.close(code=1008)
         return
     await manager.connect(ws)
@@ -1856,6 +1806,49 @@ async def websocket_endpoint(ws: WebSocket) -> None:
                 _handle_kiosk_report(msg)
     except WebSocketDisconnect:
         manager.disconnect(ws)
+
+
+# ---------- Eigene Apps (Ordner apps/, siehe app/plugins.py) ----------
+
+def _include_app_router(router, app_id: str) -> None:
+    # Kiosk/TV-Seite (lokal) und Fernbedienung (mit Passwort) duerfen rein
+    app.include_router(router, prefix=f"/api/apps/{app_id}", dependencies=[Depends(require_local_or_remote_secret)])
+
+
+plugins.load_servers(_include_app_router)
+
+
+@app.get("/apps/{app_id}/{name}")
+async def app_static(app_id: str, name: str) -> FileResponse:
+    """Dateien einer App (remote.html/js/css, tv.html, Bilder) - nie server.py."""
+    try:
+        path, mime = plugins.static_file(app_id, name)
+    except plugins.PluginError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return FileResponse(path, media_type=mime, headers={"Cache-Control": "no-cache"})
+
+
+@app.post("/api/remote/apps/{app_id}/tv", dependencies=[Depends(require_remote_secret)])
+async def app_tv(app_id: str, request: Request) -> dict:
+    """{"action": "open", "page": "tv.html"} zeigt eine Seite der App im
+    Vollbild auf dem Fernseher, {"action": "close"} schliesst sie wieder."""
+    body = await request.json()
+    if apps_registry.by_id(app_id) is None:
+        raise HTTPException(status_code=404, detail="Unbekannte App")
+    ctx = plugins.context(str(plugins.APPS_DIR / app_id / "app.json"))
+    try:
+        if body.get("action") == "close":
+            await ctx.close_tv()
+        else:
+            page = str(body.get("page") or "tv.html")
+            if not page.startswith("https://"):
+                plugins.static_file(app_id, page.split("?")[0].split("#")[0])
+            await ctx.show_on_tv(page)
+    except plugins.PluginError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except tv_browser.CDPError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"ok": True}
 
 
 # Muss zuletzt gemountet werden, sonst faengt der Catch-All die API-Routen ab.

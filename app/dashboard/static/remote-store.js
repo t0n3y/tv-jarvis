@@ -14,11 +14,12 @@ document.querySelector("svg.sprite").insertAdjacentHTML(
   `<symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12.5H6z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/></symbol>
   <symbol id="i-school" viewBox="0 0 24 24"><path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4v-5"/><path d="M21.5 9v5.5"/></symbol>
   <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.8 2.5 5.1 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8z"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.5c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.5v13"/></symbol>`
 );
 
 // Kacheln auf dem Homescreen, die zu einer App aus dem Store gehoeren
-const TILE_APPS = { jellyfin: "jellyfin", youtube: "youtube", twitch: "twitch", chess: "chess", vinyl: "vinyl", light: "light" };
+const TILE_APPS = { jellyfin: "jellyfin", youtube: "youtube", twitch: "twitch", vinyl: "vinyl", light: "light" };
 
 function applyName(name) {
   if (!name) return;
@@ -35,6 +36,7 @@ function applyEnabledApps(enabled) {
   }
   const comics = document.getElementById("tile-comics");
   if (comics) comics.classList.toggle("hidden", enabled.comics === false);
+  document.querySelectorAll(".app-grid [data-plugin]").forEach((tile) => tile.classList.toggle("hidden", !enabled[tile.dataset.plugin]));
 }
 
 // ---------- Homescreen: Kacheln Comics + App Store ----------
@@ -108,6 +110,7 @@ function appBadge(app, big = false) {
 }
 
 function appStatus(app) {
+  if (app.error) return "Fehler";
   if (!app.enabled) return "Aus";
   return app.configured ? "An" : "An · Einrichtung fehlt";
 }
@@ -219,9 +222,15 @@ function renderStoreApp() {
       "div",
       { class: "store-hero" },
       appBadge(app, true),
-      h("div", { class: "store-hero-text" }, h("div", { class: "store-hero-name" }, app.name), h("div", { class: "store-hero-cat" }, app.category))
+      h(
+        "div",
+        { class: "store-hero-text" },
+        h("div", { class: "store-hero-name" }, app.name),
+        h("div", { class: "store-hero-cat" }, [app.category, app.author && `von ${app.author}`, app.version && `Version ${app.version}`].filter(Boolean).join(" · "))
+      )
     ),
-    h("p", { class: "store-summary" }, app.summary),
+    app.error ? h("div", { class: "store-test bad" }, `Diese App hat einen Fehler: ${app.error}`) : null,
+    app.summary ? h("p", { class: "store-summary" }, app.summary) : null,
     h(
       "div",
       { class: "group" },
@@ -245,6 +254,7 @@ async function saveStoreApp(app, { onlyToggle = false } = {}) {
   try {
     const updated = await api.post(`/api/remote/apps/${app.id}`, { enabled: $("store-enabled").checked, values });
     store.apps = store.apps.map((a) => (a.id === app.id ? updated : a));
+    installPluginApps(store.apps);
     applyEnabledApps(Object.fromEntries(store.apps.map((a) => [a.id, a.enabled])));
     toast(onlyToggle ? (updated.enabled ? `${app.name} ist an` : `${app.name} ist aus`) : "Gespeichert");
     if (!onlyToggle) renderStoreApp();
@@ -518,6 +528,110 @@ function closeSetup() {
   refreshBranding();
 }
 
+// ---------- Eigene Apps (Ordner apps/<id>/, Anleitung: apps/README.md) ----------
+// Jede App mit remote.html/remote.js bekommt eine Kachel und eine Ansicht.
+// In remote.js:   const app = RPiTV.app();
+//   app.el                    Inhalt der Ansicht (remote.html steckt schon drin)
+//   app.onOpen(fn)            fn() bei jedem Oeffnen der App
+//   app.api.get("pfad")       GET /api/apps/<id>/pfad (mit Passwort), .post/.del
+//   app.tv.open("tv.html")    Seite der App im Vollbild auf dem Fernseher
+//   app.tv.close()            ... und wieder zu
+//   app.toast("Text")         kurze Meldung (zweites Argument true = Fehler)
+//   app.file("bild.png")      Adresse einer Datei aus dem App-Ordner
+//   app.h(tag, attrs, ...kinder), app.icon(name)   kleine DOM-Helfer
+
+const plugin = { handles: {}, loaded: {} };
+
+function pluginHandle(id) {
+  if (plugin.handles[id]) return plugin.handles[id];
+  const base = `/api/apps/${id}/`;
+  const clean = (path) => base + String(path || "").replace(/^\/+/, "");
+  const handle = {
+    id,
+    el: document.getElementById(`app-body-${id}`),
+    hooks: [],
+    onOpen(fn) {
+      handle.hooks.push(fn);
+    },
+    api: {
+      get: (path) => api.get(clean(path)),
+      post: (path, body) => api.post(clean(path), body),
+      del: (path) => api.del(clean(path)),
+    },
+    tv: {
+      open: (page = "tv.html") => api.post(`/api/remote/apps/${id}/tv`, { action: "open", page }),
+      close: () => api.post(`/api/remote/apps/${id}/tv`, { action: "close" }),
+    },
+    toast,
+    file: (name) => `/apps/${id}/${name}`,
+    h,
+    icon,
+  };
+  plugin.handles[id] = handle;
+  return handle;
+}
+
+window.RPiTV = {
+  app(id) {
+    const own = id || (document.currentScript && document.currentScript.dataset.app);
+    if (!own) throw new Error("RPiTV.app(): App unbekannt - nur direkt in remote.js aufrufen");
+    return pluginHandle(own);
+  },
+};
+
+function installPluginApps(apps) {
+  const grid = document.querySelector("#view-home .app-grid");
+  const before = document.getElementById("tile-comics");
+  for (const app of apps) {
+    if (!app.plugin || !app.view || app.error || document.getElementById(`view-app-${app.id}`)) continue;
+    if (app.icon_svg && !document.getElementById(`i-${app.icon}`)) {
+      document.querySelector("svg.sprite").insertAdjacentHTML("beforeend", `<symbol id="i-${app.icon}" viewBox="0 0 24 24">${app.icon_svg}</symbol>`);
+    }
+    grid.insertBefore(
+      h(
+        "button",
+        { class: "app-tile hidden", type: "button", "data-plugin": app.id, style: `--app-rgb: ${app.color}`, onclick: () => openView(`app-${app.id}`) },
+        h("span", { class: "app-icon" }, icon(app.icon)),
+        h("span", { class: "app-name" }, app.name)
+      ),
+      before
+    );
+    views.append(
+      h(
+        "section",
+        { class: "view hidden plugin-view", id: `view-app-${app.id}`, style: `--tint: ${app.color}` },
+        h("div", { class: "view-header" }, h("button", { class: "icon-btn", "aria-label": "Zurück", onclick: () => goHome() }, icon("back")), h("h1", null, app.name)),
+        h("div", { class: "app-body", id: `app-body-${app.id}` })
+      )
+    );
+    VIEW_HOOKS[`app-${app.id}`] = () => openPluginApp(app);
+  }
+}
+
+function loadScript(src, id) {
+  return new Promise((resolve, reject) => {
+    const script = h("script", { src, "data-app": id });
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`${src} ließ sich nicht laden`));
+    document.body.append(script);
+  });
+}
+
+async function openPluginApp(app) {
+  const handle = pluginHandle(app.id);
+  try {
+    if (!plugin.loaded[app.id]) {
+      plugin.loaded[app.id] = true;
+      if (app.files.includes("remote.css")) document.head.append(h("link", { rel: "stylesheet", href: `/apps/${app.id}/remote.css` }));
+      if (app.files.includes("remote.html")) handle.el.innerHTML = await fetch(`/apps/${app.id}/remote.html`).then((r) => r.text());
+      if (app.files.includes("remote.js")) await loadScript(`/apps/${app.id}/remote.js`, app.id);
+    }
+    for (const fn of handle.hooks) await fn();
+  } catch (err) {
+    toast(err.message || "Die App hat einen Fehler", true);
+  }
+}
+
 // ---------- Start ----------
 
 async function refreshBranding() {
@@ -528,8 +642,10 @@ async function refreshBranding() {
       openSetup();
       return;
     }
-    const info = await api.get("/api/remote/info");
-    applyEnabledApps(info.apps);
+    const data = await api.get("/api/remote/apps");
+    store.apps = data.apps;
+    installPluginApps(data.apps);
+    applyEnabledApps(Object.fromEntries(data.apps.map((a) => [a.id, a.enabled])));
   } catch (err) {
     // offline - beim naechsten Oeffnen erneut
   }
