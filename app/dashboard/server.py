@@ -40,7 +40,6 @@ from app import (
     chess_tv,
     jellyfin_client,
     kiosk_media,
-    media_grab,
     media_upload,
     radio,
     radio_stations,
@@ -953,39 +952,6 @@ async def upload_cancel(upload_id: str) -> dict:
     await _upload(media_upload.cancel, upload_id)
     return {"ok": True}
 
-
-# Videos von Webseiten direkt auf die Jellyfin-Platte (media_grab)
-
-@app.get("/api/remote/jellyfin/grab", dependencies=[Depends(require_remote_secret)])
-async def grab_list() -> dict:
-    return {"jobs": media_grab.public_jobs()}
-
-
-@app.post("/api/remote/jellyfin/grab", dependencies=[Depends(require_remote_secret)])
-async def grab_add(request: Request) -> dict:
-    body = await request.json()
-    try:
-        media_grab.add(str(body.get("url", "")))
-    except media_grab.GrabError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"jobs": media_grab.public_jobs()}
-
-
-@app.post("/api/remote/jellyfin/grab/{job_id}", dependencies=[Depends(require_remote_secret)])
-async def grab_start(job_id: str, request: Request) -> dict:
-    try:
-        await media_grab.download(get_config(), job_id, await request.json())
-    except media_grab.GrabError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except jellyfin_client.JellyfinError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return {"jobs": media_grab.public_jobs()}
-
-
-@app.delete("/api/remote/jellyfin/grab/{job_id}", dependencies=[Depends(require_remote_secret)])
-async def grab_remove(job_id: str) -> dict:
-    media_grab.remove(job_id)
-    return {"jobs": media_grab.public_jobs()}
 
 
 # ---------- Radio ----------

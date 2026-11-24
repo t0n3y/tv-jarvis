@@ -2145,59 +2145,6 @@ body.typing .volume-hud { display: none; }
 .up-warning { font-size: 13px; }
 .up-retry { align-self: flex-start; }
 
-/* ---------- Video aus dem Netz laden ---------- */
-
-.grab { display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
-.grab .up-list:empty { display: none; }
-
-.grab-cands { display: flex; flex-direction: column; gap: 6px; }
-
-.grab-cand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--fill-4);
-  color: var(--text);
-  font-size: 15px;
-  text-align: left;
-}
-
-.grab-cand::before {
-  content: "";
-  flex: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px var(--text-3);
-}
-
-.grab-cand.active::before { box-shadow: inset 0 0 0 6px rgb(var(--tint)); }
-.grab-cand span { color: var(--text-2); font-size: 13px; margin-left: auto; }
-
-.up-fields.three { grid-template-columns: minmax(0, 1fr) 72px 72px; }
-
-.up-bar.searching span {
-  width: 35%;
-  animation: grab-search 1.4s ease-in-out infinite;
-}
-
-@keyframes grab-search {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(290%); }
-}
-
-.grab-bookmark {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: rgb(var(--tint));
-  font: inherit;
-}
-
 /* ---------- Uhr & Timer (orange wie die Uhr-App) ---------- */
 
 .timer-pill {
