@@ -1,15 +1,29 @@
 # RPi TV
 
-Ein Raspberry Pi macht aus jedem Fernseher mit HDMI ein kleines Zuhause-System:
-morgens geht der Fernseher von selbst an, zeigt Wetter, Termine, ToDos und den
-Vertretungsplan und liest alles vor. Danach läuft Radio. Gesteuert wird alles
-mit dem Handy über eine Fernbedienungs-Web-App im Apple-Stil, inklusive
-Jellyfin, YouTube, Twitch, Plattenschrank, Licht und Comics – und eigene
-Apps, die jeder in wenigen Minuten selbst bauen kann.
+**Ein Raspberry Pi macht aus jedem Fernseher ein kleines Zuhause-System – gesteuert mit dem Handy.**
 
-Name, Apps und Zugangsdaten stellst du in der Fernbedienung ein. Den Namen
-„RPi TV“ kannst du durch deinen eigenen ersetzen: Er erscheint dann auf dem
-Fernseher, in der App und in der Sprachausgabe.
+Morgens geht der Fernseher von selbst an, zeigt Wetter, Termine, ToDos,
+Vertretungsplan und die nächsten Busse und liest alles vor. Danach läuft
+Radio. Den Rest des Tages ist er Mediacenter, Plattenspieler, Bilderrahmen
+oder Quizshow. Bedient wird alles über eine Fernbedienungs-Web-App im
+Apple-Stil, und mit eigenen Apps lässt sich das System erweitern.
+
+<p align="center">
+  <img src="docs/screenshots/fernseher.jpg" alt="Dashboard auf dem Fernseher" width="100%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/fernbedienung.jpg" alt="Fernbedienung" width="24%">
+  <img src="docs/screenshots/app-store.jpg" alt="App Store" width="24%">
+  <img src="docs/screenshots/abfahrten.jpg" alt="App Abfahrten" width="24%">
+  <img src="docs/screenshots/schlaf-timer.jpg" alt="App Schlaf-Timer" width="24%">
+</p>
+
+- **Ein Befehl** installiert alles, eingerichtet wird in der Fernbedienung
+- **Wecker** mit Morgen-Ansage, Dashboard und Radio
+- **App Store** mit 19 Apps: Jellyfin, YouTube, Twitch, Plattenschrank, Licht, Comics, Kalender, IServ, Abfahrten, Quiz und mehr
+- **Eigene Apps** als Ordner: `python -m app.new_app "Name"`, dazu Teilen per Git-Link
+- **Updates, Backup und Neustart** per Knopfdruck
+- Läuft komplett lokal auf dem Pi, ohne Cloud-Konto
 
 ## Installation: ein Befehl
 
@@ -78,21 +92,31 @@ außerdem „Verbindung testen“.
 Apps, die aus sind, verschwinden vom Homescreen der Fernbedienung und vom
 Dashboard auf dem Fernseher.
 
-## Anpassen
+## Funktionen im Überblick
 
-Das ganze Projekt ist offen: Du darfst es für dich umbauen (Lizenz siehe
-unten).
+**Fernseher**
+- Dashboard mit Uhr, Wetter, Terminen, ToDos, Vertretungsplan und Kacheln
+  eigener Apps (z. B. Abfahrten, Einkaufsliste). Ausgeschaltete Apps
+  verschwinden, die Spalten ordnen sich neu.
+- Ein- und Ausschalten über HDMI-CEC, mit Start- und Abschiedsanimation.
+- Wecker: zur eingestellten Zeit an, Morgen-Ansage mit natürlicher Stimme
+  (Piper, offline), danach Radio. Zum Verlassen-Zeitpunkt wieder aus.
 
-- **Name**: *Einstellungen → Allgemein*. Ersetzt „RPi TV“ überall.
-- **Eigene Apps**: siehe nächster Abschnitt.
-- **Einstellungen als Datei**: Alle Standardwerte stehen in
-  `config.example.yaml`. Wer lieber Dateien bearbeitet, kopiert sie nach
-  `config.yaml`. Es gilt die Reihenfolge
-  `config.example.yaml` → `config.yaml` → `data/settings.json`
-  (Fernbedienung), also überschreibt jede Ebene die vorige.
-- **Eigener Fork**: Mit dem Installer kannst du auch deinen eigenen Fork
-  installieren:
-  `curl -fsSL …/install.sh | RPITV_REPO=https://github.com/<du>/tv-jarvis.git bash`
+**Fernbedienung** (Web-App, auf dem iPhone per *Zum Home-Bildschirm*)
+- Fernseher an/aus, Lautstärke, Wiedergabe-Steuerung im Dock.
+- Apps: Jellyfin (mit Weiterschauen und Upload), YouTube (Links und Abos),
+  Twitch, Radio, Plattenschrank, Uhr/Timer, Licht, TV-Browser mit
+  Handy als Touchpad und Tastatur, Comics und alle Apps aus dem App Store.
+- Einstellungen: Name, Weckzeiten, Kurse und Fächer, Radiosender, Passwort,
+  Updates, Backup.
+
+**Sicherheit**
+- Die Fernbedienung ist mit einem Passwort geschützt (Pflicht bei der
+  Einrichtung).
+- Zugangsdaten liegen nur in `.env` auf dem Pi und erreichen nie den Browser.
+- Anfragen über einen Tunnel (z. B. Cloudflare) zählen nie als „lokal“.
+- Für den Zugriff von unterwegs: App *Fernzugriff* (Cloudflare-Tunnel,
+  empfohlen mit Cloudflare Access).
 
 ## Eigene Apps bauen
 
@@ -125,6 +149,22 @@ In der Fernbedienung unter **Einstellungen → System**:
 
 Alternativ den Installationsbefehl noch einmal ausführen.
 
+## Anpassen
+
+Das ganze Projekt ist offen: Du darfst es für dich umbauen (Lizenz siehe
+unten).
+
+- **Name**: *Einstellungen → Allgemein*. Ersetzt „RPi TV“ überall.
+- **Eigene Apps**: siehe nächster Abschnitt.
+- **Einstellungen als Datei**: Alle Standardwerte stehen in
+  `config.example.yaml`. Wer lieber Dateien bearbeitet, kopiert sie nach
+  `config.yaml`. Es gilt die Reihenfolge
+  `config.example.yaml` → `config.yaml` → `data/settings.json`
+  (Fernbedienung), also überschreibt jede Ebene die vorige.
+- **Eigener Fork**: Mit dem Installer kannst du auch deinen eigenen Fork
+  installieren:
+  `curl -fsSL …/install.sh | RPITV_REPO=https://github.com/<du>/tv-jarvis.git bash`
+
 ## Fehlersuche
 
 ```bash
@@ -150,107 +190,13 @@ sudo systemctl restart dashboard.service  # neu starten
 - **Songs/Videos laden nicht mehr**: YouTube ändert sich oft. Dann hilft
   `.venv/bin/pip install -U "yt-dlp[default]"`.
 
-## Lizenz
+## Fernseher ohne HDMI-CEC
 
-[PolyForm Noncommercial 1.0.0](LICENSE.md). Du darfst den Code frei nutzen,
-verändern und weitergeben, aber **nicht kommerziell**: kein Verkauf, kein
-Einsatz in einem bezahlten Produkt oder einer bezahlten Dienstleistung. Private
-Nutzung, Schulen, Vereine und Forschung sind ausdrücklich erlaubt.
-
-Weil kommerzielle Nutzung ausgeschlossen ist, ist das „source available“ und
-keine Open-Source-Lizenz im Sinne der OSI.
-
-## Fernbedienung (iPhone/iPad)
-
-Der Dashboard-Server hostet unter `/remote.html` eine mobile Fernbedienung im
-Tablet-Look. Im selben WLAN wie der Pi im Browser öffnen und am besten über
-"Teilen → Zum Home-Bildschirm" als App ablegen (eigenes Icon, Vollbild):
-
-```
-http://pi.local:8080/remote.html
-```
-
-`pi.local` statt einer festen IP-Adresse: die ändert der Router gelegentlich,
-der Name bleibt. Dafür muss `dashboard.host: "::"` gesetzt sein (Standard) -
-dann lauscht der Server per IPv4 **und** IPv6.
-
-Aufbau wie ein Tablet-Homescreen:
-
-- **Homescreen**: Uhr + Begrüßung, "Jetzt läuft"-Karte (tippen öffnet die
-  passende App), Fernseher an/aus, App-Icons für Jellyfin, YouTube, Radio,
-  Platten, Licht und Einstellungen.
-- **Jellyfin-App**: eigene Bibliothek mit Postern durchsuchen (Filme, Serien -
-  Serien/Staffeln lassen sich aufklappen), Suche, "Weiterschauen"-Leiste.
-  Antippen öffnet eine Detailansicht mit Beschreibung und "Abspielen" bzw.
-  "Fortsetzen ab …"/"Von vorne". Das Video läuft in einem eigenen Player im
-  Kiosk; die Position wird alle 15 s und beim Pausieren/Stoppen in Jellyfin
-  gespeichert (Weiterschauen funktioniert also auch in den anderen
-  Jellyfin-Apps). Ab ~92 % gilt ein Film als gesehen.
-  **Hochladen** (Knopf oben rechts in der Jellyfin-App): Filme oder
-  Serienfolgen vom Handy/iPad/PC direkt auf die Jellyfin-Platte, ohne sie
-  abzuziehen. Titel/Jahr bzw. Serie/Staffel werden aus dem Dateinamen
-  vorgeschlagen; abgelegt wird als `Filme/Titel (Jahr).ext` bzw.
-  `Serien/Serie/Staffel NN/<Datei>`. Übertragen wird in 8-MB-Stücken –
-  bricht es ab, dieselbe Datei erneut wählen, dann geht es an der Stelle
-  weiter. Danach liest Jellyfin die Bibliothek neu ein; Formate, die der
-  Fernseher nicht direkt kann (z. B. HEVC), werden angemerkt.
-- **YouTube-App**: Link einfügen und abspielen (Stopp-Knopf als "×" im
-  Eingabefeld), Now-Playing-Karte mit Thumbnail, Titel und scrubbarem
-  Fortschrittsbalken, 10s zurück/vor sowie ein Pause/Weiter-Knopf.
-- **Radio-App**: zwischen den konfigurierten Sendern wechseln (Standard:
-  Sunshine Live, 1LIVE) sowie Stopp.
-- **Platten-App (Plattenschrank)**: eigene Retro-Optik (angelehnt an
-  wgv-sv.de/platten) mit einem Holzschrank pro Genre. Platte antippen →
-  "Platte auflegen", "Mischen" oder einen einzelnen Song; pro Schrank
-  abspielen/mischen, oben "Zufallsmix" über alles. Solange etwas läuft,
-  zeigt ein Hi-Fi-Deck Titel, Fortschritt und Tasten (zurück, Pause, weiter,
-  Stopp). **Neue Musik:** "Platte dazu" → Album oder einzelnen Song suchen
-  (Cover + Tracklist über die iTunes-Suche, ohne Account) → Lieblingssongs
-  antippen → Schrank wählen. Das passende YouTube-Video je Song sucht der Pi
-  selbst ("<Künstler> <Song> topic", yt-dlp als Rückfallebene). Auf dem
-  Fernseher läuft ein Plattenspieler-Bildschirm (drehende Platte mit Cover als
-  Etikett, Tonarm folgt dem Songfortschritt, Tracklist); der YouTube-Player
-  spielt unsichtbar dahinter. Sammlung: `data/vinyl.json` (beim ersten Start
-  aus `app/vinyl_seed.json` befüllt).
-- **Uhr-App**: Uhr mit Sekunden, auf Wunsch im Vollbild auf dem Fernseher.
-  Timer über Vorlagen (1 Min – 1 Std) oder eigene Zeit; er zählt auf dem
-  Fernseher im Vollbild mit Fortschrittsring herunter. Läuft gerade
-  Plattenspieler, YouTube oder Jellyfin, zeigt eine kleine Notch oben die
-  Restzeit. Beim Ablauf wird alles pausiert (Radio gestoppt), der Fernseher
-  (falls aus) eingeschaltet und ein Alarmton gespielt, bis die Fernbedienung
-  geöffnet wird; dort dann groß „Beenden“ oder „Neu starten“. Der Timer läuft
-  im Dashboard-Dienst, also auch bei ausgeschaltetem Fernseher.
-- **Licht-App**: DMX-Scheinwerfer über den uDMX-Adapter – Farbe, Helligkeit,
-  Effekte (Soft/Hard/Ramp) im BPM-Takt mit Fader und Tap-Sync.
-- **Einstellungen-App**: Wecker an/aus + Weck-/Verlasszeiten für Wochentag und
-  Wochenende (wirkt sofort, siehe oben), Radiosender hinzufügen/entfernen.
-- **Control-Dock**: am unteren Rand fest sichtbar, egal welche App gerade
-  offen ist - Home, Lautstärke -/+ (zeigt den neuen Pegel an), Stumm und ein
-  Pause/Weiter-Knopf, der automatisch das steuert, was gerade läuft.
-
-Abspielen bei ausgeschaltetem Fernseher schaltet ihn automatisch ein und
-startet das Video, sobald der Kiosk bereit ist. Es läuft immer nur eine Quelle
-(Jellyfin, YouTube, Plattenspieler oder Radio) - jede neue stoppt die
-vorherige. YouTube-Untertitel und YouTubes eigenes Pause-Overlay sind
-unterdrückt. Der Kiosk lädt die Seite bewusst über `localhost` (nicht
-127.0.0.1): bei einer IP als Herkunft verweigert YouTube eingebettete
-Musikvideos mit Fehler 150.
-
-**Jellyfin-App einrichten:** In Jellyfin unter Dashboard → API-Schlüssel einen
-Schlüssel anlegen, in `.env` als `JELLYFIN_API_KEY` eintragen und in
-`config.yaml` unter `jellyfin.username` den Jellyfin-Benutzer angeben. Der Key
-hat Admin-Rechte und bleibt deshalb serverseitig: Streams und Poster laufen
-über den Dashboard-Server (der Stream-Proxy antwortet nur dem Kiosk auf dem Pi
-selbst). Abgespielt wird per Direct Play ohne Transcoding - Formate, die der
-Kiosk-Browser nicht kann (z. B. HEVC/H.265, DTS-Ton), lehnt die App vor dem
-Start mit einer klaren Meldung ab.
-
-**Absicherung:** Ohne `REMOTE_CONTROL_SECRET` in `.env` ist die Fernbedienung
-ohne Passwort nutzbar (ok fürs eigene, vertrauenswürdige WLAN). Zum Absichern
-in `.env` einen Wert eintragen - die Seite fragt dann beim ersten Laden
-einmalig danach und merkt sich das Passwort im Browser.
-
-## Architektur (Kurzüberblick)
+Standard ist HDMI-CEC. Kann dein Fernseher das nicht (oder nur unzuverlässig): `tv_control.backend: smart_plug` in
+`config.yaml` setzen und `app/tv_control/smart_plug.py` mit der passenden
+Bibliothek für eure Steckdosenmarke füllen (Kommentare in der Datei enthalten
+konkrete Empfehlungen je nach Marke).
+## Projektaufbau
 
 ```
 app/
@@ -259,6 +205,7 @@ app/
   apps.py               App Store: Apps, Felder, Anleitungen, Verbindungstests
   plugins.py            Laedt eigene Apps aus apps/ (+ ctx fuer deren server.py)
   new_app.py            Vorlage fuer eine neue App: python -m app.new_app "Name"
+  system_tools.py       Neustart, Updates, Backup, Apps per Link installieren
   briefing.py           Sammelt alle Quellen parallel, baut Text + JSON
   tts.py                 Piper-Wrapper
   radio.py                mpv-Steuerung, spielt den aktuell gewaehlten Sender
@@ -286,16 +233,18 @@ systemd/                              dashboard.service-Vorlage (von install.sh
 scripts/install.sh                     Installation mit einem Befehl (curl | bash)
 scripts/fix_audio_sink.sh               Setzt HDMI als PipeWire-Standardausgabe
                                          (per labwc-Autostart bei jedem Login)
+apps/                                   Eigene Apps (je ein Ordner, Anleitung: apps/README.md)
+docs/screenshots/                       Bilder fuer diese README
 ```
 
-Mehr Details/Hintergrund zu den Design-Entscheidungen: siehe Plan-Historie in
-diesem Projekt (Config-Kommentare in `config.example.yaml` sind meist
-selbsterklärend).
+Alle Einstellungen mit Erklärung stehen in `config.example.yaml`.
 
-## Smart-Plug-Fallback
+## Lizenz
 
-Aktuell ist CEC (Samsung Anynet+) die primäre Steuerung. Falls das in der
-Praxis nicht zuverlässig funktioniert: `tv_control.backend: smart_plug` in
-`config.yaml` setzen und `app/tv_control/smart_plug.py` mit der passenden
-Bibliothek für eure Steckdosenmarke füllen (Kommentare in der Datei enthalten
-konkrete Empfehlungen je nach Marke).
+[PolyForm Noncommercial 1.0.0](LICENSE.md). Du darfst den Code frei nutzen,
+verändern und weitergeben, aber **nicht kommerziell**: kein Verkauf, kein
+Einsatz in einem bezahlten Produkt oder einer bezahlten Dienstleistung. Private
+Nutzung, Schulen, Vereine und Forschung sind ausdrücklich erlaubt.
+
+Weil kommerzielle Nutzung ausgeschlossen ist, ist das „source available“ und
+keine Open-Source-Lizenz im Sinne der OSI.

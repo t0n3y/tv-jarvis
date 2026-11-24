@@ -335,6 +335,7 @@ function applyApps(state) {
   document.querySelector(".side-stack").classList.toggle("off", side);
   const columns = used + (ownColumn ? 1 : 0);
   document.querySelector("main.grid").dataset.columns = String(Math.min(3, columns));
+  fitAppPanels();
 }
 
 // Kacheln eigener Apps (apps/<id>/server.py: dashboard()) - unter Vertretung
@@ -368,6 +369,8 @@ function renderAppPanels() {
       stack.append(el);
     }
     el.style.setProperty("--app-rgb", panel.color);
+    // Platz nach Anzahl der Eintraege verteilen (Abfahrten > Schlaf-Timer)
+    el.style.flex = String(Math.max(1.5, Math.min(6, panel.items.length)) + 1);
     el.querySelector("h2").textContent = panel.title;
     el.querySelector(".panel-meta").textContent = panel.meta;
     const list = el.querySelector("ul");
@@ -382,6 +385,21 @@ function renderAppPanels() {
     });
   }
   if (dashboardState) applyApps(dashboardState);
+  fitAppPanels();
+}
+
+// Halb abgeschnittene Zeilen in App-Kacheln ganz ausblenden (erst messen,
+// wenn die Kacheln sichtbar sind)
+function fitAppPanels() {
+  requestAnimationFrame(() => {
+    document.querySelectorAll(".app-panel ul").forEach((list) => {
+      const panel = list.closest(".panel");
+      const rect = panel.getBoundingClientRect();
+      if (!rect.height) return;
+      const bottom = rect.bottom - parseFloat(getComputedStyle(panel).paddingBottom) + 1;
+      list.querySelectorAll("li").forEach((li) => (li.style.visibility = li.getBoundingClientRect().bottom > bottom ? "hidden" : ""));
+    });
+  });
 }
 
 async function refreshAppPanels() {
