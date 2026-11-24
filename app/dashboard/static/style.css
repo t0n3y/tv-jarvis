@@ -218,6 +218,7 @@ header {
   min-height: 0;
 }
 
+.grid[data-columns="4"] { grid-template-columns: 1.15fr 1fr 1fr 1fr; }
 .grid[data-columns="2"] { grid-template-columns: 1.2fr 1fr; }
 .grid[data-columns="1"] { grid-template-columns: minmax(0, 0.6fr); justify-content: center; }
 .panel.off,

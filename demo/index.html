@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Live-Vorschau von RPi TV: Fernbedienung und Fernseher im Browser ausprobieren." />
+<title>RPi TV – Live-Vorschau</title>
+<link rel="icon" type="image/png" href="apple-touch-icon.png" />
+<link rel="stylesheet" href="demo/demo.css" />
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><img src="apple-touch-icon.png" alt="" /><span>RPi TV</span><em>Live-Vorschau</em></div>
+  <p class="lead">Bediene rechts die Fernbedienung – links reagiert der Fernseher. Alles läuft nur in deinem Browser; nach dem Neuladen ist alles wieder wie am Anfang.</p>
+  <div class="actions">
+    <button type="button" id="reset">Zurücksetzen</button>
+    <a href="https://github.com/t0n3y/tv-jarvis" target="_blank" rel="noopener">Auf GitHub</a>
+  </div>
+</header>
+
+<main class="stage" id="stage">
+  <section class="tv-wrap">
+    <div class="tv" id="tv">
+      <div class="tv-screen" id="tv-screen">
+        <iframe id="tv-frame" title="Fernseher" allow="autoplay; encrypted-media"></iframe>
+        <iframe id="tv-page" class="hidden" title="App auf dem Fernseher" allow="autoplay"></iframe>
+        <div class="tv-off hidden" id="tv-off"><span>Fernseher aus – in der Fernbedienung „Ein“ tippen</span></div>
+        <div class="caption hidden" id="caption"></div>
+      </div>
+    </div>
+    <div class="tv-foot" aria-hidden="true"></div>
+    <p class="tip">Ideen: YouTube-Link einfügen · Jellyfin-Film starten · Uhr → Timer · App Store → Apps an/aus · Quiz starten · Einstellungen → „Wecker jetzt testen“</p>
+  </section>
+
+  <section class="phone-wrap">
+    <div class="phone" id="phone">
+      <iframe id="remote-frame" title="Fernbedienung"></iframe>
+    </div>
+  </section>
+</main>
+
+<div class="small-screen">
+  <img src="apple-touch-icon.png" alt="" />
+  <h1>RPi TV – Live-Vorschau</h1>
+  <p>Die Vorschau zeigt Fernseher und Fernbedienung nebeneinander und braucht dafür einen größeren Bildschirm. Öffne sie am Tablet (quer) oder am Computer.</p>
+  <a href="https://github.com/t0n3y/tv-jarvis">Zum Projekt auf GitHub</a>
+</div>
+
+<script src="demo/server.js"></script>
+<script>
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const TV_W = 1920;
+  const TV_H = 1080;
+  const PHONE_W = 390;
+  const PHONE_H = 844;
+
+  // ---------- Groesse: Fernseher und Handy passend skalieren ----------
+  function layout() {
+    const screen = $("tv-screen");
+    const scale = screen.clientWidth / TV_W;
+    for (const frame of [$("tv-frame"), $("tv-page")]) frame.style.transform = `scale(${scale})`;
+    const phone = $("phone");
+    const available = $("stage").clientHeight - 24;
+    const phoneScale = Math.min(1, available / (PHONE_H + 28));
+    phone.style.transform = `scale(${phoneScale})`;
+    phone.parentElement.style.width = `${(PHONE_W + 28) * phoneScale}px`;
+  }
+  window.addEventListener("resize", layout);
+  new ResizeObserver(layout).observe(document.getElementById("tv-screen"));
+
+  // ---------- Stimme: Ansagen ueber die Sprachausgabe des Browsers ----------
+  function speak(text) {
+    return new Promise((resolve) => {
+      const caption = $("caption");
+      caption.textContent = text;
+      caption.classList.remove("hidden");
+      const done = () => {
+        caption.classList.add("hidden");
+        resolve();
+      };
+      const fallback = setTimeout(done, Math.max(4000, text.length * 75));
+      if (!("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "de-DE";
+      const voice = speechSynthesis.getVoices().find((v) => v.lang && v.lang.startsWith("de"));
+      if (voice) utterance.voice = voice;
+      utterance.onend = () => {
+        clearTimeout(fallback);
+        done();
+      };
+      speechSynthesis.speak(utterance);
+    });
+  }
+
+  // ---------- Fernseher an/aus und App-Seiten ----------
+  const hooks = {
+    power(on) {
+      $("tv-off").classList.toggle("hidden", on);
+      if (on) $("tv-frame").src = `tv.html?boot=${Date.now()}`;
+    },
+    openPage(url) {
+      $("tv-page").src = url;
+      $("tv-page").classList.remove("hidden");
+    },
+    closePage() {
+      $("tv-page").classList.add("hidden");
+      $("tv-page").removeAttribute("src");
+    },
+    speak,
+    rename() {},
+  };
+
+  async function start() {
+    const data = await fetch("demo/data.json").then((r) => r.json());
+    window.RPITV_DEMO = new DemoServer(data, hooks);
+    $("tv-frame").src = "tv.html";
+    $("remote-frame").src = "remote.html";
+    layout();
+  }
+
+  $("reset").addEventListener("click", () => location.reload());
+  if (window.matchMedia("(min-width: 900px)").matches) start();
+  else window.matchMedia("(min-width: 900px)").addEventListener("change", (e) => e.matches && !window.RPITV_DEMO && start());
+</script>
+</body>
+</html>

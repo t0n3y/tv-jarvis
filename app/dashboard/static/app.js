@@ -321,11 +321,10 @@ function applyApps(state) {
   document.querySelector(".calendar-panel").classList.toggle("off", !showCalendar);
   document.querySelector(".todos-panel").classList.toggle("off", !apps.todos);
   $("plan-panel").classList.toggle("off", !apps.iserv);
-  // App-Kacheln: eigene Spalte, solange eine frei ist - sonst unter
-  // Vertretung/Kalender in der rechten Spalte
+  // App-Kacheln bekommen eine eigene (vierte) Spalte
   const sideHasCore = apps.iserv || showCalendar;
   const used = 1 + (apps.todos ? 1 : 0) + (sideHasCore ? 1 : 0);
-  const ownColumn = appPanels.length > 0 && used < 3;
+  const ownColumn = appPanels.length > 0 && used < 4;
   const appStack = appStackEl();
   const target = ownColumn ? appStack : document.querySelector(".side-stack");
   appStack.querySelectorAll(".app-panel").forEach((el) => target !== appStack && target.append(el));
@@ -334,7 +333,7 @@ function applyApps(state) {
   const side = !sideHasCore && !(appPanels.length && !ownColumn);
   document.querySelector(".side-stack").classList.toggle("off", side);
   const columns = used + (ownColumn ? 1 : 0);
-  document.querySelector("main.grid").dataset.columns = String(Math.min(3, columns));
+  document.querySelector("main.grid").dataset.columns = String(Math.min(4, columns));
   fitAppPanels();
 }
 

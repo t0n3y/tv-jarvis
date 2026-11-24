@@ -1,0 +1,753 @@
+{
+ "apps": [
+  {
+   "id": "jellyfin",
+   "name": "Jellyfin",
+   "icon": "jellyfin",
+   "color": "94, 92, 230",
+   "category": "Filme & Serien",
+   "summary": "Deine Filme und Serien vom eigenen Mediaserver – auf dem Fernseher abspielen, Weiterschauen, vom Handy hochladen.",
+   "guide": [
+    "Noch kein Jellyfin? Auf dem Pi installieren: <code>curl -fsSL https://repo.jellyfin.org/install-debuntu.sh | sudo bash</code>",
+    "Im Browser <b>http://&lt;Pi&gt;:8096</b> öffnen, den Einrichtungsassistenten durchgehen und deine Film- und Serienordner als Bibliotheken anlegen (Typ „Filme“ bzw. „Serien“).",
+    "In Jellyfin: <b>Dashboard → API-Schlüssel → +</b>, Name z.&nbsp;B. „RPi TV“. Den Schlüssel kopieren und hier einfügen.",
+    "Deinen Jellyfin-Benutzernamen eintragen – davon kommen „Weiterschauen“ und gesehene Folgen."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Adresse des Jellyfin-Servers",
+     "type": "url",
+     "placeholder": "http://127.0.0.1:8096",
+     "key": "jellyfin.url",
+     "value": "http://127.0.0.1:8096",
+     "is_set": null
+    },
+    {
+     "label": "Dein Jellyfin-Benutzername",
+     "type": "text",
+     "key": "jellyfin.username",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "API-Schlüssel",
+     "type": "password",
+     "key": "secret:JELLYFIN_API_KEY",
+     "is_set": false,
+     "value": ""
+    }
+   ],
+   "testable": true,
+   "configured": false
+  },
+  {
+   "id": "youtube",
+   "name": "YouTube",
+   "icon": "youtube",
+   "color": "255, 59, 48",
+   "category": "Filme & Serien",
+   "summary": "Links vom Handy auf dem Fernseher abspielen und die neuesten Videos deiner Abos.",
+   "guide": [
+    "Video auf dem Fernseher: in der YouTube-App <b>Teilen → Link kopieren</b> und in der App hier einfügen.",
+    "Für deine Abos: App <b>Browser</b> öffnen, <b>youtube.com</b> aufrufen und dich mit deinem Google-Konto anmelden. Danach erscheinen die neuesten Abo-Videos in der YouTube-App.",
+    "Der Pi spielt YouTube in H.264 mit höchstens 30 Bildern pro Sekunde ab – so ruckelt es nicht."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "twitch",
+   "name": "Twitch",
+   "icon": "twitch",
+   "color": "145, 70, 255",
+   "category": "Filme & Serien",
+   "summary": "Wer von deinen Lieblings-Streamern live ist – mit einem Tipp im Vollbild ohne Chat.",
+   "guide": [
+    "In der Twitch-App unten Streamer per Name oder twitch.tv-Link hinzufügen.",
+    "Wer live ist, steht oben mit Vorschau. Antippen startet den Stream auf dem Fernseher.",
+    "Kein Konto nötig."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "vinyl",
+   "name": "Plattenschrank",
+   "icon": "vinyl",
+   "color": "166, 102, 60",
+   "category": "Musik",
+   "summary": "Ein Plattenspieler auf dem Fernseher mit Schränken pro Genre – ganze Alben am Stück hören.",
+   "guide": [
+    "Platten hinzufügen: in der App <b>Platte dazu</b> antippen, Album suchen, Songs auswählen.",
+    "Eigene Schränke (Genres) legst du unten mit <b>Neuen Schrank bauen</b> an.",
+    "Die Musik kommt von YouTube; der Player läuft unsichtbar hinter dem Plattenspieler."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "light",
+   "name": "Licht",
+   "icon": "sun",
+   "color": "255, 204, 0",
+   "category": "Zuhause",
+   "summary": "DMX-Scheinwerfer steuern: Farben, Dimmer und Effekte im Takt der Musik mit Tap-Tempo.",
+   "guide": [
+    "Du brauchst einen <b>uDMX-USB-Adapter</b> (z.&nbsp;B. „Anyma uDMX“) und DMX-Scheinwerfer mit 8-Kanal-Modus (z.&nbsp;B. UKING RGB-Par).",
+    "Adapter an den Pi stecken, Scheinwerfer per DMX-Kabel verbinden.",
+    "Am ersten Scheinwerfer Adresse <b>d001</b> und 8-Kanal-Modus einstellen, am zweiten <b>d009</b>, dann d017 … (immer +8).",
+    "In der App Licht unten die Anzahl der Lampen einstellen."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "comics",
+   "name": "Comics",
+   "icon": "book",
+   "color": "255, 149, 0",
+   "category": "Lesen",
+   "summary": "Comics und PDFs mit Doppelseiten und Blätteranimation – auch in Jellyfin.",
+   "guide": [
+    "Den Reader öffnest du mit der Kachel Comics oder unter <b>/comics.html</b>.",
+    "Hefte (CBZ, CBR, CB7, PDF) mit dem <b>+</b> im Reader hochladen – oder direkt in den Ordner <b>Comics</b> neben deinen Jellyfin-Ordnern legen, ein Unterordner pro Reihe.",
+    "Eigene Adresse wie comics.deine-domain.de: im Cloudflare-Tunnel einen Public Hostname auf <b>localhost:8080</b> anlegen (siehe App „Fernzugriff“)."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "iserv",
+   "name": "IServ-Vertretungsplan",
+   "icon": "school",
+   "color": "0, 122, 255",
+   "category": "Schule",
+   "summary": "Deine Vertretungen auf dem Dashboard und im Wecker – nur für deine Kurse, ab 16 Uhr schon für morgen.",
+   "guide": [
+    "IServ-Adresse, Benutzername und Passwort eintragen (wie beim Login im Browser).",
+    "In IServ den Vertretungsplan öffnen (oft unter Schnellzugriff „V Heute“). Die Adresse endet z.&nbsp;B. auf <b>/iserv/infodisplay/show/28</b> – diesen Teil ab <b>/iserv</b> eintragen, genauso für „morgen“.",
+    "Klasse bzw. Stufe genau so schreiben, wie sie im Plan steht.",
+    "Oberstufe: deine Kurse und Fächer trägst du danach unter <b>Einstellungen → Schule</b> ein.",
+    "Mit <b>Verbindung testen</b> prüfst du, ob der Plan gelesen wird."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "IServ-Adresse deiner Schule",
+     "type": "url",
+     "placeholder": "https://deine-schule.de",
+     "key": "iserv.base_url",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "IServ-Benutzername",
+     "type": "text",
+     "key": "secret:ISERV_USERNAME",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "IServ-Passwort",
+     "type": "password",
+     "key": "secret:ISERV_PASSWORD",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "Klasse oder Stufe (wie im Plan, z. B. 07b, EF, Q1)",
+     "type": "text",
+     "key": "iserv.klasse",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Pfad „Vertretung heute“",
+     "type": "text",
+     "placeholder": "/iserv/infodisplay/show/28",
+     "key": "iserv.plan_pages.0.path",
+     "value": "/iserv/infodisplay/show/28",
+     "is_set": null
+    },
+    {
+     "label": "Pfad „Vertretung morgen“",
+     "type": "text",
+     "placeholder": "/iserv/infodisplay/show/29",
+     "key": "iserv.plan_pages.1.path",
+     "value": "/iserv/infodisplay/show/29",
+     "is_set": null
+    }
+   ],
+   "testable": true,
+   "configured": false
+  },
+  {
+   "id": "calendar_google",
+   "name": "Google Kalender",
+   "icon": "calendar",
+   "color": "52, 168, 83",
+   "category": "Kalender",
+   "summary": "Termine von heute (ab 20 Uhr von morgen) auf dem Dashboard und im Wecker.",
+   "guide": [
+    "Am PC <b>calendar.google.com</b> öffnen → Zahnrad → <b>Einstellungen</b>.",
+    "Links unter „Einstellungen für meine Kalender“ deinen Kalender wählen.",
+    "Ganz unten bei <b>Privatadresse im iCal-Format</b> den Link kopieren (endet auf <b>basic.ics</b>) und hier einfügen. Mehrere Kalender: eine Adresse pro Zeile.",
+    "Diese Adresse ist wie ein Passwort – nicht weitergeben."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Privatadresse im iCal-Format (eine pro Kalender)",
+     "type": "lines",
+     "key": "calendars.google.ics_urls",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": true,
+   "configured": true
+  },
+  {
+   "id": "calendar_icloud",
+   "name": "iCloud Kalender",
+   "icon": "calendar",
+   "color": "255, 59, 48",
+   "category": "Kalender",
+   "summary": "Termine aus deinem iPhone-Kalender auf dem Dashboard und im Wecker.",
+   "guide": [
+    "<b>account.apple.com</b> öffnen und anmelden → <b>Anmelden und Sicherheit → App-spezifische Passwörter</b>.",
+    "Ein neues Passwort anlegen, Name z.&nbsp;B. „RPi TV“. Es sieht so aus: xxxx-xxxx-xxxx-xxxx.",
+    "Hier deine Apple-ID und dieses Passwort eintragen – nicht dein normales Apple-Passwort."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Apple-ID (E-Mail)",
+     "type": "text",
+     "key": "secret:ICLOUD_APPLE_ID",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "App-spezifisches Passwort",
+     "type": "password",
+     "key": "secret:ICLOUD_APP_SPECIFIC_PASSWORD",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "Nur diese Kalender (leer = alle, einer pro Zeile)",
+     "type": "lines",
+     "key": "calendars.icloud.calendar_names",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": true,
+   "configured": false
+  },
+  {
+   "id": "todos",
+   "name": "ToDos aus Notizen",
+   "icon": "check",
+   "color": "255, 214, 10",
+   "category": "Kalender",
+   "summary": "Eine Checkliste aus der Notizen-App erscheint auf dem Dashboard – abgehakte durchgestrichen.",
+   "guide": [
+    "Auf dem iPhone in <b>Kurzbefehle</b> einen neuen Kurzbefehl anlegen.",
+    "Aktion <b>Notizen suchen</b> (deine ToDo-Notiz), dann <b>Inhalte von URL abrufen</b>: Methode POST, URL <b>https://&lt;deine Adresse&gt;/api/todos/webhook</b>.",
+    "Bei Header <b>X-Webhook-Secret</b> mit dem Geheimwort von hier eintragen, als Text den Notizinhalt senden.",
+    "Unter <b>Automation</b> z.&nbsp;B. „Beim Schließen der Notizen-App“ den Kurzbefehl ausführen lassen."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Geheimwort für den Kurzbefehl",
+     "type": "password",
+     "generate": true,
+     "key": "secret:TODOS_WEBHOOK_SECRET",
+     "is_set": false,
+     "value": ""
+    }
+   ],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "remote_access",
+   "name": "Fernzugriff",
+   "icon": "globe",
+   "color": "142, 142, 147",
+   "category": "System",
+   "summary": "Die Fernbedienung von unterwegs und mit https nutzen – nötig z. B. für die Spracheingabe am iPhone.",
+   "guide": [
+    "Kostenloses Konto bei <b>Cloudflare</b> anlegen und deine Domain dort hinzufügen.",
+    "<b>Zero Trust → Networks → Tunnels → Create a tunnel</b> (Cloudflared). Den angezeigten Installationsbefehl für <b>Debian, arm64</b> auf dem Pi ausführen.",
+    "Im Tunnel einen <b>Public Hostname</b> anlegen: z.&nbsp;B. <b>tv.deine-domain.de</b>, Typ HTTP, URL <b>localhost:8080</b>. Für den Comic-Reader genauso <b>comics.deine-domain.de</b>.",
+    "Empfohlen: unter <b>Zero Trust → Access</b> eine Application für diese Adressen anlegen (Login per E-Mail-Code). Dazu immer ein Passwort für die Fernbedienung (Einstellungen)."
+   ],
+   "plugin": false,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "abfahrten",
+   "name": "Abfahrten",
+   "icon": "app-abfahrten",
+   "color": "0, 122, 255",
+   "category": "Unterwegs",
+   "summary": "Die nächsten Busse und Bahnen deiner Haltestelle – auf dem Dashboard, in der App und im Wecker.",
+   "guide": [
+    "App öffnen und deine Haltestelle suchen – antippen, fertig.",
+    "Auf dem Fernseher erscheinen die nächsten Abfahrten neben dem Kalender, mit Verspätungen und Gleis.",
+    "Mit Fußweg blendet die App Abfahrten aus, die du nicht mehr erreichst. Mit Linien siehst du nur deine Busse/Bahnen (z. B. <b>RE78</b> oder <b>250</b>).",
+    "Der Wecker sagt morgens die nächste erreichbare Verbindung an.",
+    "Die Daten kommen kostenlos von <b>Transitous</b> (europaweit, Echtzeit wo verfügbar)."
+   ],
+   "icon_svg": "\n  <rect x=\"5\" y=\"3.5\" width=\"14\" height=\"14\" rx=\"3.5\"/>\n  <path d=\"M5 11h14\"/>\n  <path d=\"M8.5 14.5h.01M15.5 14.5h.01\"/>\n  <path d=\"m8 17.5-2 3M16 17.5l2 3\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "homepage": "https://transitous.org",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.css",
+    "remote.html",
+    "remote.js"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Fußweg zur Haltestelle in Minuten",
+     "type": "number",
+     "placeholder": "z. B. 5",
+     "key": "apps.abfahrten.walk_minutes",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Nur diese Linien (eine pro Zeile, leer = alle)",
+     "type": "lines",
+     "key": "apps.abfahrten.lines",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "bilderrahmen",
+   "name": "Bilderrahmen",
+   "icon": "app-bilderrahmen",
+   "color": "255, 159, 10",
+   "category": "Zuhause",
+   "summary": "Deine Fotos als Diashow – startet von selbst, wenn der Fernseher an ist und nichts läuft.",
+   "guide": [
+    "Fotos (JPG, PNG, WebP) in einen Ordner auf dem Pi oder der angeschlossenen Platte legen – Unterordner werden mitgenommen. Am einfachsten über die Jellyfin-Freigabe oder einen USB-Stick.",
+    "Den Pfad oben eintragen, z.&nbsp;B. <b>/mnt/platte/Fotos</b>, und speichern.",
+    "In der App <b>Diashow starten</b> – oder warten: Ist der Fernseher an und läuft nichts, startet sie nach der eingestellten Zeit von selbst (außer nachts, siehe Zeiten).",
+    "Sobald du etwas abspielst, verschwindet die Diashow wieder."
+   ],
+   "icon_svg": "\n  <rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\" rx=\"2.5\"/>\n  <circle cx=\"9\" cy=\"9.5\" r=\"1.6\"/>\n  <path d=\"m4 17 5-4.5 3.5 3 3-2.5 4.5 4\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.html",
+    "remote.js",
+    "tv.html"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Ordner mit Fotos auf dem Pi",
+     "type": "text",
+     "placeholder": "/mnt/platte/Fotos",
+     "key": "apps.bilderrahmen.folder",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Von selbst starten nach … Minuten ohne Wiedergabe (0 = nie)",
+     "type": "number",
+     "placeholder": "15",
+     "key": "apps.bilderrahmen.idle_minutes",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Sekunden pro Foto",
+     "type": "number",
+     "placeholder": "12",
+     "key": "apps.bilderrahmen.seconds",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Nur zu diesen Zeiten von selbst starten",
+     "type": "text",
+     "placeholder": "09:00-23:00",
+     "key": "apps.bilderrahmen.hours",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "durchsage",
+   "name": "Durchsage",
+   "icon": "speaker",
+   "color": "255, 55, 95",
+   "category": "Zuhause",
+   "summary": "Tippen statt rufen: Der Fernseher sagt deine Nachricht laut an – „Essen ist fertig!“",
+   "guide": [
+    "Nachricht eintippen oder eine Schnell-Durchsage antippen – der Fernseher spricht sie mit der Stimme des Weckers.",
+    "Läuft gerade Radio, wird es kurz leiser gestellt (angehalten) und danach weitergespielt.",
+    "Ist der Fernseher aus, schaltet ihn der Schalter <b>Fernseher dafür einschalten</b> kurz ein – sonst hört man nichts.",
+    "Eigene Schnell-Durchsagen trägst du oben unter Einstellungen ein, eine pro Zeile."
+   ],
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "remote.css",
+    "remote.html",
+    "remote.js"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Schnell-Durchsagen (eine pro Zeile)",
+     "type": "lines",
+     "key": "apps.durchsage.presets",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "einkaufsliste",
+   "name": "Einkaufsliste",
+   "icon": "app-einkaufsliste",
+   "color": "52, 199, 89",
+   "category": "Zuhause",
+   "summary": "Eine gemeinsame Liste für alle im Haushalt – auf jedem Handy mit der Fernbedienung und auf dem Fernseher.",
+   "guide": [
+    "In der App eintippen, was fehlt – mehrere Dinge auf einmal mit Komma trennen („Milch, Brot, Eier“).",
+    "Im Laden abhaken: antippen. <b>Erledigte löschen</b> räumt die Liste auf.",
+    "Alle mit der Fernbedienung sehen dieselbe Liste. Auf dem Fernseher erscheint sie neben dem Kalender, solange etwas drauf steht."
+   ],
+   "icon_svg": "\n  <path d=\"M3.5 4.5h2.2l2.1 10.3a1.6 1.6 0 0 0 1.6 1.2h7.9a1.6 1.6 0 0 0 1.5-1.2l1.6-6.8H6.6\"/>\n  <circle cx=\"10\" cy=\"19.5\" r=\"1.2\"/>\n  <circle cx=\"17\" cy=\"19.5\" r=\"1.2\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.css",
+    "remote.html",
+    "remote.js"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "pinnwand",
+   "name": "Pinnwand",
+   "icon": "app-pinnwand",
+   "color": "255, 149, 0",
+   "category": "Weitere Apps",
+   "summary": "Schickt eine Nachricht vom Handy groß auf den Fernseher. Beispiel-App: Vorlage für eigene Apps.",
+   "guide": [
+    "In der App eine Nachricht eintippen und <b>Auf den Fernseher</b> drücken.",
+    "Mit <b>Schließen</b> zeigt der Fernseher wieder das Dashboard."
+   ],
+   "icon_svg": "\n  <path d=\"M14.5 3.5 20.5 9.5\"/>\n  <path d=\"M16.5 5.5 11 9 7.5 9.5 14.5 16.5 15 13 18.5 7.5\"/>\n  <path d=\"M11 13 4.5 19.5\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.css",
+    "remote.html",
+    "remote.js",
+    "tv.html"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Unterschrift unter jeder Nachricht",
+     "type": "text",
+     "placeholder": "z. B. Mama",
+     "key": "apps.pinnwand.signature",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "quiz",
+   "name": "Quiz",
+   "icon": "app-quiz",
+   "color": "175, 82, 222",
+   "category": "Spiele",
+   "summary": "Quizabend: Fragen auf dem Fernseher, alle antworten mit dem eigenen Handy – ohne App, per QR-Code.",
+   "guide": [
+    "In der App <b>Neues Spiel</b> antippen – der Fernseher zeigt einen QR-Code.",
+    "Alle scannen ihn mit dem Handy (gleiches WLAN), geben einen Namen ein und sind dabei. Ein Passwort brauchen die Mitspieler nicht.",
+    "<b>Los geht’s</b> startet das Quiz. Pro Frage gibt es 20 Sekunden – richtig gibt Punkte, schnell gibt mehr.",
+    "Eigene Fragen: Datei <code>data/apps/quiz/fragen.json</code> anlegen, gleiches Format wie <code>apps/quiz/fragen.json</code> (die richtige Antwort steht immer zuerst, gemischt wird automatisch)."
+   ],
+   "icon_svg": "\n  <circle cx=\"12\" cy=\"12\" r=\"8.5\"/>\n  <path d=\"M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.7\"/>\n  <path d=\"M12 17h.01\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "play.html",
+    "remote.css",
+    "remote.html",
+    "remote.js",
+    "tv.html"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "schlaf_timer",
+   "name": "Schlaf-Timer",
+   "icon": "app-schlaf_timer",
+   "color": "94, 92, 230",
+   "category": "Zuhause",
+   "summary": "Einschlafen bei Radio oder Film: Nach der gewählten Zeit wird es leiser und der Fernseher geht aus.",
+   "guide": [
+    "Zeit antippen – fertig. In der letzten Minute wird der Ton langsam leiser, dann gehen Wiedergabe und Fernseher aus.",
+    "Die Lautstärke ist beim nächsten Einschalten wieder wie vorher.",
+    "Solange der Timer läuft, steht auf dem Fernseher-Dashboard, wann er ausgeht."
+   ],
+   "icon_svg": "\n  <path d=\"M19.5 14.6A7.8 7.8 0 1 1 9.4 4.5a6.2 6.2 0 0 0 10.1 10.1z\"/>\n  <path d=\"M15.5 4.5h3l-3 3.5h3\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.css",
+    "remote.html",
+    "remote.js"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [],
+   "testable": false,
+   "configured": true
+  },
+  {
+   "id": "wlan_lampen",
+   "name": "WLAN-Lampen",
+   "icon": "app-wlan_lampen",
+   "color": "255, 204, 0",
+   "category": "Zuhause",
+   "summary": "LSC-, Tuya- und Smart-Life-Lampen direkt im WLAN schalten: an/aus, hell/dunkel, warm/kalt, Farben, Szenen.",
+   "guide": [
+    "Die Lampen laufen über <b>Tuya</b> (LSC Smart Connect ist eine Tuya-App). Gesteuert wird danach direkt im WLAN – die Cloud brauchst du nur einmal, um die Schlüssel der Lampen zu holen.",
+    "Falls deine Lampen noch in <b>LSC Smart Connect</b> sind: zusätzlich in der App <b>Smart Life</b> anmelden und die Lampen dort neu hinzufügen (die Tuya-Plattform kennt nur Smart Life / Tuya Smart).",
+    "Am PC <b>platform.tuya.com</b> öffnen, kostenloses Entwicklerkonto anlegen.",
+    "<b>Cloud → Development → Create Cloud Project</b>: Industry „Smart Home“, Development Method „Smart Home“, Data Center <b>Central Europe</b>.",
+    "Im Projekt unter <b>Service API</b> sicherstellen, dass „IoT Core“ und „Authorization Token Management“ abonniert sind (kostenloser Testzeitraum, verlängerbar).",
+    "Im Projekt: <b>Devices → Link App Account → Add App Account</b> und den QR-Code mit der Smart-Life-App scannen (Ich → Scanner oben rechts).",
+    "Unter <b>Overview</b> stehen <b>Access ID</b> und <b>Access Secret</b> – oben eintragen, Rechenzentrum <b>eu</b>. Unter Devices eine Geräte-ID kopieren und als „Geräte-ID“ eintragen.",
+    "Speichern, dann in der App <b>Lampen suchen</b>. Der Pi holt die Schlüssel und findet die Lampen im WLAN (dauert ca. 20 Sekunden)."
+   ],
+   "icon_svg": "\n  <path d=\"M9 17.5h6M10 20.5h4\"/>\n  <path d=\"M12 3.5a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1v1.1h5v-1.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3.5z\"/>\n",
+   "author": "RPi TV",
+   "version": "1.0",
+   "homepage": "https://github.com/jasonacox/tinytuya",
+   "view": true,
+   "files": [
+    "app.json",
+    "icon.svg",
+    "remote.css",
+    "remote.html",
+    "remote.js"
+   ],
+   "plugin": true,
+   "removable": false,
+   "enabled": false,
+   "fields": [
+    {
+     "label": "Access ID (Tuya-Plattform)",
+     "type": "text",
+     "key": "secret:TUYA_ACCESS_ID",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "Access Secret (Tuya-Plattform)",
+     "type": "password",
+     "key": "secret:TUYA_ACCESS_SECRET",
+     "is_set": false,
+     "value": ""
+    },
+    {
+     "label": "Rechenzentrum",
+     "type": "text",
+     "placeholder": "eu",
+     "key": "apps.wlan_lampen.region",
+     "value": "",
+     "is_set": null
+    },
+    {
+     "label": "Geräte-ID einer Lampe (optional)",
+     "type": "text",
+     "key": "apps.wlan_lampen.device_id",
+     "value": "",
+     "is_set": null
+    }
+   ],
+   "testable": false,
+   "configured": false
+  }
+ ],
+ "effects": [
+  {
+   "id": "static",
+   "name": "Standlicht",
+   "group": "static"
+  },
+  {
+   "id": "breathe",
+   "name": "Atmen",
+   "group": "soft"
+  },
+  {
+   "id": "wave",
+   "name": "Welle",
+   "group": "soft"
+  },
+  {
+   "id": "rainbow",
+   "name": "Regenbogen",
+   "group": "soft"
+  },
+  {
+   "id": "glide",
+   "name": "Farbgleiten",
+   "group": "soft"
+  },
+  {
+   "id": "flash",
+   "name": "Beat-Blitz",
+   "group": "hard"
+  },
+  {
+   "id": "chase",
+   "name": "Lauflicht",
+   "group": "hard"
+  },
+  {
+   "id": "jump",
+   "name": "Farbsprung",
+   "group": "hard"
+  },
+  {
+   "id": "alternate",
+   "name": "Wechsler",
+   "group": "hard"
+  },
+  {
+   "id": "strobe",
+   "name": "Stroboskop",
+   "group": "hard"
+  },
+  {
+   "id": "ramp_beat",
+   "name": "Anstieg",
+   "group": "ramp"
+  },
+  {
+   "id": "ramp_bar",
+   "name": "Anstieg lang",
+   "group": "ramp"
+  },
+  {
+   "id": "ramp_cascade",
+   "name": "Kaskade",
+   "group": "ramp"
+  },
+  {
+   "id": "ramp_color",
+   "name": "Farbanstieg",
+   "group": "ramp"
+  },
+  {
+   "id": "buildup",
+   "name": "Build-up",
+   "group": "ramp"
+  }
+ ]
+}
