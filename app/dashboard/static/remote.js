@@ -1,7 +1,7 @@
 "use strict";
 
 /* ============================================================
-   JARVIS Fernbedienung
+   Fernbedienung
    Aufbau: Grundlagen (DOM, API, Toast) → Navigation → Homescreen →
    Apps (YouTube, Jellyfin, Twitch, Radio, Einstellungen) → Status-Poll + Dock.
    ============================================================ */
@@ -1845,7 +1845,7 @@ async function saveAddAlbum() {
       { class: "rs-busy" },
       h("div", { class: "hifi-disc" }, h("span")),
       h("div", { class: "rs-title" }, "Einen Moment …"),
-      h("div", null, `Jarvis sucht ${songs.length === 1 ? "den Song" : `die ${songs.length} Songs`} auf YouTube.`)
+      h("div", null, `Ich suche ${songs.length === 1 ? "den Song" : `die ${songs.length} Songs`} auf YouTube.`)
     )
   );
   try {

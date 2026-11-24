@@ -1,4 +1,8 @@
-# Kopieren nach config.yaml und anpassen. Keine Geheimnisse hier rein (siehe .env.example).
+# Standardwerte. Normalerweise stellt man alles in der Fernbedienung ein
+# (Einrichtung + App Store, gespeichert in data/settings.json). Wer lieber
+# Dateien bearbeitet: nach config.yaml kopieren und anpassen - config.yaml
+# ueberschreibt diese Werte, die Fernbedienung wiederum config.yaml.
+# Keine Geheimnisse hier rein (siehe .env.example).
 
 location:
   # Ort für die Wetter-Abfrage (Open-Meteo Geocoding). Alternativ lat/lon direkt setzen
@@ -30,18 +34,17 @@ tv_control:
 
 calendars:
   google:
-    enabled: true
+    enabled: false
     # "Geheime Adresse im iCal-Format" aus den Google-Kalender-Einstellungen
-    ics_urls:
-      - "https://calendar.google.com/calendar/ical/DEINE_ADRESSE/basic.ics"
+    ics_urls: []
   icloud:
-    enabled: true
+    enabled: false
     # leer = alle Kalender, sonst Liste von Kalendernamen wie in der iCloud-Kalender-App
     calendar_names: []
 
 iserv:
-  enabled: true
-  base_url: "https://DEINE-SCHULE.iserv.de"
+  enabled: false
+  base_url: ""
   # Pfad zur Vertretungsplan-Ansicht - je nach Schule unterschiedlich, wird beim
   # Feinschliff (siehe README) an eure IServ-Instanz angepasst.
   # Untis-Vertretungsplan ueber den IServ-Infobildschirm (Schnellzugriff
@@ -103,6 +106,8 @@ dashboard:
   # "127.0.0.1" = nur auf dem Pi selbst.
   host: "::"
   port: 8080
-  title: "JARVIS"
+  # Name des Systems: erscheint auf dem Fernseher, in der Fernbedienung und
+  # in der Sprachausgabe. In der Fernbedienung unter Einstellungen aenderbar.
+  title: "RPi TV"
   boot_animation_seconds: 4
   shutdown_animation_seconds: 1.5

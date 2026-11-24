@@ -1,10 +1,16 @@
-"""Laedt config.yaml + .env und stellt sie als typisierte Objekte bereit.
+"""Laedt die Einstellungen + .env und stellt sie als typisierte Objekte bereit.
+
+Schichten, jede ueberschreibt die vorige (Details: app/settings_store.py):
+  config.example.yaml (Standardwerte) -> config.yaml (optional, von Hand)
+  -> data/settings.json (aus der Fernbedienung)
 
 Aufruf ueberall im Projekt: `from app.config import get_config; cfg = get_config()`
 """
 
 from __future__ import annotations
 
+import copy
+import json
 import os
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -168,17 +174,34 @@ class Config:
 
 def _load_yaml(path: Path) -> dict:
     if not path.exists():
-        raise FileNotFoundError(
-            f"{path} nicht gefunden. Kopiere config.example.yaml nach config.yaml "
-            "und passe es an."
-        )
+        return {}
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
+def _merge(base: dict, extra: dict) -> dict:
+    out = copy.deepcopy(base)
+    for key, value in (extra or {}).items():
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = _merge(out[key], value)
+        else:
+            out[key] = copy.deepcopy(value)
+    return out
+
+
+def _settings_overrides() -> dict:
+    try:
+        data = json.loads((ROOT_DIR / "data" / "settings.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data.get("config") or {}
+
+
 def load_config(config_path: Path | None = None, env_path: Path | None = None) -> Config:
     load_dotenv(env_path or (ROOT_DIR / ".env"))
-    raw = _load_yaml(config_path or (ROOT_DIR / "config.yaml"))
+    raw = _load_yaml(ROOT_DIR / "config.example.yaml")
+    raw = _merge(raw, _load_yaml(config_path or (ROOT_DIR / "config.yaml")))
+    raw = _merge(raw, _settings_overrides())
 
     loc = raw.get("location", {})
     sched = raw.get("schedule", {})
@@ -249,7 +272,7 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
         dashboard=DashboardConfig(
             host=dash.get("host", "127.0.0.1"),
             port=int(dash.get("port", 8080)),
-            title=dash.get("title", "JARVIS"),
+            title=dash.get("title") or "RPi TV",
             boot_animation_seconds=float(dash.get("boot_animation_seconds", 4)),
             shutdown_animation_seconds=float(dash.get("shutdown_animation_seconds", 1.5)),
         ),

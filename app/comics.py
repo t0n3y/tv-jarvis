@@ -1,4 +1,4 @@
-"""Comics & PDFs fuer den eigenen Reader (comics.bassbunkerfm.de).
+"""Comics & PDFs fuer den eigenen Reader (z.B. comics.deine-domain.de).
 
 Die Dateien liegen in der Jellyfin-Bibliothek "Comics" (Typ Buecher, also
 auch in Jellyfin sichtbar), ein Unterordner pro Reihe:

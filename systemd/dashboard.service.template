@@ -1,5 +1,5 @@
 [Unit]
-Description=TV-Jarvis Dashboard-Server
+Description=RPi TV (Dashboard, Fernbedienung, Wecker)
 After=network-online.target
 Wants=network-online.target
 

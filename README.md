@@ -1,162 +1,135 @@
-# TV-Jarvis
+# RPi TV
 
-Morgen-Briefing (Kalender, Stundenplan/Vertretungsplan, Wetter, ToDos) auf dem
-Fernseher, vorgelesen und als Jarvis-artiges Dashboard angezeigt. Fernseher
-geht automatisch an (Weckzeit) und wieder aus (Verlasszeit), am Wochenende mit
-eigenen Zeiten und ohne Stundenplan. Läuft auf einem Raspberry Pi 4B.
+Ein Raspberry Pi macht aus jedem Fernseher mit HDMI ein kleines Zuhause-System:
+morgens geht der Fernseher von selbst an, zeigt Wetter, Termine, ToDos und den
+Vertretungsplan und liest alles vor. Danach läuft Radio. Gesteuert wird alles
+mit dem Handy über eine Fernbedienungs-Web-App im Apple-Stil, inklusive
+Jellyfin, YouTube, Twitch, Plattenschrank, Licht, Comics und Sprachschach.
 
-## Voraussetzungen
+Name, Apps und Zugangsdaten stellst du in der Fernbedienung ein. Den Namen
+„RPi TV“ kannst du durch deinen eigenen ersetzen: Er erscheint dann auf dem
+Fernseher, in der App und in der Sprachausgabe.
 
-- Raspberry Pi 4B mit Raspberry Pi OS **Desktop** (Bookworm/Trixie oder neuer,
-  mit Autologin auf den Desktop – siehe unten), per HDMI an den Fernseher
-  angeschlossen. Der Pi 4 hat zwei micro-HDMI-Ports mit je einem eigenen
-  CEC-Adapter (`/dev/cec0`, `/dev/cec1`) – **egal an welchem der Fernseher
-  hängt**, es muss nur der passende Adapter in `config.yaml`
-  (`tv_control.cec_adapter`) eingetragen werden (siehe Schritt 3).
-- Am Samsung-Fernseher: Einstellungen → Allgemein → Externe Geräteverwaltung
-  → **Anynet+ (HDMI-CEC)** aktivieren, dort zusätzlich **Automatisches
-  Ausschalten** aktivieren (ohne das ignoriert Samsung oft den
-  CEC-Standby-Befehl).
-- Autologin auf den Desktop einrichten (`sudo raspi-config` → System Options →
-  Boot / Auto Login → Desktop Autologin), damit nach dem Hochfahren des Pi
-  eine grafische Session für den Chromium-Kiosk existiert.
-- Internetzugang für den Pi (Wetter, Kalender, IServ, ToDos).
+## Installation: ein Befehl
 
-## 1. Code auf den Pi bringen
+Du brauchst:
 
-Dieses Projekt wurde auf einem Windows-Rechner entwickelt. Auf den Pi
-übertragen, z. B. per `git` (empfohlen: eigenes privates Repo, `.env` und
-`config.yaml` sind über `.gitignore` ausgeschlossen) oder per `scp`:
+- einen **Raspberry Pi 4 oder 5** mit **Raspberry Pi OS (64 Bit, mit Desktop)**
+  und Internet (am besten per LAN-Kabel),
+- einen **Fernseher mit HDMI-CEC**, damit der Pi ihn ein- und ausschalten
+  kann. Je nach Marke heißt das *Anynet+* (Samsung), *Bravia Sync* (Sony),
+  *SimpLink* (LG) oder *EasyLink* (Philips). Bei Samsung zusätzlich
+  „Automatisches Ausschalten“ aktivieren.
+
+Auf dem Pi ein Terminal öffnen (oder per SSH) und eingeben:
 
 ```bash
-scp -r tv-jarvis pi@<pi-ip>:/home/pi/tv-jarvis
+curl -fsSL https://raw.githubusercontent.com/t0n3y/tv-jarvis/main/scripts/install.sh | bash
 ```
 
-## 2. Installation
+Das Skript fragt einmal nach deinem Passwort (für `sudo`). Danach erledigt es
+alles: Systempakete, Python-Umgebung, deutsche Stimme (Piper), Geräte-Rechte,
+automatische Desktop-Anmeldung und den Systemdienst. Zum Schluss zeigt es
+eine Adresse und einen **QR-Code** an.
+
+## Einrichtung: in der Fernbedienung
+
+QR-Code mit dem Handy scannen (gleiches WLAN) oder
+`http://<name-des-pi>.local:8080/remote.html` öffnen. Ein Assistent führt in
+vier Schritten durch die Einrichtung:
+
+1. **Name** des Systems, dein Vorname und dein Ort fürs Wetter
+2. **Fernseher**: Der Pi sucht den HDMI-Anschluss selbst. Mit „Fernseher
+   testen“ geht der Fernseher an und sagt Hallo.
+3. **Apps** auswählen
+4. **Passwort** für die Fernbedienung (wird vorgeschlagen)
+
+Tipp fürs iPhone: In Safari *Teilen → Zum Home-Bildschirm* tippen, dann liegt
+die Fernbedienung wie eine normale App auf dem Home-Bildschirm.
+
+## App Store
+
+Im **App Store** in der Fernbedienung schaltest du Apps ein und aus. Jede App
+hat eine Schritt-für-Schritt-Anleitung. Bei Apps mit Zugangsdaten gibt es
+außerdem „Verbindung testen“.
+
+| App | Was sie macht | Was du brauchst |
+| --- | --- | --- |
+| **Jellyfin** | Filme und Serien vom eigenen Mediaserver, Weiterschauen, Upload vom Handy | Jellyfin-Server + API-Schlüssel |
+| **YouTube** | Links vom Handy abspielen, neueste Videos deiner Abos | für Abos: einmal im TV-Browser anmelden |
+| **Twitch** | Lieblings-Streamer: wer ist live, Stream im Vollbild ohne Chat | nichts |
+| **Plattenschrank** | Plattenspieler auf dem Fernseher, Schränke pro Genre | nichts |
+| **Licht** | DMX-Scheinwerfer, Farben und Effekte im Takt | uDMX-USB-Adapter |
+| **Sprachschach** | chess.com gegen Bots oder online, Züge per Sprache | chess.com-Konto |
+| **Comics** | Reader mit Doppelseiten und Blätteranimation (CBZ/CBR/PDF) | nichts |
+| **IServ-Vertretungsplan** | Vertretungen für deine Kurse auf dem Dashboard und im Wecker | IServ-Zugang |
+| **Google / iCloud Kalender** | Termine auf dem Dashboard und im Wecker | iCal-Adresse bzw. App-Passwort |
+| **ToDos aus Notizen** | Checkliste aus der Notizen-App | iPhone-Kurzbefehl |
+| **Fernzugriff** | Fernbedienung von unterwegs mit https | Cloudflare-Konto + Domain |
+
+Apps, die aus sind, verschwinden vom Homescreen der Fernbedienung und vom
+Dashboard auf dem Fernseher.
+
+## Anpassen
+
+Das ganze Projekt ist offen: Du darfst es für dich umbauen (Lizenz siehe
+unten).
+
+- **Name**: *Einstellungen → Allgemein*. Ersetzt „RPi TV“ überall.
+- **Eigene App**: einen Eintrag in `app/apps.py` anlegen (Name, Symbol, Farbe,
+  Felder, Anleitung). Die Felder speichert der App Store automatisch, normale
+  Werte in `data/settings.json`, Zugangsdaten in `.env`. Hat die App eine
+  eigene Ansicht, kommt eine Kachel mit `data-open="<id>"` in
+  `app/dashboard/static/remote.html`.
+- **Einstellungen als Datei**: Alle Standardwerte stehen in
+  `config.example.yaml`. Wer lieber Dateien bearbeitet, kopiert sie nach
+  `config.yaml`. Es gilt die Reihenfolge
+  `config.example.yaml` → `config.yaml` → `data/settings.json`
+  (Fernbedienung), also überschreibt jede Ebene die vorige.
+- **Eigener Fork**: Mit dem Installer kannst du auch deinen eigenen Fork
+  installieren:
+  `curl -fsSL …/install.sh | RPITV_REPO=https://github.com/<du>/tv-jarvis.git bash`
+
+## Aktualisieren
+
+Den Installationsbefehl einfach noch einmal ausführen. Er lädt die neue
+Version und behält alle Einstellungen. Hast du selbst Dateien geändert,
+überspringt er das Update.
+
+## Fehlersuche
 
 ```bash
-cd /home/pi/tv-jarvis
-sudo ./scripts/install.sh
+systemctl status dashboard.service        # läuft der Dienst?
+journalctl -u dashboard.service -e        # Log
+sudo systemctl restart dashboard.service  # neu starten
+./scripts/quick_test.sh 120               # Weckvorgang sofort testen
 ```
 
-Das Skript installiert Systempakete (cec-utils, mpv, chromium-browser,
-alsa-utils), legt ein Python-Virtualenv an, installiert die
-Python-Abhängigkeiten, kopiert `config.example.yaml` → `config.yaml` und
-`.env.example` → `.env` (falls noch nicht vorhanden), lädt die deutsche
-Piper-Stimme herunter und richtet die systemd-Dienste/Timer ein.
+- **Fernseher geht nicht an**: HDMI-CEC am Fernseher prüfen, dann
+  *Einstellungen → Fernseher & Ton testen*. Der Pi 4 hat zwei HDMI-Ports mit
+  je eigenem CEC-Adapter (`/dev/cec0`, `/dev/cec1`). Der Test erkennt den
+  richtigen Port neu.
+- **Kein Ton**: ebenfalls *Fernseher & Ton testen*. Es setzt die
+  HDMI-Tonausgabe (`plughw:CARD=vc4hdmi0|1,DEV=0`) passend zum Port.
+- **Vertretungsplan leer**: Jede Schule baut IServ etwas anders. Die Pfade
+  „Vertretung heute/morgen“ im App Store prüfen. Klassischer IServ-Plan statt
+  Untis: Selektoren unter `iserv.selectors` in `config.yaml` anpassen.
+- **Stimme fehlt**: Den Installer erneut ausführen. Er lädt
+  `de_DE-thorsten-medium` von
+  [huggingface.co/rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)
+  nach `data/piper-voices/`.
+- **Songs/Videos laden nicht mehr**: YouTube ändert sich oft. Dann hilft
+  `.venv/bin/pip install -U "yt-dlp[default]"`.
 
-Falls der automatische Download der Piper-Stimme fehlschlägt (Netzwerk/URL
-hat sich geändert): manuell von
-[huggingface.co/rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)
-(`de/de_DE/thorsten/medium/`) die Dateien `de_DE-thorsten-medium.onnx` und
-`.onnx.json` nach `data/piper-voices/` legen. Das `piper`-Binary selbst: von
-den [Piper-Releases](https://github.com/rhasspy/piper/releases) die
-`aarch64`-Variante laden und z. B. nach `/usr/local/bin` entpacken.
+## Lizenz
 
-## 3. config.yaml anpassen
+[PolyForm Noncommercial 1.0.0](LICENSE.md). Du darfst den Code frei nutzen,
+verändern und weitergeben, aber **nicht kommerziell**: kein Verkauf, kein
+Einsatz in einem bezahlten Produkt oder einer bezahlten Dienstleistung. Private
+Nutzung, Schulen, Vereine und Forschung sind ausdrücklich erlaubt.
 
-- **location**: Stadt für die Wetterabfrage (oder direkt `lat`/`lon`).
-- **schedule**: Weck-/Verlasszeiten für Wochentage und Wochenende - dient nur
-  als **Startwert** beim allerersten Lauf. Danach lebt der Zeitplan in
-  `data/schedule.json` und lässt sich jederzeit live über die
-  **Einstellungen-App** auf der Fernbedienung ändern (inkl. Wecker an/aus),
-  ohne `config.yaml` anzufassen oder den Dienst neu zu starten.
-- **tv_control**: `cec_device` bleibt meist `0`. `cec_adapter` ermitteln mit
-  `for f in /sys/class/drm/*/status; do echo "$f: $(cat $f)"; done` (welcher
-  HDMI-Port zeigt `connected`?) und `cec-client -l` (welcher `/dev/cecX`
-  gehört dazu) - ohne diese Angabe kann `cec-client` den falschen der beiden
-  Adapter wählen und jeder Befehl schlägt mit `power status: unknown` fehl.
-- **audio.alsa_device**: Gleiches Thema wie beim CEC-Adapter - der Pi 4 hat
-  zwei HDMI-Audio-Karten. Mit `aplay -l` den Kartennamen (z. B. `vc4hdmi1`)
-  ermitteln, der zum verbundenen Port passt, und als
-  `"plughw:CARD=vc4hdmi1,DEV=0"` eintragen (reines `hw:` ohne `plug`
-  funktioniert oft nicht, da das Format sonst nicht passt).
-- **calendars.google.ics_urls**: In Google Kalender → Einstellungen des
-  jeweiligen Kalenders → "Kalender integrieren" → **"Geheime Adresse im
-  iCal-Format"** kopieren.
-- **calendars.icloud**: `calendar_names` leer lassen für alle Kalender, sonst
-  genau wie in der iCloud-Kalender-App benannt.
-- **iserv**: `base_url` eurer Schule eintragen. Die Selektoren (`selectors`)
-  müssen an die echte Seite angepasst werden, siehe Abschnitt "IServ-
-  Feinschliff" unten.
-- **radio.stream_url**: nur noch der Fallback, falls `data/radio_stations.json`
-  fehlt - die eigentliche Senderliste (Standard: Sunshine Live + 1LIVE) lässt
-  sich über die Radio- bzw. Einstellungen-App auf der Fernbedienung verwalten.
-  Stream-URLs vorher im Browser/VLC testen (Sender ändern ihre
-  Streaming-Infrastruktur gelegentlich).
-
-## 4. .env ausfüllen
-
-```
-ISERV_USERNAME=...
-ISERV_PASSWORD=...
-ICLOUD_APPLE_ID=...
-ICLOUD_APP_SPECIFIC_PASSWORD=...
-TODOS_WEBHOOK_SECRET=irgendein-langes-zufälliges-secret
-```
-
-**App-spezifisches Passwort für iCloud:** appleid.apple.com → Anmelden und
-Sicherheit → App-spezifische Passwörter → neues erzeugen. **Nicht** das
-normale Apple-ID-Passwort verwenden.
-
-## 5. ToDos aus iCloud-Notizen (Shortcuts-Automation)
-
-Da Apple keine offizielle API für Notizen anbietet, übernimmt das eine kleine
-Automation in der **Kurzbefehle**-App (iPhone oder Mac):
-
-1. Neuer Kurzbefehl: Aktion **"Notiz abrufen"** (die gewünschte ToDo-Notiz
-   auswählen) → Aktion **"Inhalte von URL abrufen"**.
-2. URL: `http://<pi-ip>:8080/api/todos/webhook`, Methode `POST`.
-3. Header hinzufügen: `X-Webhook-Secret` = der Wert aus `TODOS_WEBHOOK_SECRET`
-   in eurer `.env`.
-4. Anfragetext (JSON): `{"text": "Text der Notiz"}` (Text der Notiz aus
-   Schritt 1 einsetzen/verketten - jede Zeile der Notiz wird ein ToDo).
-5. Automation: Unter "Automation" → neue persönliche Automation → "Zeitplan"
-   (z. B. jeden Morgen kurz vor der Weckzeit) oder "App" (wenn Notizen
-   geschlossen wird) → obigen Kurzbefehl ausführen, ohne vorher zu fragen.
-
-Alternative: `todos.provider: notion` in `config.yaml` setzen und
-`NOTION_TOKEN` + `notion.database_id` eintragen (offizielle REST-API, robuster
-als der iCloud-Weg, falls die Shortcuts-Automation zu unzuverlässig ist).
-
-## 6. IServ-Feinschliff
-
-Jede Schule stellt den Vertretungsplan in IServ anders dar. Der mitgelieferte
-Scraper (`app/sources/iserv.py`) ist ein Grundgerüst mit konfigurierbaren
-CSS-Selektoren. Nach der ersten Installation:
-
-1. Testlauf: `.venv/bin/python -m app.routines.morning_routine` und
-   `data/state.json` → Feld `substitution_plan` prüfen.
-2. Ist die Liste leer/falsch: HTML-Quelltext der eingeloggten
-   Vertretungsplan-Seite besorgen (z. B. im Browser einloggen, Seite
-   speichern) und die Selektoren in `config.yaml` (`iserv.selectors`)
-   entsprechend anpassen.
-
-## 7. Testen
-
-```bash
-sudo systemctl status dashboard.service
-sudo -u pi /home/pi/tv-jarvis/.venv/bin/python -m app.routines.morning_routine
-sudo -u pi /home/pi/tv-jarvis/.venv/bin/python -m app.routines.leave_routine
-```
-
-Nützliche Befehle:
-
-```bash
-sudo systemctl restart dashboard.service
-journalctl -u dashboard.service -e
-```
-
-Der Zeitplan (Weckzeiten, Wecker an/aus) wird von `dashboard.service` selbst
-im Hintergrund überwacht (kein separater Timer mehr, siehe
-[Architektur](#architektur-kurzüberblick)) und lässt sich jederzeit über die
-Einstellungen-App auf `/remote.html` ändern - Änderungen wirken sofort, ganz
-ohne Neustart.
-
-**Schnelltest ohne den Zeitplan anzufassen:** `./scripts/quick_test.sh [Sekunden]`
-löst die komplette Routine sofort aus (TV an, Briefing, Radio), wartet die
-angegebene Zeit (Standard 120s) und fährt dann wieder runter (Radio aus, TV
-aus) - ohne `config.yaml` oder die systemd-Timer zu verändern.
+Weil kommerzielle Nutzung ausgeschlossen ist, ist das „source available“ und
+keine Open-Source-Lizenz im Sinne der OSI.
 
 ## Fernbedienung (iPhone/iPad)
 
@@ -252,7 +225,9 @@ einmalig danach und merkt sich das Passwort im Browser.
 
 ```
 app/
-  config.py            Config-/Secrets-Loader
+  config.py            Einstellungen laden (Standardwerte -> config.yaml -> data/settings.json)
+  settings_store.py     Speichert, was in der Fernbedienung eingestellt wird (+ .env)
+  apps.py               App Store: Apps, Felder, Anleitungen, Verbindungstests
   briefing.py           Sammelt alle Quellen parallel, baut Text + JSON
   tts.py                 Piper-Wrapper
   radio.py                mpv-Steuerung, spielt den aktuell gewaehlten Sender
@@ -270,14 +245,14 @@ app/
   audio_control.py               Lautstaerke ueber PipeWire/wpctl
   sources/                        Wetter, Google-ICS, iCloud-CalDAV, IServ, ToDos
   tv_control/                      CEC- und Steckdosen-Backend (austauschbar)
-  dashboard/                        FastAPI-Server + Jarvis-Frontend (static/:
+  dashboard/                        FastAPI-Server + Frontend (static/:
                                      index.html/app.js fuers Kiosk-Fenster,
                                      remote.html/css/js fuers Handy)
   routines/                          morning_routine.py / leave_routine.py
 systemd/                              dashboard.service-Vorlage (von install.sh
                                        gerendert - der einzige systemd-Dienst,
                                        der Zeitplan laeuft in-Prozess mit)
-scripts/install.sh                     Komplette Einrichtung auf dem Pi
+scripts/install.sh                     Installation mit einem Befehl (curl | bash)
 scripts/fix_audio_sink.sh               Setzt HDMI als PipeWire-Standardausgabe
                                          (per labwc-Autostart bei jedem Login)
 ```

@@ -2,7 +2,7 @@
 grosse Anzeige der Brettstimme-Erweiterung (extensions/brettstimme).
 
 - Partien startet die Fernbedienung (Bot oder online, mit deinem Account).
-- Ansagen spricht Jarvis mit seiner Stimme ueber den Fernseher.
+- Ansagen spricht die Piper-Stimme ueber den Fernseher.
 - Deine Zuege sprichst du ins Handy; die Erkennung kommt hierher und geht an
   die Erweiterung, die nachfragt und den Zug auf chess.com ausfuehrt.
 

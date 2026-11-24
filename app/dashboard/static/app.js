@@ -50,7 +50,8 @@ function updateClock() {
   const mm = String(now.getMinutes()).padStart(2, "0");
   $("clock").textContent = `${hh}:${mm}`;
   $("date-label").textContent = `${WEEKDAY_NAMES[now.getDay()]}, ${now.getDate()}. ${MONTH_NAMES[now.getMonth()]}`;
-  $("dash-hello").textContent = greeting(now.getHours());
+  const name = dashboardState && dashboardState.user_name;
+  $("dash-hello").textContent = name ? `${greeting(now.getHours())}, ${name}` : greeting(now.getHours());
   // Laufende/vergangene Termine minuetlich neu einfaerben
   if (dashboardState && now.getSeconds() === 0) {
     renderEvents(dashboardState);
@@ -300,12 +301,41 @@ function renderSub(state) {
   $("dash-sub").textContent = parts.join(" · ") || " ";
 }
 
+// Name des Systems (in der Fernbedienung einstellbar, Standard "RPi TV")
+function applyName(name) {
+  if (!name) return;
+  document.title = name;
+  document.querySelectorAll(".boot-word, .vy-brand-name").forEach((el) => (el.textContent = name));
+}
+
+fetch("/api/setup/status")
+  .then((resp) => (resp.ok ? resp.json() : null))
+  .then((info) => info && applyName(info.name))
+  .catch(() => {});
+
+// Kacheln von Apps, die im App Store aus sind, gar nicht erst zeigen
+function applyApps(state) {
+  const apps = state.apps;
+  if (!apps) return;
+  const showCalendar = apps.calendar_google || apps.calendar_icloud;
+  document.querySelector(".calendar-panel").classList.toggle("off", !showCalendar);
+  document.querySelector(".todos-panel").classList.toggle("off", !apps.todos);
+  $("plan-panel").classList.toggle("off", !apps.iserv);
+  const side = !apps.iserv && !showCalendar;
+  document.querySelector(".side-stack").classList.toggle("off", side);
+  const columns = 1 + (apps.todos ? 1 : 0) + (side ? 0 : 1);
+  document.querySelector("main.grid").dataset.columns = String(columns);
+}
+
 async function refreshState() {
   try {
     const resp = await fetch("/api/state");
     if (!resp.ok) return;
     const state = await resp.json();
     dashboardState = state;
+    applyName(state.name);
+    applyApps(state);
+    updateClock();
 
     renderWeather(state);
     renderEvents(state);

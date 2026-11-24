@@ -61,7 +61,7 @@ def auth_headers(cfg: Config) -> dict[str, str]:
     token = cfg.secrets.jellyfin_api_key or ""
     return {
         "Authorization": (
-            'MediaBrowser Client="TV-Jarvis", Device="Raspberry Pi", '
+            'MediaBrowser Client="RPi TV", Device="Raspberry Pi", '
             f'DeviceId="tv-jarvis-pi", Version="1.0", Token="{token}"'
         )
     }

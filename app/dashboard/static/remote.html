@@ -7,14 +7,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="JARVIS" />
-<title>JARVIS</title>
+<meta name="apple-mobile-web-app-title" content="RPi TV" />
+<title>RPi TV</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=DM+Sans:opsz,wght@9..40,400..700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="remote.css" />
 <link rel="stylesheet" href="remote-vinyl.css" />
+<link rel="stylesheet" href="remote-store.css" />
 </head>
 <body>
 
@@ -69,7 +70,7 @@
 <header class="topbar">
   <div class="brand">
     <span class="reactor" aria-hidden="true"></span>
-    <span class="wordmark">JARVIS</span>
+    <span class="wordmark">RPi TV</span>
   </div>
   <button class="timer-pill hidden" id="timer-pill" type="button" aria-label="Timer öffnen"><svg class="icon"><use href="#i-timer"/></svg><span id="timer-pill-time">0:00</span></button>
   <div class="status-pill" id="tv-pill">
@@ -689,5 +690,6 @@
 <script src="remote.js"></script>
 <script src="remote-chess.js"></script>
 <script src="remote-subs.js"></script>
+<script src="remote-store.js"></script>
 </body>
 </html>

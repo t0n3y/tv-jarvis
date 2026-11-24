@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Jarvis h264ify",
+  "name": "RPi TV h264ify",
   "version": "1.0.0",
   "description": "Laesst YouTube auf dem Pi H.264 mit hoechstens 30 fps liefern statt VP9/AV1.",
   "content_scripts": [

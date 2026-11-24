@@ -1,7 +1,7 @@
 "use strict";
 
 /* ============================================================
-   Comic-Reader (comics.bassbunkerfm.de)
+   Comic-Reader (z.B. comics.deine-domain.de)
    Bibliothek -> Heft oeffnen -> zwei Seiten nebeneinander mit
    Blaetteranimation (StPageFlip). Seiten kommen einzeln vom Pi
    (/api/comics/<id>/page/<n>) und werden nur rund um die aktuelle

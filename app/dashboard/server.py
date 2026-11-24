@@ -36,6 +36,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 from starlette.datastructures import MutableHeaders
 
+from app import apps as apps_registry
 from app import (
     audio_control,
     chess_tv,
@@ -47,6 +48,7 @@ from app import (
     radio_stations,
     schedule_store,
     school_settings,
+    settings_store,
     tv_power,
     tv_browser,
     twitch,
@@ -109,7 +111,7 @@ class NoCacheMiddleware:
 
 
 class ComicsHostMiddleware:
-    """comics.bassbunkerfm.de (Cloudflare-Tunnel auf denselben Server) oeffnet
+    """comics.<deine-domain> (Cloudflare-Tunnel auf denselben Server) oeffnet
     direkt den Comic-Reader statt des Kiosk-Dashboards."""
 
     def __init__(self, asgi_app) -> None:
@@ -124,7 +126,7 @@ class ComicsHostMiddleware:
         await self.app(scope, receive, send)
 
 
-app = FastAPI(title="TV-Jarvis Dashboard")
+app = FastAPI(title="RPi TV")
 app.add_middleware(NoCacheMiddleware)
 app.add_middleware(ComicsHostMiddleware)
 
@@ -354,6 +356,9 @@ def get_state() -> JSONResponse:
         return JSONResponse({"error": "noch kein Briefing erzeugt"}, status_code=404)
     data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
     data["radio_playing"] = radio.is_playing()
+    data["name"] = get_config().dashboard.title
+    data["apps"] = apps_registry.enabled_map()
+    data["user_name"] = settings_store.get_path(apps_registry._raw_config(), "dashboard.user_name") or ""
     return JSONResponse(data)
 
 
@@ -973,7 +978,7 @@ async def upload_cancel(upload_id: str) -> dict:
 
 
 
-# ---------- Comics (eigener Reader unter comics.bassbunkerfm.de) ----------
+# ---------- Comics (eigener Reader, z.B. unter comics.<deine-domain>) ----------
 
 async def _comics(fn, *args):
     try:
@@ -1551,7 +1556,13 @@ async def remote_info() -> dict:
             name = await asyncio.to_thread(jellyfin_client.user_display_name, cfg)
         except jellyfin_client.JellyfinError:
             pass
-    return {"name": name, "jellyfin": jellyfin_client.is_configured(cfg)}
+    user_name = settings_store.get_path(apps_registry._raw_config(), "dashboard.user_name")
+    return {
+        "name": user_name or name,
+        "jellyfin": jellyfin_client.is_configured(cfg),
+        "system_name": cfg.dashboard.title,
+        "apps": apps_registry.enabled_map(),
+    }
 
 
 @app.get("/api/remote/schedule", dependencies=[Depends(require_remote_secret)])
@@ -1595,6 +1606,147 @@ async def test_wake() -> dict:
 
     _spawn(run())
     return {"ok": True}
+
+
+# ---------- Einrichtung, App Store, Name ----------
+# Erststart: Ohne REMOTE_CONTROL_SECRET ist die Fernbedienung offen; der
+# Einrichtungsassistent setzt als Erstes ein Passwort. GET /api/setup/status
+# ist bewusst ohne Passwort (verraet nur Name und ob eingerichtet).
+
+HDMI_PORTS = {"HDMI-A-1": 0, "HDMI-A-2": 1}
+
+
+def _detect_hardware() -> dict:
+    """Pi 4: HDMI-A-1 = /dev/cec0 + vc4hdmi0, HDMI-A-2 = /dev/cec1 + vc4hdmi1."""
+    found = None
+    for status in sorted(Path("/sys/class/drm").glob("card*-HDMI-A-*/status")):
+        try:
+            connected = status.read_text().strip() == "connected"
+        except OSError:
+            continue
+        port = status.parent.name.split("-", 1)[1]
+        if connected and port in HDMI_PORTS:
+            found = HDMI_PORTS[port]
+            break
+    if found is None:
+        return {"connected": False}
+    cec = f"/dev/cec{found}"
+    return {
+        "connected": True,
+        "port": found + 1,
+        "cec_adapter": cec if Path(cec).exists() else "",
+        "alsa_device": f"plughw:CARD=vc4hdmi{found},DEV=0",
+    }
+
+
+def _profile() -> dict:
+    raw = apps_registry._raw_config()
+    cfg = get_config()
+    return {
+        "name": cfg.dashboard.title,
+        "user_name": settings_store.get_path(raw, "dashboard.user_name") or "",
+        "city": cfg.location.city or "",
+        "setup_done": settings_store.load()["setup_done"],
+        "password_set": settings_store.secret_is_set("REMOTE_CONTROL_SECRET"),
+    }
+
+
+@app.get("/api/setup/status")
+async def setup_status() -> dict:
+    profile = await asyncio.to_thread(_profile)
+    return {k: profile[k] for k in ("name", "setup_done", "password_set")}
+
+
+@app.get("/api/remote/system", dependencies=[Depends(require_remote_secret)])
+async def get_system() -> dict:
+    profile = await asyncio.to_thread(_profile)
+    cfg = get_config()
+    return {
+        **profile,
+        "hardware": await asyncio.to_thread(_detect_hardware),
+        "cec_adapter": cfg.tv_control.cec_adapter,
+        "alsa_device": cfg.audio.alsa_device,
+        "password_suggestion": settings_store.new_password(),
+    }
+
+
+@app.post("/api/remote/system", dependencies=[Depends(require_remote_secret)])
+async def set_system(request: Request) -> dict:
+    body = await request.json()
+    config: dict = {}
+    if "name" in body:
+        name = str(body["name"] or "").strip()[:40]
+        config["dashboard.title"] = name or settings_store.DEFAULT_NAME
+    if "user_name" in body:
+        config["dashboard.user_name"] = str(body["user_name"] or "").strip()[:40]
+    if "city" in body:
+        city = str(body["city"] or "").strip()[:80]
+        if city:
+            config.update({"location.city": city, "location.lat": None, "location.lon": None})
+    if body.get("detect_hardware"):
+        hardware = await asyncio.to_thread(_detect_hardware)
+        if hardware.get("connected"):
+            config["audio.alsa_device"] = hardware["alsa_device"]
+            if hardware["cec_adapter"]:
+                config["tv_control.cec_adapter"] = hardware["cec_adapter"]
+    password = body.get("password")
+    if password is not None:
+        password = str(password).strip()
+        if len(password) < 8:
+            raise HTTPException(status_code=400, detail="Das Passwort braucht mindestens 8 Zeichen")
+        await asyncio.to_thread(settings_store.set_secrets, {"REMOTE_CONTROL_SECRET": password})
+    apps = body.get("apps") if isinstance(body.get("apps"), dict) else None
+    if apps:
+        for app_id, enabled in apps.items():
+            if app_id in apps_registry.BY_ID:
+                await asyncio.to_thread(apps_registry.save, app_id, bool(enabled), {})
+    finish = True if body.get("finish") else None
+    if finish and not settings_store.secret_is_set("REMOTE_CONTROL_SECRET"):
+        raise HTTPException(status_code=400, detail="Bitte zuerst ein Passwort festlegen")
+    await asyncio.to_thread(settings_store.update, config, None, finish)
+    _spawn(_refresh_and_push())
+    return await asyncio.to_thread(_profile)
+
+
+@app.post("/api/remote/system/test-tv", dependencies=[Depends(require_remote_secret)])
+async def test_tv() -> dict:
+    """Fernseher einschalten und etwas sagen - prueft HDMI-CEC und Ton."""
+    from app import tts
+
+    cfg = get_config()
+    await asyncio.to_thread(tv_power.power_on, cfg)
+    await asyncio.to_thread(audio_control.ensure_hdmi_output)
+    text = f"Hallo! Hier ist {cfg.dashboard.title}. Wenn du mich hörst, ist der Ton richtig eingestellt."
+    _spawn(asyncio.to_thread(tts.speak, cfg, text))
+    return {"ok": True}
+
+
+@app.get("/api/remote/apps", dependencies=[Depends(require_remote_secret)])
+async def get_apps() -> dict:
+    return {"apps": await asyncio.to_thread(apps_registry.public_list)}
+
+
+@app.post("/api/remote/apps/{app_id}", dependencies=[Depends(require_remote_secret)])
+async def save_app(app_id: str, request: Request) -> dict:
+    body = await request.json()
+    enabled = body.get("enabled")
+    values = body.get("values") if isinstance(body.get("values"), dict) else {}
+    try:
+        await asyncio.to_thread(apps_registry.save, app_id, None if enabled is None else bool(enabled), values)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    _spawn(_refresh_and_push())
+    listing = await asyncio.to_thread(apps_registry.public_list)
+    return next(item for item in listing if item["id"] == app_id)
+
+
+@app.post("/api/remote/apps/{app_id}/test", dependencies=[Depends(require_remote_secret)])
+async def test_app(app_id: str) -> dict:
+    try:
+        message = await asyncio.to_thread(apps_registry.test, app_id)
+    except Exception as exc:  # noqa: BLE001 - Fehlermeldung geht an die Fernbedienung
+        raise HTTPException(status_code=400, detail=f"Hat nicht geklappt: {exc}") from exc
+    return {"ok": True, "message": message}
 
 
 # ---------- WebSocket zum Kiosk ----------
