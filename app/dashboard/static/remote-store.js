@@ -123,7 +123,7 @@ function renderStore() {
     ...categories.map((category) =>
       h(
         "div",
-        null,
+        { class: "store-cat" },
         h("div", { class: "section-label" }, category.name),
         h(
           "div",
