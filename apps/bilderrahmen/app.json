@@ -1,0 +1,20 @@
+{
+  "name": "Bilderrahmen",
+  "color": "255, 159, 10",
+  "category": "Zuhause",
+  "summary": "Deine Fotos als Diashow – startet von selbst, wenn der Fernseher an ist und nichts läuft.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [
+    { "key": "folder", "label": "Ordner mit Fotos auf dem Pi", "type": "text", "placeholder": "/mnt/platte/Fotos" },
+    { "key": "idle_minutes", "label": "Von selbst starten nach … Minuten ohne Wiedergabe (0 = nie)", "type": "number", "placeholder": "15" },
+    { "key": "seconds", "label": "Sekunden pro Foto", "type": "number", "placeholder": "12" },
+    { "key": "hours", "label": "Nur zu diesen Zeiten von selbst starten", "type": "text", "placeholder": "09:00-23:00" }
+  ],
+  "guide": [
+    "Fotos (JPG, PNG, WebP) in einen Ordner auf dem Pi oder der angeschlossenen Platte legen – Unterordner werden mitgenommen. Am einfachsten über die Jellyfin-Freigabe oder einen USB-Stick.",
+    "Den Pfad oben eintragen, z.&nbsp;B. <b>/mnt/platte/Fotos</b>, und speichern.",
+    "In der App <b>Diashow starten</b> – oder warten: Ist der Fernseher an und läuft nichts, startet sie nach der eingestellten Zeit von selbst (außer nachts, siehe Zeiten).",
+    "Sobald du etwas abspielst, verschwindet die Diashow wieder."
+  ]
+}

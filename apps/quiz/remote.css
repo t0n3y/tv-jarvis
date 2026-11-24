@@ -1,0 +1,9 @@
+#view-app-quiz [data-ref="setup"],
+#view-app-quiz .qz-running { display: flex; flex-direction: column; gap: 20px; }
+#view-app-quiz [data-ref="setup"].hidden,
+#view-app-quiz .qz-running.hidden { display: none; }
+#view-app-quiz .qz-code { font-family: var(--font-rounded); font-size: 40px; font-weight: 700; letter-spacing: 2px; }
+#view-app-quiz .qz-players { display: flex; flex-wrap: wrap; gap: 8px; }
+#view-app-quiz .qz-chip { padding: 6px 12px; border-radius: 99px; background: var(--fill-3); font-size: 15px; font-weight: 500; }
+#view-app-quiz .qz-empty { font-size: 15px; color: var(--text-2); }
+#view-app-quiz .qz-end { color: var(--danger); }

@@ -1,0 +1,24 @@
+<div data-ref="setup">
+  <div class="card stack">
+    <div class="kicker">Fragen pro Spiel</div>
+    <div class="segmented seg-wide" data-ref="rounds">
+      <button class="seg-btn" data-value="5" type="button">5</button>
+      <button class="seg-btn active" data-value="10" type="button">10</button>
+      <button class="seg-btn" data-value="15" type="button">15</button>
+      <button class="seg-btn" data-value="20" type="button">20</button>
+    </div>
+    <button class="btn btn-primary btn-block" data-ref="new" type="button">Neues Spiel</button>
+  </div>
+  <p class="hint">Der Fernseher zeigt einen QR-Code. Mitspieler brauchen dasselbe WLAN – oder du öffnest die Fernbedienung über deine Fernzugriff-Adresse, dann geht es auch von unterwegs.</p>
+</div>
+
+<div data-ref="running" class="hidden qz-running">
+  <div class="card stack">
+    <div class="kicker" data-ref="phase"></div>
+    <div class="qz-code" data-ref="code"></div>
+    <div class="qz-players" data-ref="players"></div>
+  </div>
+  <button class="btn btn-primary btn-block" data-ref="start" type="button">Los geht’s</button>
+  <button class="btn btn-ghost btn-block" data-ref="skip" type="button">Weiter</button>
+  <button class="btn btn-ghost btn-block qz-end" data-ref="end" type="button">Spiel beenden</button>
+</div>

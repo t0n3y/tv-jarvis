@@ -15,7 +15,7 @@ import logging
 from dataclasses import asdict
 from typing import Callable
 
-from app import kiosk_media, radio, tts, tv_power
+from app import kiosk_media, plugins, radio, tts, tv_power
 from app.briefing import build_briefing
 from app.config import ROOT_DIR, get_config
 
@@ -47,8 +47,18 @@ def main(on_state_written: Callable[[], None] | None = None) -> None:
     if on_state_written:
         on_state_written()  # Kiosk zeigt die frischen Daten, waehrend vorgelesen wird
 
+    # Eigene Apps (apps/<id>/server.py: briefing()) duerfen je einen Satz
+    # beisteuern - vor dem Abschiedsgruss
+    speech = briefing.speech_text
+    extra = plugins.briefing_texts()
+    if extra:
+        closing = "Ich wünsche dir einen schönen Tag!"
+        head, sep, tail = speech.rpartition(closing)
+        block = "\n\n".join(extra)
+        speech = f"{head}{block}\n\n{sep}{tail}" if sep else f"{speech}\n\n{block}"
+
     logger.info("Lese Briefing vor ...")
-    tts.speak(cfg, briefing.speech_text)
+    tts.speak(cfg, speech)
 
     logger.info("Starte Radio ...")
     radio.start(cfg)

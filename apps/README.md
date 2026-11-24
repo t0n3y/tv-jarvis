@@ -176,6 +176,9 @@ def test() -> str:            # optional: Knopf „Verbindung testen“ im App S
 | `load(name, standard)` / `save(daten, name)` | JSON-Speicher in `data/apps/<id>/` |
 | `await show_on_tv("tv.html")` / `await close_tv()` | Seite auf dem Fernseher öffnen/schließen (auch `https://…`) |
 | `say("Text")` | Mit der Stimme über den Fernseher sprechen (blockiert; in `async`-Funktionen `await asyncio.to_thread(ctx.say, "…")`) |
+| `enabled()` | Ist die App im App Store eingeschaltet? |
+| `tv_is_on()` / `busy()` | Ist der Fernseher an? Läuft gerade etwas (Video, Radio, Platte, Stream, TV-Browser)? |
+| `await power(True/False)` | Fernseher ein/aus – wie der Knopf in der Fernbedienung |
 | `config` | Gesamte Konfiguration, z. B. `ctx.config.dashboard.title`, `ctx.config.location.city` |
 | `log` | Logger, zu lesen mit `journalctl -u dashboard.service` |
 | `data_dir` / `dir` | Speicherordner / App-Ordner als `Path` |
@@ -186,11 +189,78 @@ gehören in normale `def`-Funktionen. FastAPI führt die automatisch im
 Hintergrund aus. Hat `server.py` einen Fehler, läuft der Rest weiter. Die
 App zeigt dann im App Store „Fehler“, Details stehen im Log.
 
+## Haken: Dashboard, Wecker, Hintergrund, öffentlicher Bereich
+
+Alle optional – einfach die Funktion in `server.py` anlegen:
+
+```python
+def dashboard() -> dict | None:
+    """Kachel auf dem Fernseher-Dashboard (rechte Spalte, jede Minute neu).
+    None = gerade keine Kachel."""
+    return {
+        "title": "Abfahrten",
+        "meta": "Hauptbahnhof",                 # klein, rechts oben
+        "empty": "Gerade nichts",               # Text, wenn items leer ist
+        "items": [{"time": "7:12", "text": "RE 78 → Bielefeld", "note": "+3", "strike": False}],
+    }
+
+
+def briefing() -> str | None:
+    """Ein Satz für die Morgen-Ansage des Weckers (vor dem Abschiedsgruß)."""
+    return "Heute steht Milch auf der Einkaufsliste."
+
+
+async def background():
+    """Läuft dauerhaft ab dem Start des Dienstes. Stürzt sie ab, startet sie
+    nach einer Minute neu. Selbst prüfen, ob die App an ist."""
+    while True:
+        await asyncio.sleep(30)
+        if ctx.enabled() and ctx.tv_is_on() and not ctx.busy():
+            ...
+
+
+public_router = APIRouter()   # /api/apps/<id>/public/... OHNE Passwort
+
+
+@public_router.post("/join")
+async def join(request: Request): ...
+```
+
+`public_router` ist für Gäste gedacht, die das Passwort nicht kennen, etwa die
+Mitspieler beim [Quiz](quiz). Alles darunter kann **jeder im Netz** aufrufen,
+also nur Unkritisches dort hinein. Eine passende Seite legst du als normale
+Datei in den Ordner (z. B. `play.html`), sie ist unter `/apps/<id>/play.html`
+erreichbar.
+
+**Private Dateien:** Dateien, die mit `_` beginnen (z. B. `_fragen.json`),
+liefert der Server nie aus. `server.py` liest sie über `ctx.dir / "_fragen.json"`.
+
+**Python-Pakete:** Eine `requirements.txt` im App-Ordner wird beim Installieren
+(per Link und beim Installer) automatisch mit `pip` installiert.
+
+## Beispiele im Projekt
+
+| App | Zeigt |
+| --- | --- |
+| [`pinnwand`](pinnwand) | Grundgerüst: Ansicht, TV-Seite, API, Speicher |
+| [`durchsage`](durchsage) | Stimme (`ctx.say`), Fernseher einschalten, Radio pausieren |
+| [`abfahrten`](abfahrten) | Externe API, Dashboard-Kachel, Satz im Wecker |
+| [`einkaufsliste`](einkaufsliste) | Gemeinsame Daten, Dashboard-Kachel |
+| [`schlaf_timer`](schlaf_timer) | `background()`, Lautstärke, Fernseher ausschalten |
+| [`bilderrahmen`](bilderrahmen) | `background()` mit `busy()`, Diashow auf dem Fernseher |
+| [`wlan_lampen`](wlan_lampen) | Eigenes Python-Paket (`requirements.txt`), Geheimnisse |
+| [`quiz`](quiz) | `public_router` für Gäste, private Datei, Spielablauf |
+
 ## Weitergeben
 
-Einfach den Ordner teilen, z. B. als eigenes Git-Repo. Andere legen ihn nach
-`apps/`, starten den Dienst neu und schalten die App im App Store ein. Eine
-gute App:
+Am einfachsten als eigenes Git-Repo mit `app.json` ganz oben, z. B. auf GitHub.
+Andere fügen den Link in der Fernbedienung unter **App Store → App hinzufügen**
+ein. Der Pi lädt die App, installiert ihre Pakete und startet bei Bedarf neu.
+Die Ordner-ID ist `"id"` aus `app.json` oder sonst der Repo-Name. So
+installierte Apps lassen sich im App Store auch wieder entfernen. Ohne Git
+geht es auch: Ordner nach `apps/` kopieren und den Dienst neu starten.
+
+Eine gute App:
 
 - hat eine `guide` mit allen Schritten, die man außerhalb erledigen muss
   (Konten, Schlüssel, Geräte),

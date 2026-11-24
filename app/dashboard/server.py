@@ -49,6 +49,7 @@ from app import (
     schedule_store,
     school_settings,
     settings_store,
+    system_tools,
     tv_power,
     tv_browser,
     twitch,
@@ -1815,7 +1816,105 @@ def _include_app_router(router, app_id: str) -> None:
     app.include_router(router, prefix=f"/api/apps/{app_id}", dependencies=[Depends(require_local_or_remote_secret)])
 
 
-plugins.load_servers(_include_app_router)
+def _include_app_public_router(router, app_id: str) -> None:
+    # Bewusst ohne Passwort (z.B. Mitspieler-Handys beim Quiz) - siehe apps/README.md
+    app.include_router(router, prefix=f"/api/apps/{app_id}/public")
+
+
+plugins.load_servers(_include_app_router, _include_app_public_router)
+
+
+def _media_busy() -> bool:
+    return bool(
+        youtube_now_playing.get("playing")
+        or jellyfin_now_playing.get("playing")
+        or twitch_now_playing.get("playing")
+        or vinyl_now_playing.get("playing")
+        or radio.is_playing()
+        or tv_browser.is_running()
+    )
+
+
+plugins.HOST["busy"] = _media_busy
+
+
+@app.on_event("startup")
+async def _start_apps_and_restore() -> None:
+    plugins.start_background_tasks()
+    _spawn(asyncio.to_thread(system_tools.restore_after_restart))
+
+
+@app.get("/api/apps-dashboard", dependencies=[Depends(require_local_or_remote_secret)])
+async def apps_dashboard() -> dict:
+    """Kacheln eigener Apps fuer das Fernseher-Dashboard."""
+    return {"panels": await asyncio.to_thread(plugins.dashboard_panels)}
+
+
+def _system_error(exc: Exception) -> HTTPException:
+    return HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/remote/system/restart", dependencies=[Depends(require_remote_secret)])
+async def system_restart() -> dict:
+    system_tools.restart()
+    return {"ok": True}
+
+
+@app.get("/api/remote/system/update", dependencies=[Depends(require_remote_secret)])
+async def system_update_check() -> dict:
+    return {**await asyncio.to_thread(system_tools.check_update), "state": system_tools.update_state}
+
+
+@app.post("/api/remote/system/update", dependencies=[Depends(require_remote_secret)])
+async def system_update_start() -> dict:
+    try:
+        await asyncio.to_thread(system_tools.start_update)
+    except system_tools.SystemError_ as exc:
+        raise _system_error(exc) from exc
+    return {"state": system_tools.update_state}
+
+
+@app.get("/api/remote/system/update/state", dependencies=[Depends(require_remote_secret)])
+async def system_update_state() -> dict:
+    return {"state": system_tools.update_state}
+
+
+@app.get("/api/remote/system/backup", dependencies=[Depends(require_remote_secret)])
+async def system_backup(secrets: bool = False) -> Response:
+    content = await asyncio.to_thread(system_tools.export_backup, secrets)
+    name = f"rpitv-backup-{time.strftime('%Y-%m-%d')}.zip"
+    return Response(content, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.post("/api/remote/system/backup", dependencies=[Depends(require_remote_secret)])
+async def system_restore(request: Request) -> dict:
+    content = await request.body()
+    if len(content) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Die Datei ist zu groß für ein Backup")
+    try:
+        count = await asyncio.to_thread(system_tools.import_backup, content)
+    except system_tools.SystemError_ as exc:
+        raise _system_error(exc) from exc
+    system_tools.restart(delay=1.5)
+    return {"ok": True, "files": count}
+
+
+@app.post("/api/remote/apps/install", dependencies=[Depends(require_remote_secret)])
+async def install_app(request: Request) -> dict:
+    body = await request.json()
+    try:
+        return await asyncio.to_thread(system_tools.install_app, str(body.get("url") or ""))
+    except system_tools.SystemError_ as exc:
+        raise _system_error(exc) from exc
+
+
+@app.delete("/api/remote/apps/{app_id}", dependencies=[Depends(require_remote_secret)])
+async def remove_app(app_id: str) -> dict:
+    try:
+        await asyncio.to_thread(system_tools.remove_app, app_id)
+    except system_tools.SystemError_ as exc:
+        raise _system_error(exc) from exc
+    return {"ok": True}
 
 
 @app.get("/apps/{app_id}/{name}")

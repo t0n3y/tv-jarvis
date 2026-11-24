@@ -67,6 +67,13 @@ außerdem „Verbindung testen“.
 | **ToDos aus Notizen** | Checkliste aus der Notizen-App | iPhone-Kurzbefehl |
 | **Fernzugriff** | Fernbedienung von unterwegs mit https | Cloudflare-Konto + Domain |
 | **Pinnwand** | Beispiel-App: Nachricht vom Handy groß auf den Fernseher | nichts |
+| **Durchsage** | Tippen statt rufen: Der Fernseher spricht deine Nachricht | nichts |
+| **Abfahrten** | Nächste Busse/Bahnen auf dem Dashboard und im Wecker | nichts (Transitous, kostenlos) |
+| **Bilderrahmen** | Fotos als Diashow, startet von selbst, wenn nichts läuft | Foto-Ordner auf dem Pi |
+| **Einkaufsliste** | Gemeinsame Liste für den Haushalt, auch auf dem Dashboard | nichts |
+| **Schlaf-Timer** | Nach X Minuten leiser werden, dann alles aus | nichts |
+| **WLAN-Lampen** | LSC-/Tuya-/Smart-Life-Lampen: an/aus, Helligkeit, Farben, Szenen | Tuya-Entwicklerkonto (einmalig) |
+| **Quiz** | Quizabend: Fragen auf dem Fernseher, Antworten per Handy | nichts |
 
 Apps, die aus sind, verschwinden vom Homescreen der Fernbedienung und vom
 Dashboard auf dem Fernseher.
@@ -100,14 +107,23 @@ sudo systemctl restart dashboard.service
 ```
 
 Alles Weitere – Bausteine, `RPiTV.app()` im Browser, `ctx` im Server – steht in
-[apps/README.md](apps/README.md). Weitergeben heißt: Ordner teilen, andere
-legen ihn nach `apps/`.
+[apps/README.md](apps/README.md). Weitergeben: als Git-Repo, andere fügen den
+Link im App Store unter **App hinzufügen** ein.
 
-## Aktualisieren
+## Aktualisieren, Backup, Neustart
 
-Den Installationsbefehl einfach noch einmal ausführen. Er lädt die neue
-Version und behält alle Einstellungen. Hast du selbst Dateien geändert,
-überspringt er das Update.
+In der Fernbedienung unter **Einstellungen → System**:
+
+- **Updates**: zeigt neue Versionen mit den Änderungen an und installiert sie
+  per Knopfdruck. Der Pi startet danach kurz neu, Fernseher und Radio laufen
+  weiter. Hast du selbst Dateien im Projekt geändert, aktualisiert er nicht
+  automatisch.
+- **Backup herunterladen / einspielen**: Einstellungen, App-Daten und Listen
+  als eine ZIP-Datei – auf Wunsch mit Zugangsdaten. Ideal vor einer
+  Neuinstallation.
+- **Neu starten**: startet den Dienst neu (z. B. nach einer neuen App).
+
+Alternativ den Installationsbefehl noch einmal ausführen.
 
 ## Fehlersuche
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Bilderrahmen</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; cursor: none; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    background: #000 center / contain no-repeat;
+    opacity: 0;
+    transition: opacity 1.6s ease;
+  }
+  .slide.on { opacity: 1; }
+  /* Unscharfer Hintergrund aus demselben Bild fuellt die Raender bei Hochformat */
+  .slide::before {
+    content: "";
+    position: absolute;
+    inset: -40px;
+    z-index: -1;
+    background: inherit;
+    background-size: cover;
+    filter: blur(40px) brightness(0.45);
+  }
+  .slide.on.zoom { animation: drift 30s ease-out forwards; }
+  @keyframes drift { from { transform: scale(1); } to { transform: scale(1.06); } }
+  #clock {
+    position: absolute;
+    right: 4vh;
+    bottom: 3vh;
+    font: 600 4.4vh/1 -apple-system, "Inter", "Helvetica Neue", sans-serif;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 0.3vh 2vh rgba(0, 0, 0, 0.6);
+    font-variant-numeric: tabular-nums;
+  }
+  #empty { position: absolute; inset: 0; display: grid; place-items: center; color: #888; font: 3vh sans-serif; }
+</style>
+</head>
+<body>
+<div class="slide" id="a"></div>
+<div class="slide" id="b"></div>
+<div id="clock"></div>
+<div id="empty" hidden>Keine Fotos gefunden</div>
+<script>
+  const API = "/api/apps/bilderrahmen";
+  const slides = [document.getElementById("a"), document.getElementById("b")];
+  let index = 0;
+  let front = 0;
+  let info = { count: 0, seconds: 12 };
+
+  function clock() {
+    const now = new Date();
+    document.getElementById("clock").textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function show() {
+    if (!info.count) return;
+    const url = `${API}/photo/${index % info.count}`;
+    const img = new Image();
+    img.onload = () => {
+      const next = slides[1 - front];
+      next.style.backgroundImage = `url("${url}")`;
+      next.classList.remove("zoom");
+      void next.offsetWidth;
+      next.classList.add("on", "zoom");
+      slides[front].classList.remove("on");
+      front = 1 - front;
+    };
+    img.src = url;
+    index += 1;
+  }
+
+  async function start() {
+    info = await fetch(`${API}/info`).then((r) => r.json());
+    document.getElementById("empty").hidden = info.count > 0;
+    index = Math.floor(Math.random() * Math.max(1, info.count));
+    show();
+    setInterval(show, info.seconds * 1000);
+  }
+
+  clock();
+  setInterval(clock, 10000);
+  start();
+</script>
+</body>
+</html>

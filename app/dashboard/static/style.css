@@ -231,6 +231,15 @@ header {
 }
 
 .side-stack .panel { flex: 1; }
+.side-stack .app-panel { flex: 0.8; }
+.app-stack .app-panel { flex: 1; }
+/* Hinweis (Verspaetung, Gleis) in App-Kacheln in derselben Zeile */
+.app-panel .list .note { display: inline; margin: 0 0 0 1.2vh; }
+/* Nicht zusammenquetschen: was nicht passt, faellt unten weg */
+.app-panel .list li { flex: none; }
+.grid > * { min-width: 0; }
+.app-panel .list li .item-text { display: block; white-space: nowrap; text-overflow: ellipsis; }
+.app-panel .panel-head h2 { color: rgb(var(--app-rgb, 255, 255, 255)); }
 .side-stack .plan-panel { flex: 1.3; }
 
 .panel {

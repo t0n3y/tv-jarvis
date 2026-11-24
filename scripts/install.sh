@@ -79,6 +79,10 @@ main() {
   [[ -x .venv/bin/python ]] || python3 -m venv .venv
   .venv/bin/pip install --quiet --upgrade pip
   .venv/bin/pip install --quiet -r requirements.txt
+  # Apps mit eigenen Python-Paketen (apps/<id>/requirements.txt)
+  for req in apps/*/requirements.txt; do
+    [[ -f "$req" ]] && .venv/bin/pip install --quiet -r "$req" || true
+  done
 
   step "Einstellungen"
   mkdir -p data

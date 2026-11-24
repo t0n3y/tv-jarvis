@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Quiz</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root { --a: #ff3b30; --b: #007aff; --c: #ffcc00; --d: #34c759; --bg-2: #1c1c1e; --text-2: rgba(235, 235, 245, 0.6); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #fff; cursor: none;
+    font-family: -apple-system, "Inter", "Helvetica Neue", system-ui, sans-serif; }
+  .screen { position: absolute; inset: 0; display: none; flex-direction: column; padding: 6vh 6vw; box-sizing: border-box; }
+  .screen.on { display: flex; }
+  h1 { margin: 0; font-size: 7vh; letter-spacing: -0.02em; }
+  .muted { color: var(--text-2); }
+
+  /* Warteraum */
+  #lobby { flex-direction: row; gap: 6vw; align-items: center; }
+  #qr { padding: 2.4vh; border-radius: 3vh; background: #fff; }
+  #qr img, #qr canvas { display: block; width: 42vh !important; height: 42vh !important; }
+  .lobby-text { display: flex; flex-direction: column; gap: 3vh; min-width: 0; }
+  .code { font-size: 5vh; font-weight: 700; letter-spacing: 0.08em; }
+  .url { font-size: 2.6vh; word-break: break-all; }
+  .players { display: flex; flex-wrap: wrap; gap: 1.4vh; }
+  .chip { padding: 1.2vh 2.4vh; border-radius: 99px; background: var(--bg-2); font-size: 3vh; font-weight: 600; animation: pop 0.4s; }
+  @keyframes pop { from { transform: scale(0.6); opacity: 0; } }
+
+  /* Frage */
+  .q-head { display: flex; justify-content: space-between; font-size: 2.8vh; }
+  .q-text { flex: 1; display: grid; place-items: center; text-align: center; font-size: 6.2vh; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; padding: 0 4vw; }
+  .bar { height: 1.2vh; border-radius: 1vh; background: var(--bg-2); overflow: hidden; margin-bottom: 3vh; }
+  .bar span { display: block; height: 100%; background: #fff; transition: width 0.25s linear; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh; }
+  .answer { display: flex; align-items: center; gap: 2.4vh; min-height: 13vh; padding: 0 3vh; border-radius: 2.4vh; font-size: 3.8vh; font-weight: 600; transition: opacity 0.4s, transform 0.4s; }
+  .answer b { display: grid; place-items: center; width: 7vh; height: 7vh; border-radius: 1.6vh; background: rgba(0, 0, 0, 0.25); font-size: 3.6vh; }
+  .answer .count { margin-left: auto; font-size: 3vh; opacity: 0.85; }
+  .answer:nth-child(1) { background: var(--a); }
+  .answer:nth-child(2) { background: var(--b); }
+  .answer:nth-child(3) { background: var(--c); color: #000; }
+  .answer:nth-child(4) { background: var(--d); color: #000; }
+  .reveal .answer.wrong { opacity: 0.22; }
+  .reveal .answer.right { transform: scale(1.03); box-shadow: 0 0 0 0.6vh #fff; }
+  .foot { margin-top: 3vh; font-size: 2.6vh; text-align: center; }
+
+  /* Rangliste */
+  .board { display: flex; flex-direction: column; gap: 1.4vh; margin-top: 4vh; }
+  .row { display: flex; align-items: center; gap: 3vh; padding: 2vh 3vh; border-radius: 2vh; background: var(--bg-2); font-size: 3.6vh; }
+  .row .pos { width: 5vh; color: var(--text-2); font-weight: 700; }
+  .row .name { flex: 1; font-weight: 600; }
+  .row .plus { color: #34c759; font-size: 2.8vh; }
+  .row .pts { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .row.first { background: linear-gradient(90deg, #b8860b, #1c1c1e 70%); }
+</style>
+</head>
+<body>
+<section class="screen" id="lobby">
+  <div id="qr"></div>
+  <div class="lobby-text">
+    <h1>Quiz – mach mit!</h1>
+    <div class="muted" style="font-size:3vh">QR-Code mit dem Handy scannen, Namen eingeben, fertig.</div>
+    <div class="code" id="code"></div>
+    <div class="url muted" id="url"></div>
+    <div class="players" id="players"></div>
+  </div>
+</section>
+
+<section class="screen" id="question">
+  <div class="q-head"><span id="q-num"></span><span class="muted" id="q-cat"></span></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="bar"><span id="bar"></span></div>
+  <div class="answers" id="answers"></div>
+  <div class="foot muted" id="foot"></div>
+</section>
+
+<section class="screen" id="final">
+  <h1>Endstand</h1>
+  <div class="board" id="board"></div>
+</section>
+
+<script>
+  const LETTERS = ["A", "B", "C", "D"];
+  let qrFor = "";
+
+  function show(id) {
+    document.querySelectorAll(".screen").forEach((el) => el.classList.toggle("on", el.id === id));
+  }
+
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function lobby(state) {
+    show("lobby");
+    if (qrFor !== state.join_url) {
+      qrFor = state.join_url;
+      const box = document.getElementById("qr");
+      box.replaceChildren();
+      if (window.QRCode) new QRCode(box, { text: state.join_url, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M });
+      else box.style.display = "none";
+    }
+    document.getElementById("code").textContent = `Code ${state.code}`;
+    document.getElementById("url").textContent = state.join_url;
+    document.getElementById("players").replaceChildren(...state.players.map((name) => el("span", "chip", name)));
+  }
+
+  function question(state) {
+    show("question");
+    const q = state.question;
+    const reveal = state.phase === "reveal";
+    document.getElementById("question").classList.toggle("reveal", reveal);
+    document.getElementById("q-num").textContent = `Frage ${q.number} von ${q.total}`;
+    document.getElementById("q-cat").textContent = q.cat;
+    document.getElementById("q-text").textContent = q.text;
+    document.getElementById("bar").style.width = `${(state.remaining / state.seconds) * 100}%`;
+    document.getElementById("answers").replaceChildren(
+      ...q.answers.map((text, i) => {
+        const node = el("div", `answer${reveal ? (i === q.correct ? " right" : " wrong") : ""}`);
+        node.append(el("b", "", LETTERS[i]), el("span", "", text));
+        if (reveal) node.append(el("span", "count", `${q.counts[i]}×`));
+        return node;
+      })
+    );
+    if (reveal) {
+      const top = state.ranking.slice(0, 3).map((p) => `${p.name} ${p.score}`).join("   ·   ");
+      document.getElementById("foot").textContent = top;
+    } else {
+      document.getElementById("foot").textContent = `${state.answered} von ${state.players.length} haben geantwortet`;
+    }
+  }
+
+  function final(state) {
+    show("final");
+    document.getElementById("board").replaceChildren(
+      ...state.ranking.slice(0, 8).map((p, i) => {
+        const row = el("div", `row${i === 0 ? " first" : ""}`);
+        row.append(el("span", "pos", `${i + 1}.`), el("span", "name", p.name), el("span", "pts", `${p.score}`));
+        return row;
+      })
+    );
+  }
+
+  async function tick() {
+    try {
+      const state = await fetch("/api/apps/quiz/tv").then((r) => r.json());
+      if (state.phase === "lobby") lobby(state);
+      else if (state.phase === "question" || state.phase === "reveal") question(state);
+      else if (state.phase === "final") final(state);
+    } catch (err) {
+      // naechster Versuch gleich
+    }
+    setTimeout(tick, 400);
+  }
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<title>Quiz</title>
+<style>
+  :root { --a: #ff3b30; --b: #007aff; --c: #ffcc00; --d: #34c759; --bg-2: #1c1c1e; --fill: rgba(118, 118, 128, 0.24); --text-2: rgba(235, 235, 245, 0.6); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #000; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  main { max-width: 520px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+    min-height: 100vh; display: flex; flex-direction: column; gap: 16px; }
+  h1 { margin: 0; font-size: 34px; letter-spacing: -0.4px; }
+  .muted { color: var(--text-2); }
+  .card { padding: 16px; border-radius: 22px; background: var(--bg-2); }
+  input { width: 100%; height: 52px; padding: 0 16px; border: 0; border-radius: 14px; background: var(--fill); color: #fff; font-size: 18px; outline: none; }
+  button { font: inherit; border: 0; }
+  .primary { width: 100%; height: 54px; border-radius: 99px; background: #0a84ff; color: #fff; font-size: 18px; font-weight: 600; }
+  .primary:disabled { opacity: 0.4; }
+  .grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 55vh; }
+  .choice { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 12px; border-radius: 22px;
+    color: #fff; font-size: 18px; font-weight: 600; text-align: center; transition: transform 0.15s, opacity 0.3s; }
+  .choice b { font-size: 40px; }
+  .choice:active { transform: scale(0.96); }
+  .choice:nth-child(1) { background: var(--a); }
+  .choice:nth-child(2) { background: var(--b); }
+  .choice:nth-child(3) { background: var(--c); color: #000; }
+  .choice:nth-child(4) { background: var(--d); color: #000; }
+  .grid.locked .choice:not(.mine) { opacity: 0.25; }
+  .big { flex: 1; display: grid; place-content: center; gap: 10px; text-align: center; }
+  .big .emoji { font-size: 72px; }
+  .big .title { font-size: 28px; font-weight: 700; }
+  .top { display: flex; justify-content: space-between; font-size: 15px; }
+  .error { color: #ff453a; min-height: 20px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section id="join">
+    <h1>Quiz</h1>
+    <p class="muted">Gib den Code vom Fernseher und deinen Namen ein.</p>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <input id="code" inputmode="numeric" maxlength="4" placeholder="Code" autocomplete="off" />
+      <input id="name" maxlength="16" placeholder="Dein Name" autocomplete="nickname" />
+      <button class="primary" id="go">Mitspielen</button>
+      <div class="error" id="error"></div>
+    </div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top"><span id="me"></span><span id="score" class="muted"></span></div>
+    <div id="view"></div>
+  </section>
+</main>
+<script>
+  const API = "/api/apps/quiz/public";
+  const LETTERS = ["A", "B", "C", "D"];
+  const params = new URLSearchParams(location.search);
+  const $ = (id) => document.getElementById(id);
+  let token = "";
+  let lastKey = "";
+
+  try {
+    const saved = JSON.parse(localStorage.getItem("quizPlayer") || "null");
+    if (saved && saved.code === params.get("c")) token = saved.token;
+    if (saved && saved.name) $("name").value = saved.name;
+  } catch (err) {
+    // ohne Speicher geht es auch
+  }
+  $("code").value = params.get("c") || "";
+
+  async function post(path, body) {
+    const resp = await fetch(`${API}/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.detail || "Hat nicht geklappt");
+    return data;
+  }
+
+  $("go").addEventListener("click", async () => {
+    $("error").textContent = "";
+    $("go").disabled = true;
+    try {
+      const data = await post("join", { code: $("code").value.trim(), name: $("name").value.trim() });
+      token = data.token;
+      try {
+        localStorage.setItem("quizPlayer", JSON.stringify({ code: $("code").value.trim(), token, name: data.name }));
+      } catch (err) {
+        // egal
+      }
+      startGame();
+    } catch (err) {
+      $("error").textContent = err.message;
+    } finally {
+      $("go").disabled = false;
+    }
+  });
+
+  function big(emoji, title, text) {
+    const box = document.createElement("div");
+    box.className = "big";
+    box.innerHTML = `<div class="emoji"></div><div class="title"></div><div class="muted"></div>`;
+    box.children[0].textContent = emoji;
+    box.children[1].textContent = title;
+    box.children[2].textContent = text || "";
+    return box;
+  }
+
+  function render(state) {
+    $("me").textContent = state.name || "";
+    $("score").textContent = state.score !== undefined ? `${state.score} Punkte${state.rank ? ` · Platz ${state.rank}` : ""}` : "";
+    const q = state.question;
+    // Nur neu zeichnen, wenn sich etwas Sichtbares aendert (sonst flackern Knoepfe)
+    const key = [state.phase, q && q.number, state.answer].join("|");
+    if (key === lastKey) return;
+    lastKey = key;
+    const view = $("view");
+    if (state.phase === "none") view.replaceChildren(big("👋", "Spiel beendet", "Danke fürs Mitspielen!"));
+    else if (state.phase === "lobby") view.replaceChildren(big("⏳", "Du bist dabei!", `Gleich geht's los – ${state.players} im Spiel.`));
+    else if (state.phase === "final") view.replaceChildren(big(state.rank === 1 ? "🏆" : "🎉", `Platz ${state.rank}`, `${state.score} Punkte`));
+    else if (state.phase === "reveal") {
+      const right = state.answer === q.correct;
+      view.replaceChildren(big(right ? "✅" : state.answer === null ? "⌛" : "❌", right ? `+${state.gained}` : "Leider falsch", `Richtig: ${q.answers[q.correct]}`));
+    } else if (state.phase === "question") {
+      const grid = document.createElement("div");
+      grid.className = `grid${state.answer !== null ? " locked" : ""}`;
+      q.answers.forEach((text, i) => {
+        const button = document.createElement("button");
+        button.className = `choice${state.answer === i ? " mine" : ""}`;
+        button.innerHTML = "<b></b><span></span>";
+        button.children[0].textContent = LETTERS[i];
+        button.children[1].textContent = text;
+        button.addEventListener("click", async () => {
+          if (state.answer !== null) return;
+          try {
+            await post("answer", { token, choice: i });
+            state.answer = i;
+            lastKey = "";
+            render(state);
+          } catch (err) {
+            // zu spaet o.ae. - der naechste Abruf zeigt den Stand
+          }
+        });
+        grid.append(button);
+      });
+      const title = document.createElement("p");
+      title.style.margin = "0";
+      title.style.fontSize = "20px";
+      title.style.fontWeight = "600";
+      title.textContent = q.text;
+      view.replaceChildren(title, grid);
+    }
+  }
+
+  async function poll() {
+    try {
+      const resp = await fetch(`${API}/state?token=${encodeURIComponent(token)}`);
+      if (resp.status === 404) {
+        token = "";
+        $("game").hidden = true;
+        $("join").hidden = false;
+        return;
+      }
+      render(await resp.json());
+    } catch (err) {
+      // kurz weg - weiter versuchen
+    }
+    setTimeout(poll, 700);
+  }
+
+  function startGame() {
+    $("join").hidden = true;
+    $("game").hidden = false;
+    poll();
+  }
+
+  if (token) startGame();
+</script>
+</body>
+</html>

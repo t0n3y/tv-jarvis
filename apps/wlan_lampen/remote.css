@@ -1,0 +1,29 @@
+#view-app-wlan_lampen { --tint-ink: #000; }
+#view-app-wlan_lampen .wl-master { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#view-app-wlan_lampen .wl-scenes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -8px; }
+#view-app-wlan_lampen .wl-scenes .btn { min-height: 44px; padding: 0 16px; font-size: 16px; }
+#view-app-wlan_lampen .wl-white { accent-color: #ffd28a; }
+#view-app-wlan_lampen .wl-colors { display: flex; flex-wrap: wrap; gap: 10px; }
+
+#view-app-wlan_lampen .wl-color {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+#view-app-wlan_lampen .wl-color:active { transform: scale(0.9); }
+
+#view-app-wlan_lampen .wl-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 0 6px 0 4px;
+  border-radius: 50%;
+  background: var(--fill);
+}
+
+#view-app-wlan_lampen .wl-row.on .wl-dot { background: rgb(var(--tint)); box-shadow: 0 0 12px rgba(var(--tint), 0.8); }
+#view-app-wlan_lampen .store-row + .store-row::before { left: 44px; }

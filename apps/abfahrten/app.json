@@ -1,0 +1,20 @@
+{
+  "name": "Abfahrten",
+  "color": "0, 122, 255",
+  "category": "Unterwegs",
+  "summary": "Die nächsten Busse und Bahnen deiner Haltestelle – auf dem Dashboard, in der App und im Wecker.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "homepage": "https://transitous.org",
+  "fields": [
+    { "key": "walk_minutes", "label": "Fußweg zur Haltestelle in Minuten", "type": "number", "placeholder": "z. B. 5" },
+    { "key": "lines", "label": "Nur diese Linien (eine pro Zeile, leer = alle)", "type": "lines" }
+  ],
+  "guide": [
+    "App öffnen und deine Haltestelle suchen – antippen, fertig.",
+    "Auf dem Fernseher erscheinen die nächsten Abfahrten neben dem Kalender, mit Verspätungen und Gleis.",
+    "Mit Fußweg blendet die App Abfahrten aus, die du nicht mehr erreichst. Mit Linien siehst du nur deine Busse/Bahnen (z. B. <b>RE78</b> oder <b>250</b>).",
+    "Der Wecker sagt morgens die nächste erreichbare Verbindung an.",
+    "Die Daten kommen kostenlos von <b>Transitous</b> (europaweit, Echtzeit wo verfügbar)."
+  ]
+}

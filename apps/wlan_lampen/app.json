@@ -1,0 +1,25 @@
+{
+  "name": "WLAN-Lampen",
+  "color": "255, 204, 0",
+  "category": "Zuhause",
+  "summary": "LSC-, Tuya- und Smart-Life-Lampen direkt im WLAN schalten: an/aus, hell/dunkel, warm/kalt, Farben, Szenen.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "homepage": "https://github.com/jasonacox/tinytuya",
+  "fields": [
+    { "secret": "TUYA_ACCESS_ID", "label": "Access ID (Tuya-Plattform)", "type": "text" },
+    { "secret": "TUYA_ACCESS_SECRET", "label": "Access Secret (Tuya-Plattform)", "type": "password" },
+    { "key": "region", "label": "Rechenzentrum", "type": "text", "placeholder": "eu" },
+    { "key": "device_id", "label": "Geräte-ID einer Lampe (optional)", "type": "text" }
+  ],
+  "guide": [
+    "Die Lampen laufen über <b>Tuya</b> (LSC Smart Connect ist eine Tuya-App). Gesteuert wird danach direkt im WLAN – die Cloud brauchst du nur einmal, um die Schlüssel der Lampen zu holen.",
+    "Falls deine Lampen noch in <b>LSC Smart Connect</b> sind: zusätzlich in der App <b>Smart Life</b> anmelden und die Lampen dort neu hinzufügen (die Tuya-Plattform kennt nur Smart Life / Tuya Smart).",
+    "Am PC <b>platform.tuya.com</b> öffnen, kostenloses Entwicklerkonto anlegen.",
+    "<b>Cloud → Development → Create Cloud Project</b>: Industry „Smart Home“, Development Method „Smart Home“, Data Center <b>Central Europe</b>.",
+    "Im Projekt unter <b>Service API</b> sicherstellen, dass „IoT Core“ und „Authorization Token Management“ abonniert sind (kostenloser Testzeitraum, verlängerbar).",
+    "Im Projekt: <b>Devices → Link App Account → Add App Account</b> und den QR-Code mit der Smart-Life-App scannen (Ich → Scanner oben rechts).",
+    "Unter <b>Overview</b> stehen <b>Access ID</b> und <b>Access Secret</b> – oben eintragen, Rechenzentrum <b>eu</b>. Unter Devices eine Geräte-ID kopieren und als „Geräte-ID“ eintragen.",
+    "Speichern, dann in der App <b>Lampen suchen</b>. Der Pi holt die Schlüssel und findet die Lampen im WLAN (dauert ca. 20 Sekunden)."
+  ]
+}

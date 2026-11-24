@@ -1,0 +1,15 @@
+{
+  "name": "Quiz",
+  "color": "175, 82, 222",
+  "category": "Spiele",
+  "summary": "Quizabend: Fragen auf dem Fernseher, alle antworten mit dem eigenen Handy – ohne App, per QR-Code.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [],
+  "guide": [
+    "In der App <b>Neues Spiel</b> antippen – der Fernseher zeigt einen QR-Code.",
+    "Alle scannen ihn mit dem Handy (gleiches WLAN), geben einen Namen ein und sind dabei. Ein Passwort brauchen die Mitspieler nicht.",
+    "<b>Los geht’s</b> startet das Quiz. Pro Frage gibt es 20 Sekunden – richtig gibt Punkte, schnell gibt mehr.",
+    "Eigene Fragen: Datei <code>data/apps/quiz/fragen.json</code> anlegen, gleiches Format wie <code>apps/quiz/fragen.json</code> (die richtige Antwort steht immer zuerst, gemischt wird automatisch)."
+  ]
+}

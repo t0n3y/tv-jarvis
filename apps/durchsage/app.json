@@ -1,0 +1,22 @@
+{
+  "name": "Durchsage",
+  "icon": "speaker",
+  "color": "255, 55, 95",
+  "category": "Zuhause",
+  "summary": "Tippen statt rufen: Der Fernseher sagt deine Nachricht laut an – „Essen ist fertig!“",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "presets",
+      "label": "Schnell-Durchsagen (eine pro Zeile)",
+      "type": "lines"
+    }
+  ],
+  "guide": [
+    "Nachricht eintippen oder eine Schnell-Durchsage antippen – der Fernseher spricht sie mit der Stimme des Weckers.",
+    "Läuft gerade Radio, wird es kurz leiser gestellt (angehalten) und danach weitergespielt.",
+    "Ist der Fernseher aus, schaltet ihn der Schalter <b>Fernseher dafür einschalten</b> kurz ein – sonst hört man nichts.",
+    "Eigene Schnell-Durchsagen trägst du oben unter Einstellungen ein, eine pro Zeile."
+  ]
+}

@@ -75,7 +75,15 @@ views.append(
       h("h1", null, "App Store")
     ),
     h("p", { class: "store-lead" }, "Schalte ein, was du nutzen möchtest. Jede App hat eine Anleitung zum Einrichten."),
-    h("div", { id: "store-list" })
+    h("div", { id: "store-list" }),
+    h("div", { class: "section-label" }, "App hinzufügen"),
+    h(
+      "div",
+      { class: "card stack" },
+      h("label", { class: "field" }, h("input", { id: "store-install-url", type: "url", placeholder: "https://github.com/name/meine-app", autocomplete: "off", autocapitalize: "off", spellcheck: "false" })),
+      h("button", { class: "btn btn-ghost btn-block", type: "button", id: "store-install" }, icon("plus"), "Installieren")
+    ),
+    h("p", { class: "hint" }, "Link zu einem Git-Repo mit einer App für RPi TV. Apps aus dem Netz können alles auf dem Pi tun – nur aus Quellen installieren, denen du vertraust. Eigene Apps bauen: apps/README.md im Projekt.")
   ),
   h(
     "section",
@@ -241,10 +249,65 @@ function renderStoreApp() {
     fields.length ? h("button", { class: "btn btn-primary btn-block", type: "button", onclick: () => saveStoreApp(app) }, icon("check"), "Speichern") : null,
     app.testable ? h("button", { class: "btn btn-ghost btn-block", type: "button", onclick: () => testStoreApp(app) }, "Verbindung testen") : null,
     h("div", { class: "store-test hidden", id: "store-test" }),
-    h("div", { class: "section-label" }, "So richtest du es ein"),
-    h("div", { class: "card" }, guide)
+    app.guide.length ? h("div", { class: "section-label" }, "So richtest du es ein") : null,
+    app.guide.length ? h("div", { class: "card" }, guide) : null,
+    app.homepage ? h("a", { class: "btn btn-ghost btn-block", href: app.homepage, target: "_blank", rel: "noopener" }, icon("link"), "Webseite der App") : null,
+    app.removable ? h("button", { class: "btn btn-ghost btn-block store-danger", type: "button", onclick: () => removeStoreApp(app) }, icon("trash"), "App entfernen") : null
   );
 }
+
+async function removeStoreApp(app) {
+  if (!window.confirm(`„${app.name}“ wirklich entfernen? Ihre Einstellungen bleiben gespeichert.`)) return;
+  try {
+    await api.del(`/api/remote/apps/${app.id}`);
+    toast(`${app.name} entfernt`);
+    await restartAndWait("Wird neu gestartet …");
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+// Dienst neu starten und warten, bis er wieder antwortet - dann neu laden
+async function restartAndWait(message, alreadyRestarting = false) {
+  if (!alreadyRestarting) await api.post("/api/remote/system/restart", {});
+  toast(message || "Wird neu gestartet …");
+  await new Promise((r) => setTimeout(r, 4000));
+  for (let i = 0; i < 60; i += 1) {
+    try {
+      const resp = await fetch("/api/setup/status", { cache: "no-store" });
+      if (resp.ok) {
+        location.reload();
+        return;
+      }
+    } catch (err) {
+      // noch nicht wieder da
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  toast("Der Pi braucht ungewöhnlich lange – bitte später neu laden", true);
+}
+
+onTap($("store-install"), async () => {
+  const input = $("store-install-url");
+  const url = input.value.trim();
+  if (!url) throw new Error("Bitte einen Link einfügen");
+  const button = $("store-install");
+  button.disabled = true;
+  toast("Installiere … das kann eine Minute dauern");
+  try {
+    const result = await api.post("/api/remote/apps/install", { url });
+    input.value = "";
+    if (result.needs_restart) {
+      await restartAndWait("Installiert – starte neu …");
+    } else {
+      await loadStore();
+      toast("Installiert – jetzt einschalten");
+      openStoreApp(result.id);
+    }
+  } finally {
+    button.disabled = false;
+  }
+});
 
 async function saveStoreApp(app, { onlyToggle = false } = {}) {
   const values = {};
@@ -301,6 +364,15 @@ async function testStoreApp(app) {
       h("button", { class: "store-row", type: "button", id: "sys-tv" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Fernseher & Ton testen"), h("span", { class: "store-row-sub", id: "sys-hw" }, "Erkennt den HDMI-Anschluss neu")), icon("forward-arrow")),
       h("button", { class: "store-row", type: "button", id: "sys-password" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Passwort ändern"), h("span", { class: "store-row-sub" }, "Für die Fernbedienung auf allen Geräten")), icon("forward-arrow")),
       h("button", { class: "store-row", type: "button", id: "sys-setup" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Einrichtung erneut starten")), icon("forward-arrow"))
+    ),
+    h("div", { class: "section-label" }, "System"),
+    h(
+      "div",
+      { class: "group store-actions" },
+      h("button", { class: "store-row", type: "button", id: "sys-update" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Updates"), h("span", { class: "store-row-sub", id: "sys-update-sub" }, "Antippen zum Prüfen")), icon("forward-arrow")),
+      h("button", { class: "store-row", type: "button", id: "sys-backup" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Backup herunterladen"), h("span", { class: "store-row-sub" }, "Einstellungen, Apps, Listen – als eine Datei")), icon("forward-arrow")),
+      h("label", { class: "store-row", id: "sys-restore" }, h("input", { type: "file", accept: ".zip,application/zip", id: "sys-restore-file", class: "store-file" }), h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Backup einspielen"), h("span", { class: "store-row-sub" }, "Überschreibt die Einstellungen, danach Neustart")), icon("forward-arrow")),
+      h("button", { class: "store-row", type: "button", id: "sys-restart" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Neu starten"), h("span", { class: "store-row-sub" }, "Fernseher und Radio laufen danach weiter")), icon("forward-arrow"))
     )
   );
 
@@ -330,6 +402,79 @@ async function testStoreApp(app) {
     toast("Passwort geändert – auf anderen Geräten neu eingeben");
   });
   onTap($("sys-setup"), async () => openSetup());
+
+  onTap($("sys-restart"), async () => {
+    if (!window.confirm("Den Dienst jetzt neu starten?")) return;
+    await restartAndWait();
+  });
+
+  onTap($("sys-update"), async () => {
+    const sub = $("sys-update-sub");
+    sub.textContent = "Prüfe …";
+    const info = await api.get("/api/remote/system/update");
+    if (!info.possible) {
+      sub.textContent = info.reason;
+      return;
+    }
+    if (!info.available) {
+      sub.textContent = `Aktuell (${info.version})`;
+      return;
+    }
+    sub.textContent = `${info.count} ${info.count === 1 ? "Neuerung" : "Neuerungen"} verfügbar`;
+    const list = info.changes.map((c) => `• ${c}`).join("\n");
+    if (!window.confirm(`Jetzt aktualisieren?\n\n${list}\n\nDer Pi startet danach kurz neu.`)) return;
+    await api.post("/api/remote/system/update", {});
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 2000));
+      let state;
+      try {
+        state = (await api.get("/api/remote/system/update/state")).state;
+      } catch (err) {
+        await restartAndWait("Startet neu …", true);
+        return;
+      }
+      sub.textContent = state.error || state.step;
+      if (state.error) throw new Error(state.error);
+      if (state.done) {
+        await restartAndWait("Aktualisiert – startet neu …", true);
+        return;
+      }
+    }
+  });
+
+  onTap($("sys-backup"), async () => {
+    const secrets = window.confirm("Zugangsdaten (Passwörter, API-Schlüssel) mit ins Backup?\n\nOK = ja (Datei gut aufbewahren!), Abbrechen = ohne.");
+    const headers = {};
+    if (getSecret()) headers["X-Remote-Secret"] = getSecret();
+    const resp = await fetch(`/api/remote/system/backup?secrets=${secrets}`, { headers });
+    if (!resp.ok) throw new Error("Backup fehlgeschlagen");
+    const blob = await resp.blob();
+    const name = (resp.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/);
+    const link = h("a", { href: URL.createObjectURL(blob), download: name ? name[1] : "rpitv-backup.zip" });
+    document.body.append(link);
+    link.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }, 1000);
+  });
+
+  $("sys-restore-file").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!window.confirm(`„${file.name}“ einspielen? Die jetzigen Einstellungen werden überschrieben.`)) return;
+    try {
+      const headers = { "Content-Type": "application/zip" };
+      if (getSecret()) headers["X-Remote-Secret"] = getSecret();
+      const resp = await fetch("/api/remote/system/backup", { method: "POST", headers, body: file });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.detail || "Einspielen fehlgeschlagen");
+      await restartAndWait(`${data.files} Dateien eingespielt – startet neu …`, true);
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
 })();
 
 function applyProfile(profile) {

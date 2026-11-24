@@ -321,11 +321,82 @@ function applyApps(state) {
   document.querySelector(".calendar-panel").classList.toggle("off", !showCalendar);
   document.querySelector(".todos-panel").classList.toggle("off", !apps.todos);
   $("plan-panel").classList.toggle("off", !apps.iserv);
-  const side = !apps.iserv && !showCalendar;
+  // App-Kacheln: eigene Spalte, solange eine frei ist - sonst unter
+  // Vertretung/Kalender in der rechten Spalte
+  const sideHasCore = apps.iserv || showCalendar;
+  const used = 1 + (apps.todos ? 1 : 0) + (sideHasCore ? 1 : 0);
+  const ownColumn = appPanels.length > 0 && used < 3;
+  const appStack = appStackEl();
+  const target = ownColumn ? appStack : document.querySelector(".side-stack");
+  appStack.querySelectorAll(".app-panel").forEach((el) => target !== appStack && target.append(el));
+  document.querySelectorAll(".side-stack .app-panel").forEach((el) => target !== el.parentElement && target.append(el));
+  appStack.classList.toggle("off", !ownColumn);
+  const side = !sideHasCore && !(appPanels.length && !ownColumn);
   document.querySelector(".side-stack").classList.toggle("off", side);
-  const columns = 1 + (apps.todos ? 1 : 0) + (side ? 0 : 1);
-  document.querySelector("main.grid").dataset.columns = String(columns);
+  const columns = used + (ownColumn ? 1 : 0);
+  document.querySelector("main.grid").dataset.columns = String(Math.min(3, columns));
 }
+
+// Kacheln eigener Apps (apps/<id>/server.py: dashboard()) - unter Vertretung
+// und Kalender in der rechten Spalte
+let appPanels = [];
+
+function appStackEl() {
+  let stack = document.getElementById("app-stack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.id = "app-stack";
+    stack.className = "side-stack app-stack off";
+    document.querySelector("main.grid").append(stack);
+  }
+  return stack;
+}
+
+function renderAppPanels() {
+  const stack = appStackEl();
+  const wanted = new Set(appPanels.map((p) => `app-panel-${p.id}`));
+  document.querySelectorAll(".app-panel").forEach((el) => {
+    if (!wanted.has(el.id)) el.remove();
+  });
+  for (const panel of appPanels) {
+    let el = document.getElementById(`app-panel-${panel.id}`);
+    if (!el) {
+      el = document.createElement("section");
+      el.className = "panel app-panel";
+      el.id = `app-panel-${panel.id}`;
+      el.innerHTML = `<div class="panel-head"><h2></h2><span class="panel-meta"></span></div><ul class="panel-body list"></ul>`;
+      stack.append(el);
+    }
+    el.style.setProperty("--app-rgb", panel.color);
+    el.querySelector("h2").textContent = panel.title;
+    el.querySelector(".panel-meta").textContent = panel.meta;
+    const list = el.querySelector("ul");
+    if (!panel.items.length) {
+      list.innerHTML = `<li class="panel-empty"><div>${esc(panel.empty || "Gerade nichts")}</div></li>`;
+      continue;
+    }
+    renderList(list, panel.items, (item) => {
+      const time = item.time ? `<span class="time">${esc(item.time)}</span>` : "";
+      const note = item.note ? `<span class="note">${esc(item.note)}</span>` : "";
+      return `<li class="${item.strike ? "cancelled" : ""}">${time}<span class="item-text">${esc(item.text)}${note}</span></li>`;
+    });
+  }
+  if (dashboardState) applyApps(dashboardState);
+}
+
+async function refreshAppPanels() {
+  try {
+    const resp = await fetch("/api/apps-dashboard");
+    if (!resp.ok) return;
+    appPanels = (await resp.json()).panels || [];
+    renderAppPanels();
+  } catch (err) {
+    // naechster Versuch in einer Minute
+  }
+}
+
+refreshAppPanels();
+setInterval(refreshAppPanels, 60000);
 
 async function refreshState() {
   try {

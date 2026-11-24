@@ -8,6 +8,7 @@
       tv.html       Seite fuer den Fernseher (optional, app.tv.open())
       server.py     eigene API unter /api/apps/<id>/... (optional)
       icon.svg      eigenes Symbol, 24x24, Linien (optional)
+      _name.json    private Dateien (werden nie ausgeliefert, z.B. Antworten)
 
 Anleitung fuer Entwickler: apps/README.md. Neue App anlegen:
     .venv/bin/python -m app.new_app "Mein App-Name"
@@ -23,8 +24,13 @@ In server.py:
     def hallo():
         return {"text": f"Hallo aus {ctx.name}"}
 
-    def test() -> str:          # optional: Knopf "Verbindung testen"
-        return "Alles gut"
+Optionale Haken in server.py (alle duerfen fehlen):
+    public_router = APIRouter()   /api/apps/<id>/public/... OHNE Passwort
+                                  (z.B. Mitspieler-Handys beim Quiz)
+    def test() -> str             Knopf "Verbindung testen" im App Store
+    def dashboard() -> dict|None  Kachel auf dem Fernseher-Dashboard
+    def briefing() -> str|None    Satz fuer die Morgen-Ansage des Weckers
+    async def background()        laeuft dauerhaft ab dem Start des Dienstes
 """
 
 from __future__ import annotations
@@ -126,7 +132,7 @@ def _read_manifest(folder: Path) -> dict:
         "homepage": str(raw.get("homepage") or ""),
         "plugin": True,
         "view": (folder / "remote.html").exists() or (folder / "remote.js").exists(),
-        "files": sorted(p.name for p in folder.iterdir() if p.suffix in STATIC_TYPES and p.is_file()),
+        "files": sorted(p.name for p in folder.iterdir() if p.suffix in STATIC_TYPES and p.is_file() and not p.name.startswith("_")),
         "has_server": (folder / "server.py").exists(),
     }
 
@@ -166,7 +172,8 @@ def discover() -> list[dict]:
 
 
 def static_file(app_id: str, name: str) -> tuple[Path, str]:
-    if not ID_PATTERN.match(app_id) or "/" in name or "\\" in name or name.startswith("."):
+    # "_name": private Dateien der App (z.B. Quiz-Antworten) - nie ausliefern
+    if not ID_PATTERN.match(app_id) or "/" in name or "\\" in name or name.startswith((".", "_")):
         raise PluginError("Datei nicht gefunden")
     path = APPS_DIR / app_id / name
     mime = STATIC_TYPES.get(path.suffix.lower())
@@ -177,8 +184,8 @@ def static_file(app_id: str, name: str) -> tuple[Path, str]:
 
 # ---------- server.py laden ----------
 
-def load_servers(include_router) -> None:
-    """Beim Start: server.py jeder App laden, ihren router einhaengen."""
+def load_servers(include_router, include_public_router=None) -> None:
+    """Beim Start: server.py jeder App laden, ihre Router einhaengen."""
     for manifest in discover():
         if not manifest.get("has_server") or manifest.get("error"):
             continue
@@ -188,11 +195,110 @@ def load_servers(include_router) -> None:
             router = getattr(module, "router", None)
             if router is not None:
                 include_router(router, app_id)
+            public = getattr(module, "public_router", None)
+            if public is not None and include_public_router is not None:
+                include_public_router(public, app_id)
             _modules[app_id] = module
             logger.info("App %s geladen", app_id)
         except Exception as exc:  # noqa: BLE001 - eine kaputte App darf den Dienst nicht stoppen
             logger.exception("App %s: server.py ließ sich nicht laden", app_id)
             _errors[app_id] = f"server.py: {exc}"
+
+
+def module(app_id: str):
+    """server.py einer App - auch ausserhalb des Dienstes (Wecker-Testlauf)."""
+    if app_id not in _modules and app_id not in _errors and (APPS_DIR / app_id / "server.py").exists():
+        try:
+            _modules[app_id] = _import(app_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("App %s: server.py ließ sich nicht laden", app_id)
+            _errors[app_id] = f"server.py: {exc}"
+    return _modules.get(app_id)
+
+
+def enabled_ids() -> list[str]:
+    from app import apps
+
+    enabled = apps.enabled_map()
+    return [m["id"] for m in discover() if enabled.get(m["id"]) and m.get("has_server")]
+
+
+def _hook(name: str):
+    for app_id in enabled_ids():
+        fn = getattr(module(app_id), name, None)
+        if callable(fn):
+            yield app_id, fn
+
+
+def dashboard_panels() -> list[dict]:
+    """Kacheln fuer das Fernseher-Dashboard. Format eines Rueckgabewerts:
+        {"title": "Abfahrten", "meta": "Vlotho", "empty": "Gerade nichts",
+         "items": [{"time": "7:12", "text": "RE 78 → Bielefeld", "note": "+3", "strike": False}]}
+    """
+    manifests = {m["id"]: m for m in discover()}
+    panels = []
+    for app_id, fn in _hook("dashboard"):
+        try:
+            panel = fn()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("App %s: dashboard() fehlgeschlagen: %s", app_id, exc)
+            panel = {"title": manifests[app_id]["name"], "items": [], "empty": "Gerade nicht erreichbar"}
+        if not panel:
+            continue
+        items = [
+            {k: str(item.get(k) or "") for k in ("time", "text", "note")} | {"strike": bool(item.get("strike"))}
+            for item in (panel.get("items") or [])[:12]
+            if isinstance(item, dict)
+        ]
+        panels.append({
+            "id": app_id,
+            "title": str(panel.get("title") or manifests[app_id]["name"]),
+            "meta": str(panel.get("meta") or ""),
+            "empty": str(panel.get("empty") or ""),
+            "items": items,
+            "color": manifests[app_id]["color"],
+        })
+    return panels
+
+
+def briefing_texts() -> list[str]:
+    texts = []
+    for app_id, fn in _hook("briefing"):
+        try:
+            text = fn()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("App %s: briefing() fehlgeschlagen: %s", app_id, exc)
+            continue
+        if text and str(text).strip():
+            texts.append(str(text).strip())
+    return texts
+
+
+def start_background_tasks() -> None:
+    """Beim Start des Dienstes: background() jeder geladenen App starten.
+    Die Funktion selbst prueft mit ctx.enabled(), ob sie arbeiten soll."""
+    for app_id, module_ in list(_modules.items()):
+        fn = getattr(module_, "background", None)
+        if fn is None or not asyncio.iscoroutinefunction(fn):
+            continue
+
+        async def runner(app_id=app_id, fn=fn) -> None:
+            while True:
+                try:
+                    await fn()
+                    return
+                except asyncio.CancelledError:
+                    raise
+                except Exception:  # noqa: BLE001 - neu starten statt den Dienst zu stoppen
+                    logger.exception("App %s: background() abgestuerzt - neuer Versuch in 60 s", app_id)
+                    await asyncio.sleep(60)
+
+        asyncio.get_running_loop().create_task(runner())
+
+
+# Vom Server eingetragen (app/dashboard/server.py): Wiedergabe-Zustand und
+# An/Aus, damit Apps nicht in die Interna greifen muessen.
+HOST: dict = {}
 
 
 def _import(app_id: str):
@@ -284,6 +390,31 @@ class AppContext:
         from app import tts
 
         tts.speak(self.config, text)
+
+    # ----- Zustand und Steuerung -----
+
+    def enabled(self) -> bool:
+        """Ist die App im App Store eingeschaltet?"""
+        from app import apps
+
+        return bool(apps.enabled_map().get(self.id))
+
+    def tv_is_on(self) -> bool:
+        from app.dashboard import kiosk
+
+        return kiosk.is_running()
+
+    def busy(self) -> bool:
+        """Laeuft gerade etwas (Video, Radio, Platte, Stream, TV-Browser)?"""
+        fn = HOST.get("busy")
+        return bool(fn()) if fn else False
+
+    async def power(self, on: bool) -> None:
+        """Fernseher ein- oder ausschalten - wie der Knopf in der Fernbedienung
+        (aus = Wiedergabe stoppen, Abschied-Animation, Fernseher aus)."""
+        from app import tv_power
+
+        await asyncio.to_thread(tv_power.power_on if on else tv_power.power_off, self.config)
 
 
 _contexts: dict[str, AppContext] = {}

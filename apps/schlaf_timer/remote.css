@@ -1,0 +1,6 @@
+#view-app-schlaf_timer .st-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 28px 16px; text-align: center; }
+#view-app-schlaf_timer .st-time { font-family: var(--font-rounded); font-size: 64px; font-weight: 600; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+#view-app-schlaf_timer .st-sub { font-size: 15px; color: var(--text-2); }
+#view-app-schlaf_timer .st-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+#view-app-schlaf_timer .st-grid .btn { padding: 0 8px; }
+#view-app-schlaf_timer .st-cancel { color: var(--danger); }

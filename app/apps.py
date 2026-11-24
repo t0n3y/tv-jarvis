@@ -254,8 +254,11 @@ def _list_index_path(raw: dict, path: str):
 
 
 def public_list() -> list[dict]:
+    from app import system_tools
+
     enabled = enabled_map()
     raw = _raw_config()
+    removable = system_tools.installed_ids()
     result = []
     for app in all_apps():
         fields = []
@@ -273,6 +276,7 @@ def public_list() -> list[dict]:
             **{k: app[k] for k in ("id", "name", "icon", "color", "category", "summary", "guide")},
             **{k: app[k] for k in ("icon_svg", "author", "version", "homepage", "view", "files", "error") if app.get(k)},
             "plugin": bool(app.get("plugin")),
+            "removable": app["id"] in removable,
             "enabled": enabled[app["id"]],
             "fields": fields,
             "testable": app["id"] in TESTS or plugins.test_function(app["id"]) is not None,

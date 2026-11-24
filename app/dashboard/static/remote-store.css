@@ -228,3 +228,7 @@ a.app-tile { text-decoration: none; }
 
 /* Eigene Apps (apps/<id>/): Inhalt mit dem ueblichen Abstand */
 .app-body { display: flex; flex-direction: column; gap: 20px; }
+
+.store-danger { color: var(--danger); }
+.store-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+label.store-row { cursor: pointer; }

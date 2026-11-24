@@ -1,0 +1,22 @@
+<div class="wl-master">
+  <button class="btn btn-primary" data-ref="all-on" type="button">Alle an</button>
+  <button class="btn btn-ghost" data-ref="all-off" type="button">Alle aus</button>
+</div>
+
+<div class="section-label">Szenen</div>
+<div class="wl-scenes" data-ref="scenes"></div>
+
+<div class="section-label">Helligkeit & Licht</div>
+<div class="card stack">
+  <div class="kicker">Helligkeit</div>
+  <input class="range" data-ref="brightness" type="range" min="1" max="100" value="70" />
+  <div class="kicker">Warm – Kalt</div>
+  <input class="range wl-white" data-ref="white" type="range" min="0" max="100" value="30" />
+  <div class="kicker">Farbe</div>
+  <div class="wl-colors" data-ref="colors"></div>
+</div>
+
+<div class="section-label">Lampen</div>
+<div class="group" data-ref="list"></div>
+<button class="btn btn-ghost btn-block" data-ref="discover" type="button">Lampen suchen</button>
+<p class="hint">Einrichtung und Schlüssel: App Store → WLAN-Lampen. Antippen einer Lampe schaltet nur sie.</p>

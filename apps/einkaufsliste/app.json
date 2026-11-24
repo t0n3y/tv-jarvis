@@ -1,0 +1,14 @@
+{
+  "name": "Einkaufsliste",
+  "color": "52, 199, 89",
+  "category": "Zuhause",
+  "summary": "Eine gemeinsame Liste für alle im Haushalt – auf jedem Handy mit der Fernbedienung und auf dem Fernseher.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [],
+  "guide": [
+    "In der App eintippen, was fehlt – mehrere Dinge auf einmal mit Komma trennen („Milch, Brot, Eier“).",
+    "Im Laden abhaken: antippen. <b>Erledigte löschen</b> räumt die Liste auf.",
+    "Alle mit der Fernbedienung sehen dieselbe Liste. Auf dem Fernseher erscheint sie neben dem Kalender, solange etwas drauf steht."
+  ]
+}

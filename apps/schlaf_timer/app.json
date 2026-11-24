@@ -1,0 +1,14 @@
+{
+  "name": "Schlaf-Timer",
+  "color": "94, 92, 230",
+  "category": "Zuhause",
+  "summary": "Einschlafen bei Radio oder Film: Nach der gewählten Zeit wird es leiser und der Fernseher geht aus.",
+  "author": "RPi TV",
+  "version": "1.0",
+  "fields": [],
+  "guide": [
+    "Zeit antippen – fertig. In der letzten Minute wird der Ton langsam leiser, dann gehen Wiedergabe und Fernseher aus.",
+    "Die Lautstärke ist beim nächsten Einschalten wieder wie vorher.",
+    "Solange der Timer läuft, steht auf dem Fernseher-Dashboard, wann er ausgeht."
+  ]
+}

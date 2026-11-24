@@ -1,0 +1,53 @@
+#view-app-einkaufsliste .ek-add { display: flex; gap: 8px; }
+#view-app-einkaufsliste .ek-add .field { flex: 1; }
+
+#view-app-einkaufsliste .ek-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 8px 4px 14px;
+}
+
+#view-app-einkaufsliste .ek-row + .ek-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 54px;
+  height: 0.5px;
+  background: var(--separator);
+}
+
+#view-app-einkaufsliste .ek-check {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--text-3);
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+}
+
+#view-app-einkaufsliste .ek-row.done .ek-check { border-color: rgb(var(--tint)); background: rgb(var(--tint)); }
+#view-app-einkaufsliste .ek-check .icon { width: 16px; height: 16px; stroke-width: 3; }
+#view-app-einkaufsliste .ek-text { flex: 1; min-width: 0; font-size: 17px; }
+#view-app-einkaufsliste .ek-row.done .ek-text { color: var(--text-3); text-decoration: line-through; }
+
+#view-app-einkaufsliste .ek-del {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+}
+
+#view-app-einkaufsliste .ek-del .icon { width: 18px; height: 18px; }

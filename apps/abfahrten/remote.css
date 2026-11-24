@@ -1,0 +1,44 @@
+#view-app-abfahrten .ab-stop { margin: 0 4px; }
+#view-app-abfahrten .ab-stop-name { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
+#view-app-abfahrten .ab-search { display: flex; flex-direction: column; gap: 10px; }
+
+#view-app-abfahrten .ab-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 16px;
+}
+
+#view-app-abfahrten .ab-row + .ab-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 76px;
+  height: 0.5px;
+  background: var(--separator);
+}
+
+#view-app-abfahrten .ab-line {
+  flex: none;
+  min-width: 48px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: rgb(var(--tint));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+#view-app-abfahrten .ab-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#view-app-abfahrten .ab-dir { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 17px; }
+#view-app-abfahrten .ab-sub { font-size: 13px; color: var(--text-2); }
+#view-app-abfahrten .ab-in { flex: none; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#view-app-abfahrten .ab-in.late { color: var(--warn); }
+#view-app-abfahrten .ab-row.gone { opacity: 0.4; }
+#view-app-abfahrten .ab-row.cancelled .ab-dir { text-decoration: line-through; }
+#view-app-abfahrten .ab-row.cancelled .ab-in { color: var(--danger); }
+#view-app-abfahrten .hint:empty { display: none; }

@@ -1,0 +1,2 @@
+#view-app-durchsage .ds-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -8px; }
+#view-app-durchsage .ds-presets .btn { min-height: 44px; padding: 0 16px; font-size: 16px; font-weight: 500; }
