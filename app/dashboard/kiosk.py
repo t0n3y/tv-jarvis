@@ -20,13 +20,13 @@ import subprocess
 import time
 from pathlib import Path
 
-from app.config import Config, ROOT_DIR
+from app.config import CODE_DIR, Config, ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
 PID_FILE = ROOT_DIR / "data" / "kiosk.pid"
 PROFILE_DIR = ROOT_DIR / "data" / "chromium-profile"
-H264IFY_DIR = ROOT_DIR / "extensions" / "h264ify"
+H264IFY_DIR = CODE_DIR / "extensions" / "h264ify"
 
 CHROMIUM_CANDIDATES = ["chromium-browser", "chromium"]
 
@@ -107,10 +107,12 @@ def start(cfg: Config) -> None:
     env = os.environ.copy()
     env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
     env.setdefault("WAYLAND_DISPLAY", "wayland-0")
+    window_args = prepare_window(cfg, env, "tv")
 
     proc = subprocess.Popen(
         [
             _chromium_binary(),
+            *window_args,
             "--kiosk",
             "--ozone-platform=wayland",
             f"--user-data-dir={PROFILE_DIR}",
@@ -153,3 +155,20 @@ def stop() -> None:
         except OSError:
             pass
     PID_FILE.unlink(missing_ok=True)
+
+
+def prepare_window(cfg: Config, env: dict, kind: str) -> list[str]:
+    """Mehrere Fernseher: Fenster-ID fuer labwc (welcher Bildschirm) und
+    Tonausgang dieses Fernsehers. Beim einzelnen Fernseher aendert sich nichts."""
+    from app import audio_control, display
+
+    args = [f"--class={display.window_class(kind)}"]
+    try:
+        display.ensure_window_rules(cfg)
+    except OSError as exc:
+        logger.warning("Fensterregel nicht gesetzt: %s", exc)
+    if not cfg.display.primary:
+        sink = audio_control.own_sink()
+        if sink and sink[1]:
+            env["PULSE_SINK"] = sink[1]
+    return args

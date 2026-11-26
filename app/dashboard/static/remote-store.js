@@ -365,6 +365,8 @@ async function testStoreApp(app) {
       h("button", { class: "store-row", type: "button", id: "sys-password" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Passwort ändern"), h("span", { class: "store-row-sub" }, "Für die Fernbedienung auf allen Geräten")), icon("forward-arrow")),
       h("button", { class: "store-row", type: "button", id: "sys-setup" }, h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, "Einrichtung erneut starten")), icon("forward-arrow"))
     ),
+    h("div", { class: "section-label hidden", id: "sys-tvs-label" }, "Fernseher im Haus"),
+    h("div", { class: "group store-actions hidden", id: "sys-tvs" }),
     h("div", { class: "section-label" }, "System"),
     h(
       "div",
@@ -485,6 +487,25 @@ function applyProfile(profile) {
   }
 }
 
+// Mehrere Fernseher an einem Pi (app/add_tv.py): jeder hat seine eigene
+// Fernbedienung auf einem eigenen Port - hier springt man hinueber
+function renderTvs(tvs) {
+  const show = tvs.length > 1;
+  $("sys-tvs-label").classList.toggle("hidden", !show);
+  $("sys-tvs").classList.toggle("hidden", !show);
+  if (!show) return;
+  $("sys-tvs").replaceChildren(
+    ...tvs.map((tv) =>
+      h(
+        tv.current ? "div" : "a",
+        { class: "store-row", href: tv.current ? null : `${location.protocol}//${location.hostname}:${tv.port}/remote.html` },
+        h("span", { class: "store-row-main" }, h("span", { class: "store-row-name" }, tv.name), h("span", { class: "store-row-sub" }, tv.current ? "Diese Fernbedienung" : `Fernbedienung öffnen (Port ${tv.port})`)),
+        tv.current ? icon("check") : icon("forward-arrow")
+      )
+    )
+  );
+}
+
 async function loadSystem() {
   try {
     const system = await api.get("/api/remote/system");
@@ -492,6 +513,7 @@ async function loadSystem() {
     $("sys-name").value = system.name || "";
     $("sys-user").value = system.user_name || "";
     $("sys-city").value = system.city || "";
+    renderTvs(system.tvs || []);
     $("sys-hw").textContent = system.hardware.connected
       ? `Fernseher an HDMI ${system.hardware.port} · Ton über HDMI ${system.alsa_device.includes("vc4hdmi1") ? 2 : 1}`
       : "Kein Fernseher am HDMI erkannt";

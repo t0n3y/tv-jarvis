@@ -38,15 +38,49 @@ _SINK_ID = re.compile(r"^[^0-9]*([0-9]+)\.")
 HDMI_WAIT_SECONDS = 8
 
 
-def _hdmi_sink_id() -> str | None:
+def _sink_ids() -> list[str]:
     status = _wpctl("status") or ""
     audio = status.split("Video", 1)[0]
     sinks = audio.split("Sinks:", 1)[-1].split("Sources:", 1)[0]
-    for line in sinks.splitlines():
-        match = _SINK_ID.match(line)
-        if match and "HDMI" in line:
-            return match.group(1)
+    return [m.group(1) for m in (_SINK_ID.match(line) for line in sinks.splitlines() if "HDMI" in line) if m]
+
+
+def _own_card() -> str | None:
+    """Mehrere Fernseher: der HDMI-Ausgang DIESES Fernsehers in PipeWire
+    ("vc4-hdmi-1" zu audio.alsa_device "plughw:CARD=vc4hdmi1,DEV=0")."""
+    from app.config import get_config
+    from app.display import hdmi_index
+
+    index = hdmi_index(get_config())
+    return None if index is None else f"vc4-hdmi-{index}"
+
+
+def own_sink() -> tuple[str, str] | None:
+    """(id, node.name) des eigenen HDMI-Ausgangs - oder None."""
+    card = _own_card()
+    for sink_id in _sink_ids():
+        info = _wpctl("inspect", sink_id) or ""
+        if card and f'"{card}"' not in info:
+            continue
+        name = re.search(r'node\.name = "([^"]+)"', info)
+        return sink_id, (name.group(1) if name else "")
     return None
+
+
+def _hdmi_sink_id() -> str | None:
+    sink = own_sink()
+    return sink[0] if sink else None
+
+
+def _target() -> str:
+    """Lautstaerke: beim Hauptfernseher der Standardausgang, bei weiteren
+    Fernsehern ihr eigener HDMI-Ausgang."""
+    from app.config import get_config
+
+    if get_config().display.primary:
+        return SINK
+    sink = own_sink()
+    return sink[0] if sink else SINK
 
 
 def ensure_hdmi_output() -> None:
@@ -75,7 +109,16 @@ def ensure_hdmi_output() -> None:
     if sink is None:
         logger.warning("Auch danach kein HDMI-Audioausgang gefunden")
         return
-    if "hdmi" not in (_wpctl("inspect", SINK) or "").lower():
+    from app.config import get_config
+
+    # Nur der Hauptfernseher bestimmt den Standardausgang - weitere Fernseher
+    # schicken ihren Ton gezielt an ihren eigenen Ausgang (PULSE_SINK)
+    if not get_config().display.primary:
+        return
+    current = (_wpctl("inspect", SINK) or "").lower()
+    card = _own_card()
+    is_right = f'"{card}"' in current if card else "hdmi" in current
+    if not is_right:
         _wpctl("set-default", sink)
         logger.info("Standard-Audioausgang auf HDMI gesetzt (ID %s)", sink)
 
@@ -84,27 +127,27 @@ def volume_up() -> None:
     # Wie bei jeder TV-Fernbedienung hebt Lauter/Leiser die Stummschaltung auf -
     # sonst drueckt man bei stummem Ton "+" ins Leere (so landete der Pegel mal
     # unbemerkt bei 170 %).
-    _wpctl("set-mute", SINK, "0")
+    _wpctl("set-mute", _target(), "0")
     # -l 1.0: nicht ueber 100 % hinaus verstaerken (sonst uebersteuert der Ton)
-    _wpctl("set-volume", "-l", "1.0", SINK, f"{VOLUME_STEP_PERCENT}%+")
+    _wpctl("set-volume", "-l", "1.0", _target(), f"{VOLUME_STEP_PERCENT}%+")
 
 
 def volume_down() -> None:
-    _wpctl("set-mute", SINK, "0")
-    _wpctl("set-volume", SINK, f"{VOLUME_STEP_PERCENT}%-")
+    _wpctl("set-mute", _target(), "0")
+    _wpctl("set-volume", _target(), f"{VOLUME_STEP_PERCENT}%-")
 
 
 def unmute() -> None:
-    _wpctl("set-mute", SINK, "0")
+    _wpctl("set-mute", _target(), "0")
 
 
 def mute_toggle() -> None:
-    _wpctl("set-mute", SINK, "toggle")
+    _wpctl("set-mute", _target(), "toggle")
 
 
 def get_volume() -> dict | None:
     """z.B. {"percent": 45, "muted": False} - aus "Volume: 0.45 [MUTED]"."""
-    output = _wpctl("get-volume", SINK)
+    output = _wpctl("get-volume", _target())
     match = re.search(r"Volume:\s*([0-9.]+)", output or "")
     if not match:
         return None

@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 PID_FILE = ROOT_DIR / "data" / "tvbrowser.pid"
 PROFILE_DIR = ROOT_DIR / "data" / "tvbrowser-profile"
-DEBUG_PORT = 9223
+DEBUG_PORT = 9223  # Standard; je Fernseher display.browser_port
 HOME_URL = "https://www.google.de/"
 CONNECT_TIMEOUT_SECONDS = 25
 SCREENCAST = {"format": "jpeg", "quality": 55, "maxWidth": 1280, "maxHeight": 720, "everyNthFrame": 1}
@@ -68,6 +68,12 @@ KEYS = {
 
 class CDPError(RuntimeError):
     pass
+
+
+def _port() -> int:
+    from app.config import get_config
+
+    return get_config().display.browser_port or DEBUG_PORT
 
 
 def _pid() -> int:
@@ -131,13 +137,15 @@ def _launch(cfg: Config, url: str) -> None:
     env = os.environ.copy()
     env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
     env.setdefault("WAYLAND_DISPLAY", "wayland-0")
+    window_args = kiosk.prepare_window(cfg, env, "browser")
     proc = subprocess.Popen(
         [
             kiosk._chromium_binary(),
+            *window_args,
             "--kiosk",
             "--ozone-platform=wayland",
             f"--user-data-dir={PROFILE_DIR}",
-            f"--remote-debugging-port={DEBUG_PORT}",
+            f"--remote-debugging-port={_port()}",
             "--remote-debugging-address=127.0.0.1",
             "--password-store=basic",
             "--noerrdialogs",
@@ -219,7 +227,7 @@ class Browser:
         async with httpx.AsyncClient(timeout=3) as client:
             while time.monotonic() < deadline:
                 with contextlib.suppress(httpx.HTTPError, ValueError):
-                    targets = (await client.get(f"http://127.0.0.1:{DEBUG_PORT}/json/list")).json()
+                    targets = (await client.get(f"http://127.0.0.1:{_port()}/json/list")).json()
                     target = next((t for t in targets if t.get("type") == "page"), None)
                     if target:
                         break

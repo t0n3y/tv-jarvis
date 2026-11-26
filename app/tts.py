@@ -62,6 +62,15 @@ def split_text(text: str) -> list[list[str]]:
     return sections
 
 
+def _own_target(cfg: Config) -> str:
+    if cfg.display.primary:
+        return ""
+    from app import audio_control
+
+    sink = audio_control.own_sink()
+    return sink[1] if sink else ""
+
+
 def speak(cfg: Config, text: str) -> None:
     if not text.strip():
         return
@@ -154,6 +163,8 @@ class Speaker:
             "length_scale": 1.0 / self.cfg.tts.speed if self.cfg.tts.speed else 1.0,
             "sample_rate": _sample_rate(config_path),
             "device": self.cfg.audio.alsa_device,
+            # Weitere Fernseher: Ton an den eigenen HDMI-Ausgang statt an den Standard
+            "target": _own_target(self.cfg),
         }
         self._proc = subprocess.Popen(
             [sys.executable, "-m", "app.tts", "--serve", json.dumps(settings)],
@@ -204,6 +215,8 @@ def _serve(settings: dict) -> None:
     # bekaeme "Geraet belegt"
     if shutil.which("pw-play"):
         player = ["pw-play", "--raw", "--rate", str(settings["sample_rate"]), "--channels", "1", "--format", "s16", "-"]
+        if settings.get("target"):
+            player.insert(1, f"--target={settings['target']}")
     else:
         player = ["aplay", "-q", "-r", str(settings["sample_rate"]), "-f", "S16_LE", "-t", "raw"]
         if settings.get("device"):

@@ -37,6 +37,7 @@ from starlette.background import BackgroundTask
 from starlette.datastructures import MutableHeaders
 
 from app import apps as apps_registry
+from app import display
 from app import (
     audio_control,
     comics,
@@ -300,7 +301,9 @@ def _finish_jellyfin_session(position: float | None = None) -> None:
 @app.on_event("startup")
 async def _start_scheduler() -> None:
     Scheduler(get_config()).start()
-    lighting.get_engine().start()
+    # DMX-Licht nur vom Hauptfernseher - zwei Prozesse am selben USB-Adapter flackern
+    if get_config().display.primary:
+        lighting.get_engine().start()
 
 
 @app.on_event("shutdown")
@@ -1570,7 +1573,11 @@ HDMI_PORTS = {"HDMI-A-1": 0, "HDMI-A-2": 1}
 def _detect_hardware() -> dict:
     """Pi 4: HDMI-A-1 = /dev/cec0 + vc4hdmi0, HDMI-A-2 = /dev/cec1 + vc4hdmi1."""
     found = None
+    # Mehrere Fernseher: nur den eigenen Anschluss pruefen (display.output)
+    wanted = get_config().display.output
     for status in sorted(Path("/sys/class/drm").glob("card*-HDMI-A-*/status")):
+        if wanted and not status.parent.name.endswith(wanted):
+            continue
         try:
             connected = status.read_text().strip() == "connected"
         except OSError:
@@ -1618,6 +1625,7 @@ async def get_system() -> dict:
         "cec_adapter": cfg.tv_control.cec_adapter,
         "alsa_device": cfg.audio.alsa_device,
         "password_suggestion": settings_store.new_password(),
+        "tvs": display.list_tvs(),
     }
 
 

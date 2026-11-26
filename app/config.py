@@ -19,7 +19,12 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+# CODE_DIR: der Projektordner (Code, Apps, Standardwerte, Stimme).
+# ROOT_DIR: Daten dieses Fernsehers (data/, .env, config.yaml) - beim
+# Hauptfernseher derselbe Ordner, bei weiteren Fernsehern instances/<id>/
+# (gesetzt ueber RPITV_DATA_ROOT, siehe app/display.py).
+CODE_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(os.environ["RPITV_DATA_ROOT"]).resolve() if os.environ.get("RPITV_DATA_ROOT") else CODE_DIR
 
 
 def resolve_path(relative: str) -> Path:
@@ -136,6 +141,16 @@ class TTSConfig:
 
 
 @dataclass
+class DisplayConfig:
+    # HDMI-Ausgang fuer Kiosk/TV-Browser ("HDMI-A-1"/"HDMI-A-2"), leer = egal
+    output: str
+    # Hauptfernseher: steuert DMX-Licht und den Standard-Tonausgang
+    primary: bool
+    # Steuer-Port des TV-Browsers (je Fernseher ein eigener)
+    browser_port: int
+
+
+@dataclass
 class DashboardConfig:
     host: str
     port: int
@@ -170,6 +185,7 @@ class Config:
     tts: TTSConfig
     dashboard: DashboardConfig
     secrets: Secrets
+    display: DisplayConfig
 
 
 def _load_yaml(path: Path) -> dict:
@@ -199,7 +215,7 @@ def _settings_overrides() -> dict:
 
 def load_config(config_path: Path | None = None, env_path: Path | None = None) -> Config:
     load_dotenv(env_path or (ROOT_DIR / ".env"))
-    raw = _load_yaml(ROOT_DIR / "config.example.yaml")
+    raw = _load_yaml(CODE_DIR / "config.example.yaml")
     raw = _merge(raw, _load_yaml(config_path or (ROOT_DIR / "config.yaml")))
     raw = _merge(raw, _settings_overrides())
 
@@ -266,7 +282,8 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
         ),
         tts=TTSConfig(
             voice=tts.get("voice", "de_DE-thorsten-medium"),
-            model_dir=resolve_path(tts.get("model_dir", "data/piper-voices")),
+            # Die Stimme liegt nur einmal im Projektordner, auch fuer weitere Fernseher
+            model_dir=(lambda p: p if p.is_absolute() else CODE_DIR / p)(Path(tts.get("model_dir", "data/piper-voices"))),
             speed=float(tts.get("speed", 1.0)),
         ),
         dashboard=DashboardConfig(
@@ -285,6 +302,11 @@ def load_config(config_path: Path | None = None, env_path: Path | None = None) -
             todos_webhook_secret=os.environ.get("TODOS_WEBHOOK_SECRET") or None,
             remote_control_secret=os.environ.get("REMOTE_CONTROL_SECRET") or None,
             jellyfin_api_key=os.environ.get("JELLYFIN_API_KEY") or None,
+        ),
+        display=DisplayConfig(
+            output=str((raw.get("display") or {}).get("output") or ""),
+            primary=bool((raw.get("display") or {}).get("primary", True)),
+            browser_port=int((raw.get("display") or {}).get("browser_port") or 9223),
         ),
     )
 

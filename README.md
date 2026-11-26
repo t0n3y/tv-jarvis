@@ -120,6 +120,28 @@ Dashboard auf dem Fernseher.
 - Für den Zugriff von unterwegs: App *Fernzugriff* (Cloudflare-Tunnel,
   empfohlen mit Cloudflare Access).
 
+## Zweiter Fernseher am selben Pi
+
+Der Pi 4/5 hat zwei HDMI-Anschlüsse. An den zweiten kommt ein weiterer
+Fernseher, per Kabel oder über ein Funk-HDMI-Set. Ein Befehl richtet ihn ein:
+
+```bash
+.venv/bin/python -m app.add_tv "Schlafzimmer"
+sudo systemctl restart dashboard.service
+```
+
+Jeder Fernseher bekommt dann eigenes:
+- Bild, Ton (eigener HDMI-Ausgang) und Wecker
+- Fernbedienung auf einem eigenen Port, z. B. `:8081/remote.html`
+
+Einstellungen, Zugangsdaten, Apps und Passwort übernimmt er vom
+Hauptfernseher. Unter *Einstellungen → Fernseher im Haus* wechselst du
+zwischen den Fernbedienungen.
+
+Ein- und ausgeschaltet wird der zweite Fernseher per HDMI-CEC, sofern das
+Funk-HDMI-Set CEC durchreicht. Sonst bleibt ein Steckdosen-Schalter, siehe
+„Fernseher ohne HDMI-CEC“. Das DMX-Licht steuert nur der Hauptfernseher.
+
 ## Eigene Apps bauen
 
 Eine App ist ein Ordner in [`apps/`](apps) – mit Steckbrief (`app.json`),

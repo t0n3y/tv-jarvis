@@ -45,11 +45,11 @@ import threading
 from pathlib import Path
 
 from app import settings_store
-from app.config import ROOT_DIR, Config, get_config
+from app.config import CODE_DIR, ROOT_DIR, Config, get_config
 
 logger = logging.getLogger(__name__)
 
-APPS_DIR = ROOT_DIR / "apps"
+APPS_DIR = CODE_DIR / "apps"
 DATA_DIR = ROOT_DIR / "data" / "apps"
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,30}$")
 SECRET_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{2,50}$")

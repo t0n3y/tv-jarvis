@@ -1,0 +1,17 @@
+[Unit]
+Description=RPi TV - weiterer Fernseher (__NAME__)
+After=network-online.target dashboard.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=__INSTALL_DIR__
+Environment=RPITV_DATA_ROOT=__DATA_ROOT__
+EnvironmentFile=__DATA_ROOT__/.env
+ExecStart=__INSTALL_DIR__/.venv/bin/python -m app.dashboard.run
+Restart=on-failure
+RestartSec=5
+User=__RUN_USER__
+
+[Install]
+WantedBy=multi-user.target

@@ -22,7 +22,7 @@ import time
 import zipfile
 from pathlib import Path
 
-from app.config import ROOT_DIR, get_config
+from app.config import CODE_DIR, ROOT_DIR, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SystemError_(RuntimeError):
     pass
 
 
-def _run(args: list[str], timeout: float, cwd: Path = ROOT_DIR) -> str:
+def _run(args: list[str], timeout: float, cwd: Path = CODE_DIR) -> str:
     env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "PIP_DISABLE_PIP_VERSION_CHECK": "1"}
     try:
         result = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
@@ -110,7 +110,7 @@ update_state: dict = {"running": False, "step": "", "error": None, "done": False
 
 
 def check_update() -> dict:
-    if not (ROOT_DIR / ".git").exists():
+    if not (CODE_DIR / ".git").exists():
         return {"available": False, "possible": False, "reason": "Kein Git-Ordner – neu installieren mit dem Installationsbefehl."}
     try:
         upstream = _run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], 10).strip()
@@ -129,8 +129,8 @@ def check_update() -> dict:
 
 
 def requirement_files() -> list[Path]:
-    files = [ROOT_DIR / "requirements.txt"]
-    files += sorted((ROOT_DIR / "apps").glob("*/requirements.txt"))
+    files = [CODE_DIR / "requirements.txt"]
+    files += sorted((CODE_DIR / "apps").glob("*/requirements.txt"))
     return [f for f in files if f.exists()]
 
 

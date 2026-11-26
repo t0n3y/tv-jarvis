@@ -231,9 +231,9 @@ def enabled_map() -> dict[str, bool]:
 
 def _raw_config() -> dict:
     """Aktuelle Werte (alle Schichten) als dict - fuer die Formulare."""
-    from app.config import ROOT_DIR, _load_yaml, _merge, _settings_overrides
+    from app.config import CODE_DIR, ROOT_DIR, _load_yaml, _merge, _settings_overrides
 
-    raw = _load_yaml(ROOT_DIR / "config.example.yaml")
+    raw = _load_yaml(CODE_DIR / "config.example.yaml")
     raw = _merge(raw, _load_yaml(ROOT_DIR / "config.yaml"))
     return _merge(raw, _settings_overrides())
 
